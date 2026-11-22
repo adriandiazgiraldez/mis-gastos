@@ -869,7 +869,7 @@
       document.getElementById("form-cuota").value = getVal("cuota");
       document.getElementById("form-notas").value = getVal("notas");
       const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
-      const guardado = iconosGuardados[getVal("concepto").toUpperCase()] || "";
+      const guardado = getVal("favicon") || iconosGuardados[getVal("concepto").toUpperCase()] || "";
       document.getElementById("form-icono").value = guardado.startsWith("url:") ? "" : guardado;
       document.getElementById("form-url-icono").value = guardado.startsWith("url:") ? guardado.slice(4) : "";
 
@@ -914,10 +914,26 @@
     }
 
     // Modal Añadir Gasto
+    function obtenerFaviconDeSheet(conceptoUpper) {
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxFav = headersGlobales.findIndex(h => h.toLowerCase().includes("favicon"));
+      if (idxConcepto === -1 || idxFav === -1) return "";
+      const filaConFav = filasGlobales.find(f => (f[idxConcepto] || "").toString().trim().toUpperCase() === conceptoUpper && (f[idxFav] || "").toString().trim() !== "");
+      return filaConFav ? filaConFav[idxFav].toString().trim() : "";
+    }
+
     function obtenerHtmlIconoConcepto(texto) {
       const t = (texto || "").trim().toUpperCase();
       const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
-      if (iconosGuardados[t]) {
+      const fav = obtenerFaviconDeSheet(t) || iconosGuardados[t];
+      if (fav) {
+        if (fav.startsWith("url:")) {
+          const dom = fav.slice(4);
+          return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
+        }
+        return `<i class="${fav} text-slate-500 w-4 text-center shrink-0"></i>`;
+      }
+      if (false) {
         if (iconosGuardados[t].startsWith("url:")) {
           const dom = iconosGuardados[t].slice(4);
           return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
@@ -1016,11 +1032,14 @@
       const iconoElegido = document.getElementById("form-icono").value;
       const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
 
+      let valorFavicon = "";
       if (urlRaw) {
         const dominioLimpio = urlRaw.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0];
-        iconosGuardados[conceptoGuardar.toUpperCase()] = "url:" + dominioLimpio;
+        valorFavicon = "url:" + dominioLimpio;
+        iconosGuardados[conceptoGuardar.toUpperCase()] = valorFavicon;
       } else if (iconoElegido) {
-        iconosGuardados[conceptoGuardar.toUpperCase()] = iconoElegido;
+        valorFavicon = iconoElegido;
+        iconosGuardados[conceptoGuardar.toUpperCase()] = valorFavicon;
       } else {
         delete iconosGuardados[conceptoGuardar.toUpperCase()];
       }
@@ -1028,6 +1047,7 @@
 
       const formId = document.getElementById("form-id").value;
       const payload = {
+        favicon: valorFavicon,
         token: tokenActual,
         action: formId ? "edit" : "add",
         id: formId,
