@@ -481,6 +481,23 @@
           </div>
         </div>
 
+        <!-- Selector de Etiquetas de Color -->
+        <div class="pt-2">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-[11px] font-semibold text-slate-500">Etiqueta de color (destacar fila)</label>
+            <button type="button" onclick="seleccionarEtiquetaColor('')" id="btn-quitar-etiqueta" class="text-[10px] font-medium text-slate-400 hover:text-rose-500 transition hidden">Quitar color</button>
+          </div>
+          <input type="hidden" id="form-color-etiqueta" value="">
+          <div class="flex items-center gap-2.5">
+            <button type="button" onclick="seleccionarEtiquetaColor('amarillo')" title="Amarillo" data-color="amarillo" class="btn-color-tag w-6 h-6 rounded-full bg-amber-400 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
+            <button type="button" onclick="seleccionarEtiquetaColor('naranja')" title="Naranja" data-color="naranja" class="btn-color-tag w-6 h-6 rounded-full bg-orange-500 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
+            <button type="button" onclick="seleccionarEtiquetaColor('rojo')" title="Rojo" data-color="rojo" class="btn-color-tag w-6 h-6 rounded-full bg-rose-500 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
+            <button type="button" onclick="seleccionarEtiquetaColor('verde')" title="Verde" data-color="verde" class="btn-color-tag w-6 h-6 rounded-full bg-emerald-500 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
+            <button type="button" onclick="seleccionarEtiquetaColor('azul')" title="Azul" data-color="azul" class="btn-color-tag w-6 h-6 rounded-full bg-sky-500 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
+            <button type="button" onclick="seleccionarEtiquetaColor('morado')" title="Morado" data-color="morado" class="btn-color-tag w-6 h-6 rounded-full bg-purple-500 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
+          </div>
+        </div>
+
         <!-- Botones de Acción -->
         <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
           <button type="button" onclick="cerrarModalGasto()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition text-xs">Cancelar</button>
@@ -769,13 +786,13 @@
       const idxPeriodicidad = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
       const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
 
-      let html = `<thead class="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
+      let html = `<thead class="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-300">
         <tr>
           <th class="py-3 px-4 font-semibold whitespace-nowrap w-16">DÍA</th>
           <th class="py-3 px-4 font-semibold whitespace-nowrap">CONCEPTO</th>
           <th class="py-3 px-4 font-semibold whitespace-nowrap text-right">CANTIDAD (€)</th>
         </tr>
-      </thead><tbody class="divide-y divide-slate-100">`;
+      </thead><tbody class="divide-y divide-slate-300">`;
 
       const parsearCantidad = (fila) => {
         if (idxCant === -1) return 0;
@@ -818,6 +835,22 @@
 
       const renderGrupo = (lista, titulo, total, esVerde) => {
         if (lista.length === 0) return "";
+        const mapaColoresPastel = {
+          "amarillo": "bg-amber-100/70 hover:bg-amber-100",
+          "yellow": "bg-amber-100/70 hover:bg-amber-100",
+          "naranja": "bg-orange-100/70 hover:bg-orange-100",
+          "orange": "bg-orange-100/70 hover:bg-orange-100",
+          "rojo": "bg-rose-100/70 hover:bg-rose-100",
+          "red": "bg-rose-100/70 hover:bg-rose-100",
+          "verde": "bg-emerald-100/70 hover:bg-emerald-100",
+          "green": "bg-emerald-100/70 hover:bg-emerald-100",
+          "azul": "bg-sky-100/70 hover:bg-sky-100",
+          "blue": "bg-sky-100/70 hover:bg-sky-100",
+          "morado": "bg-purple-100/70 hover:bg-purple-100",
+          "purple": "bg-purple-100/70 hover:bg-purple-100"
+        };
+        const idxColor = headersGlobales.findIndex(h => h.toLowerCase().includes("etiqueta") || h.toLowerCase().includes("color"));
+
         const colorTexto = esVerde ? "text-emerald-600" : "text-rose-600";
         const bgGrupo = esVerde ? "bg-emerald-50/60 border-emerald-100" : "bg-rose-50/60 border-rose-100";
         const icono = esVerde ? "fa-circle-check" : "fa-circle-xmark";
@@ -986,7 +1019,10 @@
               ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${etiquetaPer}</span>`
               : "";
 
-            bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="hover:bg-slate-50/80 transition cursor-pointer">
+            const colorFila = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
+            const bgFilaPastel = mapaColoresPastel[colorFila] || "hover:bg-slate-50/80";
+
+            bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="${bgFilaPastel} transition cursor-pointer">
               <td class="py-3 px-4 whitespace-nowrap text-slate-500">${diaVal}</td>
               <td class="py-3 px-4 font-medium text-slate-900">
                 <div class="flex items-center justify-between w-full">
@@ -1017,24 +1053,30 @@
             const diasUnicos = [...new Set(item.filas.map(f => idxDia !== -1 ? (f[idxDia] || "").toString().trim() : "").filter(Boolean))];
             const diaGrupo = diasUnicos.join(", ");
 
-            bloque += `<tr onclick="toggleGrupoEmpresa('${grupoId}', '${claveGrupo}')" class="hover:bg-slate-50/80 transition cursor-pointer bg-white">
-              <td class="py-3 px-4 whitespace-nowrap text-slate-500 font-medium">
+            const tdBaseTop = "border-t-[3px] border-slate-500";
+            const tdBtmCabecera = estaCerrado ? "border-b-[3px] border-slate-500" : "border-b border-slate-300";
+
+            bloque += `<tr onclick="toggleGrupoEmpresa('${grupoId}', '${claveGrupo}')" class="hover:bg-slate-100/70 transition cursor-pointer bg-slate-50/80">
+              <td class="py-3 px-4 whitespace-nowrap text-slate-700 font-semibold border-l-[3px] border-slate-500 ${tdBaseTop} ${tdBtmCabecera}">
                 <div class="flex items-center gap-1.5">
-                  <i id="chevron-${grupoId}" class="fa-solid fa-chevron-right text-[10px] text-slate-400 transition-transform duration-150 ${estaCerrado ? "" : "rotate-90"}"></i>
+                  <i id="chevron-${grupoId}" class="fa-solid fa-chevron-right text-[10px] text-slate-600 transition-transform duration-150 ${estaCerrado ? "" : "rotate-90"}"></i>
                   <span>${diaGrupo}</span>
                 </div>
               </td>
-              <td class="py-3 px-4 font-semibold text-slate-900">
+              <td class="py-3 px-4 font-bold text-slate-900 ${tdBaseTop} ${tdBtmCabecera}">
                 <div class="flex items-center gap-2.5">
                   ${obtenerFavicon(item.empresa)}
                   <span>${item.empresa}</span>
-                  <span class="bg-slate-100 text-slate-500 text-[10px] font-semibold px-2 py-0.5 rounded-full">${item.filas.length} conceptos</span>
+                  <span class="bg-slate-200 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">${item.filas.length} conceptos</span>
                 </div>
               </td>
-              <td class="py-3 px-4 whitespace-nowrap text-right font-bold ${colorTexto}">${sumaFmt}</td>
+              <td class="py-3 px-4 whitespace-nowrap text-right font-bold ${colorTexto} border-r-[3px] border-slate-500 ${tdBaseTop} ${tdBtmCabecera}">${sumaFmt}</td>
             </tr>`;
 
-            item.filas.forEach(fila => {
+            item.filas.forEach((fila, idx) => {
+              const esUltima = idx === item.filas.length - 1;
+              const tdBtmHija = esUltima ? "border-b-[3px] border-slate-500" : "border-b border-slate-200";
+
               const idFila = idxId !== -1 ? fila[idxId] : "";
               const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
               const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
@@ -1058,13 +1100,16 @@
                 ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${etiquetaHijaPer}</span>`
                 : "";
 
-              bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} bg-slate-50/50 hover:bg-slate-100/70 transition cursor-pointer">` +
-                `<td class="py-2.5 px-4 whitespace-nowrap text-slate-300 text-[11px]"></td>` +
-                `<td class="py-2.5 px-4 font-medium text-slate-700 pl-8">` +
+              const colorHija = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
+              const bgHijaPastel = mapaColoresPastel[colorHija] || "bg-white hover:bg-slate-50";
+
+              bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} ${bgHijaPastel} transition cursor-pointer">` +
+                `<td class="py-2.5 px-4 whitespace-nowrap text-slate-300 text-[11px] border-l-[3px] border-slate-500 ${tdBtmHija}"></td>` +
+                `<td class="py-2.5 px-4 font-medium text-slate-700 pl-8 ${tdBtmHija}">` +
                   `<div class="flex items-center justify-between w-full">` +
                     `<div class="flex items-center min-w-0 flex-1">` +
                       `<div class="flex items-center gap-2 w-64 sm:w-80 shrink-0 pr-3">` +
-                        `<span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>` +
+                        `<span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>` +
                         `<span class="truncate">${conceptoVal}</span>` +
                       `</div>` +
                       `<div class="flex items-center gap-2 shrink-0">` +
@@ -1075,7 +1120,7 @@
                     renderBadgesFila(fila) +
                   `</div>` +
                 `</td>` +
-                `<td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-[11px]">${cantVal}</td>` +
+                `<td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-[11px] border-r-[3px] border-slate-500 ${tdBtmHija}">${cantVal}</td>` +
               `</tr>`;
             });
           }
@@ -1571,6 +1616,16 @@
       const estaPagado = getVal("pagado").toUpperCase() === "SI";
       cambiarTogglePagado(estaPagado);
       document.getElementById("bloque-opciones-recurrencia").classList.add("hidden");
+      const valColorOriginal = (getVal("etiqueta") || getVal("color") || "").toLowerCase().trim();
+      const mapaTraduccion = {
+        "yellow": "amarillo",
+        "orange": "naranja",
+        "red": "rojo",
+        "green": "verde",
+        "blue": "azul",
+        "purple": "morado"
+      };
+      seleccionarEtiquetaColor(mapaTraduccion[valColorOriginal] || valColorOriginal);
 
       document.body.classList.add("overflow-hidden");
       document.getElementById("modal-gasto").classList.remove("hidden");
@@ -1736,6 +1791,18 @@
       }
     });
 
+    function seleccionarEtiquetaColor(color) {
+      document.getElementById("form-color-etiqueta").value = color;
+      document.querySelectorAll(".btn-color-tag").forEach(btn => {
+        if (btn.getAttribute("data-color") === color) {
+          btn.classList.add("ring-2", "ring-slate-900", "ring-offset-2", "scale-110");
+        } else {
+          btn.classList.remove("ring-2", "ring-slate-900", "ring-offset-2", "scale-110");
+        }
+      });
+      document.getElementById("btn-quitar-etiqueta").classList.toggle("hidden", !color);
+    }
+
     function cambiarTogglePagado(activado) {
       const valor = activado ? "SI" : "NO";
       document.getElementById("form-pagado").value = valor;
@@ -1798,6 +1865,7 @@
       document.getElementById("texto-archivo-pdf").textContent = "Adjuntar PDF";
       document.getElementById("texto-archivo-img").textContent = "Hacer foto o elegir";
       document.getElementById("bloque-opciones-recurrencia").classList.add("hidden");
+      seleccionarEtiquetaColor("");
       cambiarTogglePagado(false);
       actualizarCamposRecurrencia();
       document.body.classList.add("overflow-hidden");
@@ -1919,8 +1987,12 @@
         }
       }
 
+      const colorEtiqueta = document.getElementById("form-color-etiqueta").value;
+
       const payload = {
         favicon: valorFavicon,
+        color: colorEtiqueta,
+        etiqueta: colorEtiqueta,
         token: tokenActual,
         action: formId ? "edit" : (filasLote.length > 0 ? "add_batch" : "add"),
         id: formId,
