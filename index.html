@@ -247,6 +247,15 @@
           <div id="dropdown-conceptos" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-52 overflow-y-auto z-50 divide-y divide-slate-100"></div>
         </div>
 
+        <div class="relative">
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Empresa (opcional, para agrupar)</label>
+          <input type="text" id="form-empresa" autocomplete="off"
+            onfocus="mostrarDropdownEmpresas()" oninput="filtrarDropdownEmpresas()"
+            placeholder="Buscar o escribir nueva empresa..."
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+          <div id="dropdown-empresas" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-52 overflow-y-auto z-50 divide-y divide-slate-100"></div>
+        </div>
+
         <div class="grid grid-cols-2 gap-3 items-center">
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Pagado</label>
@@ -456,10 +465,12 @@
       document.getElementById("estado-login").textContent = mensaje;
     }
 
-    async function cargarDatos(token) {
+    async function cargarDatos(token, silencioso = false) {
       const estadoDiv = document.getElementById("estado");
-      estadoDiv.classList.remove("hidden");
-      estadoDiv.textContent = "Cargando datos desde Google Sheets...";
+      if (!silencioso) {
+        estadoDiv.classList.remove("hidden");
+        estadoDiv.textContent = "Cargando datos desde Google Sheets...";
+      }
 
       try {
         const urlConToken = `${API_URL}?token=${encodeURIComponent(token)}`;
@@ -478,7 +489,7 @@
         headersGlobales = json.headers || [];
         filasGlobales = json.rows || [];
 
-        poblarSelectoresFecha();
+        if (!silencioso) poblarSelectoresFecha();
         actualizarResumen();
         filtrarTabla();
 
@@ -545,6 +556,25 @@
       document.getElementById("stat-total-mes").textContent = fmt(totalMes);
     }
 
+    let gruposCerrados = JSON.parse(localStorage.getItem("mis_gastos_grupos_cerrados") || "{}");
+
+    function toggleGrupoEmpresa(grupoId, claveGrupo) {
+      const filas = document.querySelectorAll(`.fila-hija-${grupoId}`);
+      const icono = document.getElementById(`chevron-${grupoId}`);
+      let cerrado = false;
+      filas.forEach(f => {
+        f.classList.toggle("hidden");
+        cerrado = f.classList.contains("hidden");
+      });
+      if (icono) icono.classList.toggle("rotate-90");
+      if (cerrado) {
+        gruposCerrados[claveGrupo] = true;
+      } else {
+        delete gruposCerrados[claveGrupo];
+      }
+      localStorage.setItem("mis_gastos_grupos_cerrados", JSON.stringify(gruposCerrados));
+    }
+
     function renderizarTabla(filas) {
       const tabla = document.getElementById("tabla-gastos");
       document.getElementById("contador-visible").textContent = `Mostrando ${filas.length} registros`;
@@ -552,6 +582,7 @@
       const idxId = headersGlobales.findIndex(h => h.trim().toUpperCase() === "ID");
       const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
       const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
       const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
       const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
 
@@ -610,57 +641,118 @@
           </td>
         </tr>`;
 
-        lista.forEach(fila => {
-          const idFila = idxId !== -1 ? fila[idxId] : "";
-          const diaVal = idxDia !== -1 ? fila[idxDia] : "";
-          const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
-          const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
-          const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
-
-          const obtenerFavicon = (texto) => {
-            const t = (texto || "").trim().toUpperCase();
-            const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
-            if (iconosGuardados[t]) {
-              if (iconosGuardados[t].startsWith("url:")) {
-                const dom = iconosGuardados[t].slice(4);
-                return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
-              }
-              return `<i class="${iconosGuardados[t]} text-slate-500 w-4 text-center shrink-0"></i>`;
+        const obtenerFavicon = (texto) => {
+          const t = (texto || "").trim().toUpperCase();
+          const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
+          if (iconosGuardados[t]) {
+            if (iconosGuardados[t].startsWith("url:")) {
+              const dom = iconosGuardados[t].slice(4);
+              return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
             }
-            const mapa = {
-              "BBVA": "bbva.es",
-              "CORTE INGL": "elcorteingles.es",
-              "DIGI": "digimobil.es",
-              "FIATC": "fiatc.es",
-              "AURA": "auraseguros.com",
-              "APTHUELVA": "apthuelva.es",
-              "ENDESA": "endesa.com",
-              "IBERDROLA": "iberdrola.es",
-              "NATURGY": "naturgy.es",
-              "VODAFONE": "vodafone.es",
-              "MOVISTAR": "movistar.es",
-              "ORANGE": "orange.es",
-              "AMAZON": "amazon.es",
-              "NETFLIX": "netflix.com",
-              "SPOTIFY": "spotify.com"
-            };
-            const clave = Object.keys(mapa).find(k => t.includes(k));
-            if (clave) {
-              return `<img src="https://www.google.com/s2/favicons?domain=${mapa[clave]}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
-            }
-            return `<i class="fa-regular fa-building text-slate-300 w-4 text-center shrink-0"></i>`;
+            return `<i class="${iconosGuardados[t]} text-slate-500 w-4 text-center shrink-0"></i>`;
+          }
+          const mapa = {
+            "BBVA": "bbva.es",
+            "CORTE INGL": "elcorteingles.es",
+            "DIGI": "digimobil.es",
+            "FIATC": "fiatc.es",
+            "AURA": "auraseguros.com",
+            "APTHUELVA": "apthuelva.es",
+            "ENDESA": "endesa.com",
+            "IBERDROLA": "iberdrola.es",
+            "NATURGY": "naturgy.es",
+            "VODAFONE": "vodafone.es",
+            "MOVISTAR": "movistar.es",
+            "ORANGE": "orange.es",
+            "AMAZON": "amazon.es",
+            "NETFLIX": "netflix.com",
+            "SPOTIFY": "spotify.com"
           };
+          const clave = Object.keys(mapa).find(k => t.includes(k));
+          if (clave) {
+            return `<img src="https://www.google.com/s2/favicons?domain=${mapa[clave]}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
+          }
+          return `<i class="fa-regular fa-building text-slate-300 w-4 text-center shrink-0"></i>`;
+        };
 
-          bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="hover:bg-slate-50/80 transition cursor-pointer">
-            <td class="py-3 px-4 whitespace-nowrap text-slate-500">${diaVal}</td>
-            <td class="py-3 px-4 font-medium text-slate-900">
-              <div class="flex items-center gap-2.5">
-                ${obtenerFavicon(conceptoVal)}
-                <span>${conceptoVal}</span>
-              </div>
-            </td>
-            <td class="py-3 px-4 whitespace-nowrap text-right font-semibold ${colorTexto}">${cantVal}</td>
-          </tr>`;
+        const gruposOrdenados = [];
+        const mapaEmpresas = {};
+
+        lista.forEach((fila) => {
+          const empresa = idxEmpresa !== -1 ? (fila[idxEmpresa] || "").toString().trim() : "";
+          if (empresa) {
+            const claveEmp = empresa.toUpperCase();
+            if (!mapaEmpresas[claveEmp]) {
+              mapaEmpresas[claveEmp] = { esGrupo: true, empresa, filas: [] };
+              gruposOrdenados.push(mapaEmpresas[claveEmp]);
+            }
+            mapaEmpresas[claveEmp].filas.push(fila);
+          } else {
+            gruposOrdenados.push({ esGrupo: false, fila });
+          }
+        });
+
+        let contadorGrupo = 0;
+        gruposOrdenados.forEach(item => {
+          if (!item.esGrupo || item.filas.length === 1) {
+            const fila = item.esGrupo ? item.filas[0] : item.fila;
+            const idFila = idxId !== -1 ? fila[idxId] : "";
+            const diaVal = idxDia !== -1 ? fila[idxDia] : "";
+            const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
+            const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
+            const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
+
+            bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="hover:bg-slate-50/80 transition cursor-pointer">
+              <td class="py-3 px-4 whitespace-nowrap text-slate-500">${diaVal}</td>
+              <td class="py-3 px-4 font-medium text-slate-900">
+                <div class="flex items-center gap-2.5">
+                  ${obtenerFavicon(conceptoVal)}
+                  <span>${conceptoVal}</span>
+                </div>
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap text-right font-semibold ${colorTexto}">${cantVal}</td>
+            </tr>`;
+          } else {
+            contadorGrupo++;
+            const grupoId = `${titulo}-${contadorGrupo}`;
+            const claveGrupo = `${titulo}-${item.empresa.toUpperCase()}`.replace(/'/g, "");
+            const estaCerrado = !!gruposCerrados[claveGrupo];
+            const sumaGrupo = item.filas.reduce((acc, f) => acc + parsearCantidad(f), 0);
+            const sumaFmt = sumaGrupo.toFixed(2).replace(".", ",") + " €";
+
+            bloque += `<tr onclick="toggleGrupoEmpresa('${grupoId}', '${claveGrupo}')" class="hover:bg-slate-50/80 transition cursor-pointer bg-white">
+              <td class="py-3 px-4 whitespace-nowrap text-slate-400">
+                <i id="chevron-${grupoId}" class="fa-solid fa-chevron-right text-[10px] transition-transform duration-150 ${estaCerrado ? "" : "rotate-90"}"></i>
+              </td>
+              <td class="py-3 px-4 font-semibold text-slate-900">
+                <div class="flex items-center gap-2.5">
+                  ${obtenerFavicon(item.empresa)}
+                  <span>${item.empresa}</span>
+                  <span class="bg-slate-100 text-slate-500 text-[10px] font-semibold px-2 py-0.5 rounded-full">${item.filas.length} conceptos</span>
+                </div>
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap text-right font-bold ${colorTexto}">${sumaFmt}</td>
+            </tr>`;
+
+            item.filas.forEach(fila => {
+              const idFila = idxId !== -1 ? fila[idxId] : "";
+              const diaVal = idxDia !== -1 ? fila[idxDia] : "";
+              const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
+              const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
+              const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
+
+              bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} bg-slate-50/50 hover:bg-slate-100/70 transition cursor-pointer">
+                <td class="py-2.5 px-4 whitespace-nowrap text-slate-400 text-[11px] pl-6">${diaVal}</td>
+                <td class="py-2.5 px-4 font-medium text-slate-700 pl-8">
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>
+                    <span>${conceptoVal}</span>
+                  </div>
+                </td>
+                <td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-[11px]">${cantVal}</td>
+              </tr>`;
+            });
+          }
         });
         return bloque;
       };
@@ -689,6 +781,12 @@
     }
     actualizarReloj();
     setInterval(actualizarReloj, 30000);
+    setInterval(() => {
+      if (!tokenActual) return;
+      const modalAbierto = ["modal-gasto", "modal-detalle", "modal-confirmar-eliminar"]
+        .some(id => !document.getElementById(id).classList.contains("hidden"));
+      if (!modalAbierto) cargarDatos(tokenActual, true);
+    }, 20000);
 
     function poblarSelectoresFecha() {
       const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
@@ -861,6 +959,7 @@
       document.getElementById("modal-gasto-titulo").textContent = "Modificar Gasto";
       document.getElementById("form-id").value = id;
       document.getElementById("form-concepto").value = getVal("concepto");
+      document.getElementById("form-empresa").value = getVal("empresa");
       document.getElementById("form-dia").value = getVal("día") || getVal("dia") || 1;
       document.getElementById("form-cantidad").value = getVal("cantidad").replace(/[€\s]/g, "").replace(",", ".");
       document.getElementById("form-mes").value = getVal("mes").toUpperCase() || "NOVIEMBRE";
@@ -991,11 +1090,51 @@
       document.getElementById("form-icono").value = iconosGuardados[valor.toUpperCase()] || "";
     }
 
+    function mostrarDropdownEmpresas() {
+      filtrarDropdownEmpresas();
+      document.getElementById("dropdown-empresas").classList.remove("hidden");
+    }
+
+    function filtrarDropdownEmpresas() {
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
+      const dropdown = document.getElementById("dropdown-empresas");
+      if (idxEmpresa === -1 || !dropdown) return;
+
+      const filtro = (document.getElementById("form-empresa").value || "").toLowerCase().trim();
+      const unicas = [...new Set(filasGlobales.map(f => (f[idxEmpresa] || "").toString().trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+
+      const filtradas = filtro ? unicas.filter(emp => emp.toLowerCase().includes(filtro)) : unicas;
+
+      if (filtradas.length === 0) {
+        dropdown.innerHTML = `<div class="px-3.5 py-2.5 text-xs text-slate-400">Nueva empresa: "${document.getElementById("form-empresa").value}"</div>`;
+        return;
+      }
+
+      dropdown.innerHTML = filtradas.map(emp => {
+        const seguro = emp.replace(/'/g, "\\'");
+        return `<button type="button" onclick="seleccionarEmpresaDropdown('${seguro}')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition">
+          ${obtenerHtmlIconoConcepto(emp)}
+          <span class="truncate">${emp}</span>
+        </button>`;
+      }).join("");
+    }
+
+    function seleccionarEmpresaDropdown(valor) {
+      document.getElementById("form-empresa").value = valor;
+      document.getElementById("dropdown-empresas").classList.add("hidden");
+    }
+
     document.addEventListener("click", (e) => {
       const input = document.getElementById("form-concepto");
       const drop = document.getElementById("dropdown-conceptos");
       if (input && drop && !input.contains(e.target) && !drop.contains(e.target)) {
         drop.classList.add("hidden");
+      }
+      const inputEmp = document.getElementById("form-empresa");
+      const dropEmp = document.getElementById("dropdown-empresas");
+      if (inputEmp && dropEmp && !inputEmp.contains(e.target) && !dropEmp.contains(e.target)) {
+        dropEmp.classList.add("hidden");
       }
     });
 
@@ -1012,6 +1151,7 @@
       document.getElementById("modal-gasto-titulo").textContent = "Añadir Gasto";
       document.getElementById("form-id").value = "";
       document.getElementById("form-concepto").value = "";
+      document.getElementById("form-empresa").value = "";
       document.getElementById("form-icono").value = "";
       document.getElementById("form-url-icono").value = "";
       cambiarTogglePagado(false);
@@ -1052,6 +1192,7 @@
         action: formId ? "edit" : "add",
         id: formId,
         concepto: document.getElementById("form-concepto").value.trim(),
+        empresa: document.getElementById("form-empresa").value.trim(),
         pagado: document.getElementById("form-pagado").value,
         fechaPago: document.getElementById("form-fecha-pago").value,
         dia: document.getElementById("form-dia").value,
