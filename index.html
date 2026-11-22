@@ -214,7 +214,7 @@
                       </div>
                       <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
                     </button>
-                    <div id="dropdown-menu-filtro-concepto" class="hidden absolute left-0 mt-1 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-slate-100">
+                    <div id="dropdown-menu-filtro-concepto" class="hidden absolute left-0 mt-1 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-96 overflow-y-auto z-50 divide-y divide-slate-100">
                       <!-- Opciones generadas dinámicamente con icono -->
                     </div>
                   </div>
@@ -744,9 +744,12 @@
         const mesB = MESES_LISTA.indexOf(mesTextoB);
         if (mesB !== mesA) return mesB - mesA;
 
-        const diaA = idxDia !== -1 ? (parseInt(a[idxDia], 10) || 0) : 0;
-        const diaB = idxDia !== -1 ? (parseInt(b[idxDia], 10) || 0) : 0;
-        if (diaB !== diaA) return diaB - diaA;
+        const diaRawA = idxDia !== -1 ? (parseInt(a[idxDia], 10) || 0) : 0;
+        const diaRawB = idxDia !== -1 ? (parseInt(b[idxDia], 10) || 0) : 0;
+        const pesoDia = (d) => (d === 30 || d === 31) ? (d - 100) : d;
+        const pesoA = pesoDia(diaRawA);
+        const pesoB = pesoDia(diaRawB);
+        if (pesoA !== pesoB) return pesoA - pesoB;
 
         const cA = idxConcepto !== -1 ? (a[idxConcepto] || "").toString().trim() : "";
         const cB = idxConcepto !== -1 ? (b[idxConcepto] || "").toString().trim() : "";
@@ -758,6 +761,8 @@
 
       const totalPendiente = pendientes.reduce((acc, f) => acc + parsearCantidad(f), 0);
       const totalPagado = pagados.reduce((acc, f) => acc + parsearCantidad(f), 0);
+
+      const esVerTodoActivo = !!document.getElementById("toggle-ver-todo")?.checked;
 
       const renderGrupo = (lista, titulo, total, esVerde) => {
         if (lista.length === 0) return "";
@@ -839,6 +844,25 @@
           }
         });
 
+        const pesoDia = (d) => (d === 30 || d === 31) ? (d - 100) : d;
+        const obtenerPesoItem = (item) => {
+          if (!item.esGrupo) {
+            const d = idxDia !== -1 ? (parseInt(item.fila[idxDia], 10) || 0) : 0;
+            return pesoDia(d);
+          }
+          const pesos = item.filas.map(f => pesoDia(idxDia !== -1 ? (parseInt(f[idxDia], 10) || 0) : 0));
+          return Math.min(...pesos);
+        };
+        const obtenerNombreItem = (item) => {
+          if (item.esGrupo) return (item.empresa || "").toString().trim();
+          return idxConcepto !== -1 ? (item.fila[idxConcepto] || "").toString().trim() : "";
+        };
+        gruposOrdenados.sort((a, b) => {
+          const diffPeso = obtenerPesoItem(a) - obtenerPesoItem(b);
+          if (diffPeso !== 0) return diffPeso;
+          return obtenerNombreItem(a).localeCompare(obtenerNombreItem(b), "es", { sensitivity: "base" });
+        });
+
         let contadorGrupo = 0;
         gruposOrdenados.forEach(item => {
           const renderIconoNota = (fila) => {
@@ -869,7 +893,7 @@
             const mesVal = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
             const anoVal = idxAno !== -1 ? (fila[idxAno] || "").toString().trim() : "";
             const mesAbrev = mesVal ? mesVal.slice(0, 3) : "";
-            const fechaTag = (mesAbrev || anoVal)
+            const fechaTag = (esVerTodoActivo && (mesAbrev || anoVal))
               ? `<span class="bg-slate-100 text-slate-500 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${mesAbrev} ${anoVal}</span>`
               : "";
 
@@ -922,7 +946,7 @@
               const mesHija = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
               const anoHija = idxAno !== -1 ? (fila[idxAno] || "").toString().trim() : "";
               const mesHijaAbrev = mesHija ? mesHija.slice(0, 3) : "";
-              const fechaHijaTag = (mesHijaAbrev || anoHija)
+              const fechaHijaTag = (esVerTodoActivo && (mesHijaAbrev || anoHija))
                 ? `<span class="bg-slate-200/60 text-slate-500 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${mesHijaAbrev} ${anoHija}</span>`
                 : "";
 
