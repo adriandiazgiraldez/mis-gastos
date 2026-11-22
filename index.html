@@ -113,6 +113,8 @@
           <h2 id="titulo-seccion" class="text-base sm:text-lg font-bold tracking-tight text-slate-900">Gastos Mensuales</h2>
         </div>
 
+        <div id="fecha-hora-actual" class="hidden sm:block text-xs font-medium text-slate-500"></div>
+
         <button onclick="abrirModalGasto()" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition active:scale-95 shadow-xs">
           <i class="fa-solid fa-plus text-[11px]"></i>
           <span>Añadir</span>
@@ -146,13 +148,56 @@
 
           <!-- Buscador + Tabla -->
           <div class="bg-white border border-slate-200/80 rounded-2xl shadow-2xs overflow-hidden">
-            <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div class="relative flex-1 max-w-md">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-xs text-slate-400"></i>
-                <input type="text" id="buscador-gastos" oninput="filtrarTabla()" placeholder="Buscar por concepto, mes, notas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 focus:bg-white transition">
+            <div class="p-4 border-b border-slate-100 space-y-3">
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-2 flex-1">
+                  <div class="relative flex-1 min-w-[200px] max-w-xs">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-xs text-slate-400"></i>
+                    <input type="text" id="buscador-gastos" oninput="filtrarTabla()" placeholder="Buscar por concepto, mes, notas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 focus:bg-white transition">
+                  </div>
+
+                  <select id="filtro-ano" onchange="onCambioMesOAno()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-400">
+                    <option value="">Todos los años</option>
+                  </select>
+
+                  <select id="filtro-mes" onchange="onCambioMesOAno()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-400">
+                    <option value="">Todos los meses</option>
+                    <option>ENERO</option><option>FEBRERO</option><option>MARZO</option><option>ABRIL</option>
+                    <option>MAYO</option><option>JUNIO</option><option>JULIO</option><option>AGOSTO</option>
+                    <option>SEPTIEMBRE</option><option>OCTUBRE</option><option>NOVIEMBRE</option><option>DICIEMBRE</option>
+                  </select>
+
+                  <button type="button" onclick="toggleCalendario()" id="btn-calendario" class="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 transition">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span id="texto-btn-calendario">Día</span>
+                  </button>
+
+                  <button type="button" onclick="limpiarFiltros()" id="btn-limpiar-filtros" class="hidden text-xs font-semibold text-rose-600 hover:text-rose-700 px-2 py-1.5">
+                    Limpiar
+                  </button>
+                </div>
+
+                <span id="contador-visible" class="text-xs text-slate-400 font-medium">Mostrando 0 registros</span>
               </div>
-              <span id="contador-visible" class="text-xs text-slate-400 font-medium">Mostrando 0 registros</span>
+
+              <!-- Calendario Mensual Desplegable -->
+              <div id="panel-calendario" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-3 max-w-xs">
+                <div class="flex items-center justify-between mb-2">
+                  <span id="calendario-titulo" class="text-xs font-bold text-slate-800">Calendario</span>
+                  <button type="button" onclick="seleccionarDiaCalendario(null)" class="text-[11px] font-semibold text-slate-500 hover:text-slate-900">Todos los días</button>
+                </div>
+                <table class="w-full text-center text-[11px] border-collapse">
+                  <thead>
+                    <tr class="text-slate-400 font-semibold">
+                      <th class="py-1">L</th><th class="py-1">M</th><th class="py-1">X</th><th class="py-1">J</th><th class="py-1">V</th><th class="py-1">S</th><th class="py-1">D</th>
+                    </tr>
+                  </thead>
+                  <tbody id="calendario-dias"></tbody>
+                </table>
+              </div>
             </div>
+
+            <div id="titulo-mes-ano-actual" class="py-2.5 px-4 bg-slate-50/70 border-b border-slate-100 text-center text-xs font-bold uppercase tracking-wider text-slate-700"></div>
 
             <div class="overflow-x-auto">
               <table id="tabla-gastos" class="w-full text-left text-xs text-slate-700">
@@ -181,7 +226,8 @@
   <div id="modal-gasto" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white border border-slate-200 w-full max-w-lg rounded-3xl shadow-xl overflow-hidden my-6">
       <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-        <h3 class="text-sm font-bold text-slate-900">Añadir Gasto</h3>
+        <h3 id="modal-gasto-titulo" class="text-sm font-bold text-slate-900">Añadir Gasto</h3>
+        <input type="hidden" id="form-id" value="">
         <button onclick="cerrarModalGasto()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg">
           <i class="fa-solid fa-xmark"></i>
         </button>
@@ -257,6 +303,47 @@
           <button type="submit" id="btn-guardar-gasto" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold">Guardar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL DETALLE CONCEPTO ==================== -->
+  <div id="modal-detalle" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-md rounded-3xl shadow-xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-slate-900">Detalle del Gasto</h3>
+        <button onclick="cerrarDetalleGasto()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div id="contenido-detalle" class="p-6 space-y-2.5 text-xs max-h-[65vh] overflow-y-auto"></div>
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between gap-2">
+        <button type="button" id="btn-eliminar-detalle" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition">
+          <i class="fa-regular fa-trash-can"></i> Eliminar
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="cerrarDetalleGasto()" class="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200/60 transition">Cerrar</button>
+          <button type="button" id="btn-editar-detalle" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white transition">
+            <i class="fa-regular fa-pen-to-square"></i> Modificar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL CONFIRMAR ELIMINACIÓN ==================== -->
+  <div id="modal-confirmar-eliminar" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-[60] hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-sm rounded-3xl shadow-xl p-6 text-center space-y-4">
+      <div class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-lg">
+        <i class="fa-regular fa-trash-can"></i>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-slate-900">¿Eliminar este concepto?</h3>
+        <p class="text-xs text-slate-500 mt-1">Esta acción no se puede deshacer y se borrará de la base de datos.</p>
+      </div>
+      <div class="flex items-center justify-center gap-2 pt-2">
+        <button type="button" onclick="cerrarConfirmarEliminar()" class="flex-1 py-2.5 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancelar</button>
+        <button type="button" id="btn-confirmar-eliminar" class="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition">Sí, eliminar</button>
+      </div>
     </div>
   </div>
 
@@ -363,8 +450,9 @@
         headersGlobales = json.headers || [];
         filasGlobales = json.rows || [];
 
+        poblarSelectoresFecha();
         actualizarResumen();
-        renderizarTabla(filasGlobales.slice(-30).reverse());
+        filtrarTabla();
 
       } catch (err) {
         tokenActual = null;
@@ -402,31 +490,197 @@
       const tabla = document.getElementById("tabla-gastos");
       document.getElementById("contador-visible").textContent = `Mostrando ${filas.length} registros`;
 
-      let html = `<thead class="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100"><tr>`;
-      headersGlobales.forEach(col => {
-        html += `<th class="py-3 px-4 font-semibold whitespace-nowrap">${col}</th>`;
-      });
-      html += `</tr></thead><tbody class="divide-y divide-slate-100">`;
+      const idxId = headersGlobales.findIndex(h => h.trim().toUpperCase() === "ID");
+      const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+      const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
 
-      filas.forEach(fila => {
-        html += `<tr class="hover:bg-slate-50/80 transition">`;
-        fila.forEach(celda => {
-          html += `<td class="py-3 px-4 whitespace-nowrap">${celda}</td>`;
+      let html = `<thead class="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
+        <tr>
+          <th class="py-3 px-4 font-semibold whitespace-nowrap w-16">DÍA</th>
+          <th class="py-3 px-4 font-semibold whitespace-nowrap">CONCEPTO</th>
+          <th class="py-3 px-4 font-semibold whitespace-nowrap text-right">CANTIDAD (€)</th>
+        </tr>
+      </thead><tbody class="divide-y divide-slate-100">`;
+
+      const parsearCantidad = (fila) => {
+        if (idxCant === -1) return 0;
+        const raw = (fila[idxCant] || "0").toString().replace(/[€\s.]/g, "").replace(",", ".");
+        return parseFloat(raw) || 0;
+      };
+
+      const esPagado = (fila) => idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+
+      const pendientes = filas.filter(f => !esPagado(f));
+      const pagados = filas.filter(f => esPagado(f));
+
+      const totalPendiente = pendientes.reduce((acc, f) => acc + parsearCantidad(f), 0);
+      const totalPagado = pagados.reduce((acc, f) => acc + parsearCantidad(f), 0);
+
+      const renderGrupo = (lista, titulo, total, esVerde) => {
+        if (lista.length === 0) return "";
+        const colorTexto = esVerde ? "text-emerald-600" : "text-rose-600";
+        const bgGrupo = esVerde ? "bg-emerald-50/60 border-emerald-100" : "bg-rose-50/60 border-rose-100";
+        const icono = esVerde ? "fa-circle-check" : "fa-circle-xmark";
+        const totalFmt = total.toFixed(2).replace(".", ",") + " €";
+
+        let bloque = `<tr class="${bgGrupo} border-y">
+          <td colspan="3" class="py-2.5 px-4">
+            <div class="flex items-center gap-2.5">
+              <span class="inline-flex items-center gap-1.5 font-bold text-xs ${colorTexto}">
+                <i class="fa-solid ${icono}"></i> ${titulo}
+              </span>
+              <span class="bg-slate-200/80 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">${totalFmt}</span>
+            </div>
+          </td>
+        </tr>`;
+
+        lista.forEach(fila => {
+          const idFila = idxId !== -1 ? fila[idxId] : "";
+          const diaVal = idxDia !== -1 ? fila[idxDia] : "";
+          const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
+          const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
+          const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
+
+          bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="hover:bg-slate-50/80 transition cursor-pointer">
+            <td class="py-3 px-4 whitespace-nowrap text-slate-500">${diaVal}</td>
+            <td class="py-3 px-4 font-medium text-slate-900">${conceptoVal}</td>
+            <td class="py-3 px-4 whitespace-nowrap text-right font-semibold ${colorTexto}">${cantVal}</td>
+          </tr>`;
         });
-        html += `</tr>`;
-      });
+        return bloque;
+      };
+
+      html += renderGrupo(pendientes, "NO", totalPendiente, false);
+      html += renderGrupo(pagados, "SI", totalPagado, true);
 
       html += `</tbody>`;
       tabla.innerHTML = html;
     }
 
+    let diaSeleccionado = null;
+    const MESES_LISTA = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+
+    function actualizarReloj() {
+      const el = document.getElementById("fecha-hora-actual");
+      if (!el) return;
+      const ahora = new Date();
+      const dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+      const d = String(ahora.getDate()).padStart(2, "0");
+      const m = String(ahora.getMonth() + 1).padStart(2, "0");
+      const a = ahora.getFullYear();
+      const hh = String(ahora.getHours()).padStart(2, "0");
+      const mm = String(ahora.getMinutes()).padStart(2, "0");
+      el.textContent = `${dias[ahora.getDay()]}, ${d}/${m}/${a} - ${hh}:${mm}h`;
+    }
+    actualizarReloj();
+    setInterval(actualizarReloj, 30000);
+
+    function poblarSelectoresFecha() {
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+      const selectAno = document.getElementById("filtro-ano");
+      const selectMes = document.getElementById("filtro-mes");
+      if (idxAno === -1 || !selectAno) return;
+
+      const anos = [...new Set(filasGlobales.map(f => (f[idxAno] || "").toString().trim()).filter(Boolean))].sort().reverse();
+      selectAno.innerHTML = `<option value="">Todos los años</option>` + anos.map(a => `<option value="${a}">${a}</option>`).join("");
+
+      const ahora = new Date();
+      const anoActual = ahora.getFullYear().toString();
+      const mesActual = MESES_LISTA[ahora.getMonth()];
+      if (anos.includes(anoActual)) selectAno.value = anoActual;
+      if (selectMes) selectMes.value = mesActual;
+    }
+
+    function onCambioMesOAno() {
+      if (!document.getElementById("panel-calendario").classList.contains("hidden")) {
+        renderizarCalendario();
+      }
+      filtrarTabla();
+    }
+
+    function toggleCalendario() {
+      const panel = document.getElementById("panel-calendario");
+      panel.classList.toggle("hidden");
+      if (!panel.classList.contains("hidden")) {
+        renderizarCalendario();
+      }
+    }
+
+    function renderizarCalendario() {
+      const anoSel = parseInt(document.getElementById("filtro-ano").value) || new Date().getFullYear();
+      const mesTexto = document.getElementById("filtro-mes").value;
+      const mesIdx = mesTexto ? MESES_LISTA.indexOf(mesTexto) : new Date().getMonth();
+
+      document.getElementById("calendario-titulo").textContent = `${MESES_LISTA[mesIdx]} ${anoSel}`;
+
+      const primerDia = new Date(anoSel, mesIdx, 1).getDay(); // 0=Dom, 1=Lun...
+      const offset = (primerDia === 0) ? 6 : primerDia - 1; // Lunes = 0
+      const diasEnMes = new Date(anoSel, mesIdx + 1, 0).getDate();
+
+      let html = "<tr>";
+      for (let i = 0; i < offset; i++) html += "<td></td>";
+
+      for (let d = 1; d <= diasEnMes; d++) {
+        if ((offset + d - 1) % 7 === 0 && d !== 1) html += "</tr><tr>";
+        const activo = diaSeleccionado === d;
+        const clases = activo
+          ? "bg-slate-900 text-white font-bold"
+          : "hover:bg-slate-200 text-slate-700";
+        html += `<td class="p-0.5"><button type="button" onclick="seleccionarDiaCalendario(${d})" class="w-7 h-7 rounded-lg text-[11px] transition ${clases}">${d}</button></td>`;
+      }
+      html += "</tr>";
+      document.getElementById("calendario-dias").innerHTML = html;
+    }
+
+    function seleccionarDiaCalendario(dia) {
+      diaSeleccionado = dia;
+      document.getElementById("texto-btn-calendario").textContent = dia ? `Día ${dia}` : "Día";
+      renderizarCalendario();
+      filtrarTabla();
+    }
+
+    function limpiarFiltros() {
+      document.getElementById("buscador-gastos").value = "";
+      document.getElementById("filtro-ano").value = "";
+      document.getElementById("filtro-mes").value = "";
+      diaSeleccionado = null;
+      document.getElementById("texto-btn-calendario").textContent = "Día";
+      document.getElementById("panel-calendario").classList.add("hidden");
+      filtrarTabla();
+    }
+
     function filtrarTabla() {
       const q = (document.getElementById("buscador-gastos").value || "").toLowerCase().trim();
-      if (!q) {
+      const ano = document.getElementById("filtro-ano").value;
+      const mes = document.getElementById("filtro-mes").value;
+      const hayFiltros = q || ano || mes || diaSeleccionado !== null;
+
+      document.getElementById("btn-limpiar-filtros").classList.toggle("hidden", !hayFiltros);
+
+      const ahora = new Date();
+      const mesMostrar = mes || MESES_LISTA[ahora.getMonth()];
+      const anoMostrar = ano || ahora.getFullYear();
+      document.getElementById("titulo-mes-ano-actual").textContent = (mes || ano) ? `${mes || "TODOS LOS MESES"} · ${ano || "TODOS LOS AÑOS"}` : `${mesMostrar} ${anoMostrar}`;
+
+      if (!hayFiltros) {
         renderizarTabla(filasGlobales.slice(-30).reverse());
         return;
       }
-      const filtradas = filasGlobales.filter(f => f.join(" ").toLowerCase().includes(q));
+
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+      const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
+      const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
+
+      const filtradas = filasGlobales.filter(f => {
+        if (q && !f.join(" ").toLowerCase().includes(q)) return false;
+        if (ano && idxAno !== -1 && (f[idxAno] || "").toString().trim() !== ano) return false;
+        if (mes && idxMes !== -1 && (f[idxMes] || "").toString().trim().toUpperCase() !== mes) return false;
+        if (diaSeleccionado !== null && idxDia !== -1 && parseInt(f[idxDia], 10) !== diaSeleccionado) return false;
+        return true;
+      });
+
       renderizarTabla(filtradas.reverse());
     }
 
@@ -457,8 +711,95 @@
       if (window.innerWidth < 768) toggleSidebar();
     }
 
+    // Modal Detalle, Modificar y Eliminar
+    function abrirDetalleGasto(id) {
+      const idxId = headersGlobales.findIndex(h => h.trim().toUpperCase() === "ID");
+      const fila = filasGlobales.find(f => (f[idxId] || "").toString() === id.toString());
+      if (!fila) return;
+
+      let html = "";
+      headersGlobales.forEach((h, i) => {
+        if (i === idxId) return;
+        const val = fila[i] !== undefined && fila[i] !== "" ? fila[i] : "—";
+        html += `<div class="flex justify-between gap-4 py-1.5 border-b border-slate-100 last:border-0">
+          <span class="text-slate-400 font-medium">${h}</span>
+          <span class="text-slate-900 font-semibold text-right">${val}</span>
+        </div>`;
+      });
+
+      document.getElementById("contenido-detalle").innerHTML = html;
+      document.getElementById("btn-editar-detalle").onclick = () => editarDesdeDetalle(fila, id);
+      document.getElementById("btn-eliminar-detalle").onclick = () => eliminarGasto(id);
+      document.getElementById("modal-detalle").classList.remove("hidden");
+    }
+
+    function cerrarDetalleGasto() {
+      document.getElementById("modal-detalle").classList.add("hidden");
+    }
+
+    function editarDesdeDetalle(fila, id) {
+      cerrarDetalleGasto();
+      const getVal = (nombre) => {
+        const idx = headersGlobales.findIndex(h => h.toLowerCase().includes(nombre.toLowerCase()));
+        return idx !== -1 ? (fila[idx] || "").toString().trim() : "";
+      };
+
+      document.getElementById("modal-gasto-titulo").textContent = "Modificar Gasto";
+      document.getElementById("form-id").value = id;
+      document.getElementById("form-concepto").value = getVal("concepto");
+      document.getElementById("form-dia").value = getVal("día") || getVal("dia") || 1;
+      document.getElementById("form-cantidad").value = getVal("cantidad").replace(/[€\s]/g, "").replace(",", ".");
+      document.getElementById("form-mes").value = getVal("mes").toUpperCase() || "NOVIEMBRE";
+      document.getElementById("form-ano").value = getVal("año") || getVal("ano") || "2026";
+      document.getElementById("form-periodicidad").value = getVal("periodicidad") || "Mensual";
+      document.getElementById("form-cuota").value = getVal("cuota");
+      document.getElementById("form-notas").value = getVal("notas");
+
+      const pagadoVal = getVal("pagado").toUpperCase() === "SI" ? "SI" : "NO";
+      const btnPagado = [...document.querySelectorAll(".btn-pagado")].find(b => b.textContent.trim() === pagadoVal);
+      if (btnPagado) seleccionarPagado(pagadoVal, btnPagado);
+
+      document.getElementById("modal-gasto").classList.remove("hidden");
+    }
+
+    function eliminarGasto(id) {
+      const modal = document.getElementById("modal-confirmar-eliminar");
+      const btnConfirmar = document.getElementById("btn-confirmar-eliminar");
+      modal.classList.remove("hidden");
+
+      btnConfirmar.onclick = async () => {
+        btnConfirmar.disabled = true;
+        btnConfirmar.textContent = "Eliminando...";
+
+        try {
+          const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ token: tokenActual, action: "delete", id: id })
+          });
+          const json = await res.json();
+          if (json.status !== "ok") throw new Error(json.message || "Error al eliminar");
+
+          cerrarConfirmarEliminar();
+          cerrarDetalleGasto();
+          await cargarDatos(tokenActual);
+        } catch (err) {
+          alert("No se pudo eliminar: " + err.message);
+        } finally {
+          btnConfirmar.disabled = false;
+          btnConfirmar.textContent = "Sí, eliminar";
+        }
+      };
+    }
+
+    function cerrarConfirmarEliminar() {
+      document.getElementById("modal-confirmar-eliminar").classList.add("hidden");
+    }
+
     // Modal Añadir Gasto
     function abrirModalGasto() {
+      document.getElementById("modal-gasto-titulo").textContent = "Añadir Gasto";
+      document.getElementById("form-id").value = "";
       document.getElementById("modal-gasto").classList.remove("hidden");
     }
     function cerrarModalGasto() {
@@ -477,8 +818,11 @@
       btn.disabled = true;
       btn.textContent = "Guardando...";
 
+      const formId = document.getElementById("form-id").value;
       const payload = {
         token: tokenActual,
+        action: formId ? "edit" : "add",
+        id: formId,
         concepto: document.getElementById("form-concepto").value.trim(),
         pagado: document.getElementById("form-pagado").value,
         fechaPago: document.getElementById("form-fecha-pago").value,
