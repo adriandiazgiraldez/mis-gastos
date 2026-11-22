@@ -681,6 +681,8 @@
       const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
       const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
       const idxNotas = headersGlobales.findIndex(h => h.toLowerCase().includes("nota"));
+      const idxPeriodicidad = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
+      const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
       const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
       const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
       const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
@@ -764,6 +766,8 @@
       const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
       const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
       const idxNotas = headersGlobales.findIndex(h => h.toLowerCase().includes("nota"));
+      const idxPeriodicidad = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
+      const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
 
       let html = `<thead class="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
         <tr>
@@ -970,14 +974,31 @@
               ? `<span class="bg-slate-100 text-slate-500 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${mesAbrev} ${anoVal}</span>`
               : "";
 
+            const perVal = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim() : "";
+            const cuotaVal = idxCuota !== -1 ? (fila[idxCuota] || "").toString().trim() : "";
+            let etiquetaPer = "";
+            if (perVal && perVal.toLowerCase() !== "gasto puntual") {
+              etiquetaPer = cuotaVal ? `${perVal} (${cuotaVal})` : perVal;
+            } else if (cuotaVal) {
+              etiquetaPer = `Cuota ${cuotaVal}`;
+            }
+            const perTag = etiquetaPer
+              ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${etiquetaPer}</span>`
+              : "";
+
             bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="hover:bg-slate-50/80 transition cursor-pointer">
               <td class="py-3 px-4 whitespace-nowrap text-slate-500">${diaVal}</td>
               <td class="py-3 px-4 font-medium text-slate-900">
                 <div class="flex items-center justify-between w-full">
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    ${obtenerFavicon(conceptoVal)}
-                    <span class="truncate">${conceptoVal}</span>
-                    ${fechaTag}
+                  <div class="flex items-center min-w-0 flex-1">
+                    <div class="flex items-center gap-2.5 w-64 sm:w-80 shrink-0 pr-3">
+                      ${obtenerFavicon(conceptoVal)}
+                      <span class="truncate">${conceptoVal}</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                      ${perTag}
+                      ${fechaTag}
+                    </div>
                   </div>
                   ${renderBadgesFila(fila)}
                 </div>
@@ -1025,14 +1046,31 @@
                 ? `<span class="bg-slate-200/60 text-slate-500 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${mesHijaAbrev} ${anoHija}</span>`
                 : "";
 
+              const perHijaVal = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim() : "";
+              const cuotaHijaVal = idxCuota !== -1 ? (fila[idxCuota] || "").toString().trim() : "";
+              let etiquetaHijaPer = "";
+              if (perHijaVal && perHijaVal.toLowerCase() !== "gasto puntual") {
+                etiquetaHijaPer = cuotaHijaVal ? `${perHijaVal} (${cuotaHijaVal})` : perHijaVal;
+              } else if (cuotaHijaVal) {
+                etiquetaHijaPer = `Cuota ${cuotaHijaVal}`;
+              }
+              const perHijaTag = etiquetaHijaPer
+                ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${etiquetaHijaPer}</span>`
+                : "";
+
               bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} bg-slate-50/50 hover:bg-slate-100/70 transition cursor-pointer">` +
                 `<td class="py-2.5 px-4 whitespace-nowrap text-slate-300 text-[11px]"></td>` +
                 `<td class="py-2.5 px-4 font-medium text-slate-700 pl-8">` +
                   `<div class="flex items-center justify-between w-full">` +
-                    `<div class="flex items-center gap-2 min-w-0">` +
-                      `<span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>` +
-                      `<span class="truncate">${conceptoVal}</span>` +
-                      fechaHijaTag +
+                    `<div class="flex items-center min-w-0 flex-1">` +
+                      `<div class="flex items-center gap-2 w-64 sm:w-80 shrink-0 pr-3">` +
+                        `<span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>` +
+                        `<span class="truncate">${conceptoVal}</span>` +
+                      `</div>` +
+                      `<div class="flex items-center gap-2 shrink-0">` +
+                        perHijaTag +
+                        fechaHijaTag +
+                      `</div>` +
                     `</div>` +
                     renderBadgesFila(fila) +
                   `</div>` +
