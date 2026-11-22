@@ -3,12 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mis Gastos - Prueba de Conexión</title>
+  <title>Mis Gastos - Acceso Protegido</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; margin: 20px; background: #f4f6f8; color: #1f2937; }
-    h1 { font-size: 1.4rem; margin-bottom: 12px; }
+    .cabecera { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    h1 { font-size: 1.4rem; margin: 0; }
+    .panel-login { background: white; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 440px; margin-bottom: 16px; }
+    .panel-login p { margin-top: 0; color: #4b5563; font-size: 0.95rem; }
     #estado { padding: 10px 14px; border-radius: 6px; background: #e0f2fe; color: #0369a1; margin-bottom: 16px; font-weight: 500; }
     .error { background: #fee2e2 !important; color: #b91c1c !important; }
+    .oculto { display: none !important; }
+    .btn-salir { padding: 7px 12px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+    .btn-salir:hover { background: #f9fafb; }
     .tabla-contenedor { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
@@ -18,37 +25,104 @@
 </head>
 <body>
 
-  <h1>Mis Gastos (Entorno de Pruebas)</h1>
-  <div id="estado">Conectando con Google Sheets...</div>
-  <div class="tabla-contenedor">
+  <div class="cabecera">
+    <h1>Mis Gastos (Entorno de Pruebas)</h1>
+    <button id="btn-cerrar-sesion" class="btn-salir oculto" onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+
+  <div id="estado">Inicia sesión con tu cuenta de Google autorizada para ver los datos.</div>
+
+  <div id="panel-login" class="panel-login">
+    <p>Acceso restringido mediante Google Identity Services.</p>
+    <div id="google-btn"></div>
+  </div>
+
+  <div id="contenedor-datos" class="tabla-contenedor oculto">
     <table id="tabla-gastos"></table>
   </div>
 
   <script>
+    const CLIENT_ID = "413651977312-hee0sobihfts9daqodq57k6f1brosla7.apps.googleusercontent.com";
     const API_URL = "https://script.google.com/macros/s/AKfycbw03aA0xWvkaw2m5r50GHLRgZTucIsmC_8-UM43id4cnKG9tUXsCg-YhTFGgk7RgIgN/exec";
 
-    async function cargarDatos() {
+    let tokenActual = null;
+
+    window.onload = function () {
+      if (typeof google === "undefined" || !google.accounts || !google.accounts.id) {
+        mostrarError("No se pudo cargar el script de Google Identity Services.");
+        return;
+      }
+
+      google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback: manejarRespuestaGoogle
+      });
+
+      google.accounts.id.renderButton(
+        document.getElementById("google-btn"),
+        { theme: "outline", size: "large", text: "signin_with" }
+      );
+    };
+
+    function manejarRespuestaGoogle(response) {
+      if (!response || !response.credential) {
+        mostrarError("No se recibió credencial de Google.");
+        return;
+      }
+      tokenActual = response.credential;
+      cargarDatos(tokenActual);
+    }
+
+    function cerrarSesion() {
+      tokenActual = null;
+      if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.disableAutoSelect();
+      }
+      document.getElementById("contenedor-datos").classList.add("oculto");
+      document.getElementById("btn-cerrar-sesion").classList.add("oculto");
+      document.getElementById("panel-login").classList.remove("oculto");
+      const estadoDiv = document.getElementById("estado");
+      estadoDiv.classList.remove("error");
+      estadoDiv.textContent = "Sesión cerrada. Inicia sesión de nuevo para consultar los datos.";
+    }
+
+    function mostrarError(mensaje) {
+      const estadoDiv = document.getElementById("estado");
+      estadoDiv.classList.add("error");
+      estadoDiv.textContent = mensaje;
+    }
+
+    async function cargarDatos(token) {
       const estadoDiv = document.getElementById("estado");
       const tabla = document.getElementById("tabla-gastos");
+      const contenedorDatos = document.getElementById("contenedor-datos");
+      const panelLogin = document.getElementById("panel-login");
+      const btnSalir = document.getElementById("btn-cerrar-sesion");
+
+      estadoDiv.classList.remove("error");
+      estadoDiv.textContent = "Validando identidad y cargando datos desde Google Sheets...";
 
       try {
-        const respuesta = await fetch(API_URL);
+        const urlConToken = `${API_URL}?token=${encodeURIComponent(token)}`;
+        const respuesta = await fetch(urlConToken);
         const json = await respuesta.json();
 
         if (json.status !== "ok") {
-          throw new Error(json.message || "Error desconocido en Apps Script");
+          throw new Error(json.message || "Acceso denegado o error en Apps Script");
         }
 
-        estadoDiv.textContent = `Conexión exitosa. Mostrando últimos registros de ${json.total} filas totales.`;
+        panelLogin.classList.add("oculto");
+        btnSalir.classList.remove("oculto");
+        contenedorDatos.classList.remove("oculto");
 
-        // Construir cabeceras
+        estadoDiv.textContent = `Sesión iniciada como ${json.user}. Mostrando últimos registros de ${json.total} filas totales.`;
+
         let html = "<thead><tr>";
         json.headers.forEach(col => {
           html += `<th>${col}</th>`;
         });
         html += "</tr></thead><tbody>";
 
-        // Mostrar los últimos 25 registros invertidos (los más recientes arriba)
         const ultimasFilas = json.rows.slice(-25).reverse();
         ultimasFilas.forEach(fila => {
           html += "<tr>";
@@ -62,13 +136,14 @@
         tabla.innerHTML = html;
 
       } catch (err) {
-        estadoDiv.classList.add("error");
-        estadoDiv.textContent = "Error al cargar: " + err.message;
+        tokenActual = null;
+        contenedorDatos.classList.add("oculto");
+        btnSalir.classList.add("oculto");
+        panelLogin.classList.remove("oculto");
+        mostrarError("Error: " + err.message);
         console.error(err);
       }
     }
-
-    cargarDatos();
   </script>
 </body>
 </html>
