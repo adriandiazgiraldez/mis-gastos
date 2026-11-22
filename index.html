@@ -381,14 +381,57 @@
             <input type="number" id="form-ano" value="2026" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
           <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Periodicidad</label>
-            <select id="form-periodicidad" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
-              <option>Mensual</option><option>Anual</option><option>Gasto Puntual</option><option>Trimestral</option>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Periodicidad *</label>
+            <select id="form-periodicidad" onchange="actualizarCamposRecurrencia()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+              <option value="Gasto Puntual">Gasto Puntual</option>
+              <option value="Mensual">Mensual (cada mes)</option>
+              <option value="Bimensual">Bimensual (cada 2 meses)</option>
+              <option value="Trimestral">Trimestral (cada 3 meses)</option>
+              <option value="Semestral">Semestral (cada 6 meses)</option>
+              <option value="Anual">Anual (cada año)</option>
             </select>
           </div>
           <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Nº Cuota</label>
-            <input type="text" id="form-cuota" placeholder="Ej. 2/3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Nº Cuota inicial</label>
+            <input type="text" id="form-cuota" placeholder="Ej. 1 o 1/12" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+          </div>
+        </div>
+
+        <!-- Fila 3.5: Opciones de Repetición Futura (oculto en modificación o gasto puntual) -->
+        <div id="bloque-opciones-recurrencia" class="hidden p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-arrows-rotate text-indigo-500"></i> Repetición automática futura
+            </span>
+            <span class="text-[10px] text-slate-400 font-medium">Crea los registros futuros de este concepto</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end">
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 mb-1">Tipo de finalización</label>
+              <select id="form-tipo-fin-recurrencia" onchange="cambiarTipoFinRecurrencia()" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400">
+                <option value="indeterminado">Indeterminado (1 año vista)</option>
+                <option value="cuotas">Por total de cuotas</option>
+                <option value="fecha">Por fecha fin</option>
+              </select>
+            </div>
+            <div id="campo-rec-cuotas" class="hidden">
+              <label class="block text-[10px] font-semibold text-slate-500 mb-1">Total de cuotas</label>
+              <input type="number" id="form-total-cuotas" min="2" max="360" placeholder="Ej. 12, 24, 60..." class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400">
+            </div>
+            <div id="campo-rec-fecha" class="hidden grid grid-cols-2 gap-1.5">
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Mes fin</label>
+                <select id="form-rec-mes-fin" class="w-full bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-[11px] focus:outline-none">
+                  <option>ENERO</option><option>FEBRERO</option><option>MARZO</option><option>ABRIL</option>
+                  <option>MAYO</option><option>JUNIO</option><option>JULIO</option><option>AGOSTO</option>
+                  <option>SEPTIEMBRE</option><option>OCTUBRE</option><option>NOVIEMBRE</option><option>DICIEMBRE</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Año fin</label>
+                <input type="number" id="form-rec-ano-fin" value="2027" class="w-full bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs focus:outline-none">
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1489,6 +1532,7 @@
 
       const estaPagado = getVal("pagado").toUpperCase() === "SI";
       cambiarTogglePagado(estaPagado);
+      document.getElementById("bloque-opciones-recurrencia").classList.add("hidden");
 
       document.body.classList.add("overflow-hidden");
       document.getElementById("modal-gasto").classList.remove("hidden");
@@ -1682,18 +1726,42 @@
       });
     }
 
+    function actualizarCamposRecurrencia() {
+      const per = document.getElementById("form-periodicidad").value;
+      const esEdicion = !!document.getElementById("form-id").value;
+      const bloque = document.getElementById("bloque-opciones-recurrencia");
+      if (esEdicion || per === "Gasto Puntual") {
+        bloque.classList.add("hidden");
+      } else {
+        bloque.classList.remove("hidden");
+        cambiarTipoFinRecurrencia();
+      }
+    }
+
+    function cambiarTipoFinRecurrencia() {
+      const tipo = document.getElementById("form-tipo-fin-recurrencia").value;
+      const cCuotas = document.getElementById("campo-rec-cuotas");
+      const cFecha = document.getElementById("campo-rec-fecha");
+      cCuotas.classList.toggle("hidden", tipo !== "cuotas");
+      cFecha.classList.toggle("hidden", tipo !== "fecha");
+    }
+
     function abrirModalGasto() {
       document.getElementById("modal-gasto-titulo").textContent = "Añadir Gasto";
       document.getElementById("form-id").value = "";
       document.getElementById("form-concepto").value = "";
       document.getElementById("form-empresa").value = "";
+      document.getElementById("form-periodicidad").value = "Gasto Puntual";
+      document.getElementById("form-cuota").value = "";
       document.getElementById("form-icono").value = "";
       document.getElementById("form-url-icono").value = "";
       document.getElementById("form-file-pdf").value = "";
       document.getElementById("form-file-img").value = "";
       document.getElementById("texto-archivo-pdf").textContent = "Adjuntar PDF";
       document.getElementById("texto-archivo-img").textContent = "Hacer foto o elegir";
+      document.getElementById("bloque-opciones-recurrencia").classList.add("hidden");
       cambiarTogglePagado(false);
+      actualizarCamposRecurrencia();
       document.body.classList.add("overflow-hidden");
       document.getElementById("modal-gasto").classList.remove("hidden");
     }
@@ -1734,25 +1802,105 @@
       ]);
 
       const formId = document.getElementById("form-id").value;
+      const periodicidad = document.getElementById("form-periodicidad").value;
+      const mesInicialTexto = document.getElementById("form-mes").value;
+      const anoInicialNum = parseInt(document.getElementById("form-ano").value, 10);
+      const cuotaInicialTexto = document.getElementById("form-cuota").value.trim();
+
+      // Cálculo de instancias repetitivas si es nuevo gasto recurrente
+      const filasLote = [];
+      if (!formId && periodicidad !== "Gasto Puntual") {
+        const pasoMeses = {
+          "Mensual": 1,
+          "Bimensual": 2,
+          "Trimestral": 3,
+          "Semestral": 6,
+          "Anual": 12
+        }[periodicidad] || 1;
+
+        const tipoFin = document.getElementById("form-tipo-fin-recurrencia").value;
+        let totalIteraciones = 1;
+
+        // Extraer número de cuota inicial si tiene formato "1" o "1/12"
+        let cuotaNumActual = 1;
+        let cuotaTotalDenominador = null;
+        if (cuotaInicialTexto) {
+          const matchCuota = cuotaInicialTexto.match(/^(\d+)(?:\/(\d+))?$/);
+          if (matchCuota) {
+            cuotaNumActual = parseInt(matchCuota[1], 10) || 1;
+            if (matchCuota[2]) cuotaTotalDenominador = parseInt(matchCuota[2], 10);
+          }
+        }
+
+        if (tipoFin === "indeterminado") {
+          totalIteraciones = Math.floor(12 / pasoMeses); // 1 año vista
+        } else if (tipoFin === "cuotas") {
+          const totalCuotasInput = parseInt(document.getElementById("form-total-cuotas").value, 10);
+          if (totalCuotasInput && totalCuotasInput >= cuotaNumActual) {
+            totalIteraciones = totalCuotasInput - cuotaNumActual + 1;
+            cuotaTotalDenominador = totalCuotasInput;
+          }
+        } else if (tipoFin === "fecha") {
+          const mesFinTexto = document.getElementById("form-rec-mes-fin").value;
+          const anoFinNum = parseInt(document.getElementById("form-rec-ano-fin").value, 10);
+          const idxMesIni = MESES_LISTA.indexOf(mesInicialTexto);
+          const idxMesFin = MESES_LISTA.indexOf(mesFinTexto);
+          const diffMeses = ((anoFinNum - anoInicialNum) * 12) + (idxMesFin - idxMesIni);
+          if (diffMeses >= 0) {
+            totalIteraciones = Math.floor(diffMeses / pasoMeses) + 1;
+          }
+        }
+
+        if (totalIteraciones > 1) {
+          const idxMesIni = MESES_LISTA.indexOf(mesInicialTexto);
+          for (let k = 0; k < totalIteraciones; k++) {
+            const mesesTotales = idxMesIni + (k * pasoMeses);
+            const mesIdxIter = mesesTotales % 12;
+            const anoIter = anoInicialNum + Math.floor(mesesTotales / 12);
+            const numCuotaIter = cuotaNumActual + k;
+            const strCuota = cuotaTotalDenominador ? `${numCuotaIter}/${cuotaTotalDenominador}` : `${numCuotaIter}`;
+
+            filasLote.push({
+              favicon: valorFavicon,
+              concepto: conceptoGuardar,
+              empresa: document.getElementById("form-empresa").value.trim(),
+              pagado: k === 0 ? document.getElementById("form-pagado").value : "NO",
+              fechaPago: k === 0 ? document.getElementById("form-fecha-pago").value : "",
+              dia: document.getElementById("form-dia").value,
+              cantidad: document.getElementById("form-cantidad").value,
+              mes: MESES_LISTA[mesIdxIter],
+              ano: anoIter.toString(),
+              periodicidad: periodicidad,
+              cuota: strCuota,
+              notas: document.getElementById("form-notas").value.trim(),
+              pdfBase64: k === 0 ? pdfBase64 : null,
+              imgBase64: k === 0 ? imgBase64 : null,
+              imgMime: (k === 0 && fileImg) ? fileImg.type : ""
+            });
+          }
+        }
+      }
+
       const payload = {
         favicon: valorFavicon,
         token: tokenActual,
-        action: formId ? "edit" : "add",
+        action: formId ? "edit" : (filasLote.length > 0 ? "add_batch" : "add"),
         id: formId,
-        concepto: document.getElementById("form-concepto").value.trim(),
+        concepto: conceptoGuardar,
         empresa: document.getElementById("form-empresa").value.trim(),
         pagado: document.getElementById("form-pagado").value,
         fechaPago: document.getElementById("form-fecha-pago").value,
         dia: document.getElementById("form-dia").value,
         cantidad: document.getElementById("form-cantidad").value,
-        mes: document.getElementById("form-mes").value,
-        ano: document.getElementById("form-ano").value,
-        periodicidad: document.getElementById("form-periodicidad").value,
-        cuota: document.getElementById("form-cuota").value.trim(),
+        mes: mesInicialTexto,
+        ano: anoInicialNum.toString(),
+        periodicidad: periodicidad,
+        cuota: cuotaInicialTexto,
         notas: document.getElementById("form-notas").value.trim(),
         pdfBase64: pdfBase64,
         imgBase64: imgBase64,
-        imgMime: fileImg ? fileImg.type : ""
+        imgMime: fileImg ? fileImg.type : "",
+        batchRows: filasLote.length > 0 ? filasLote : undefined
       };
 
       try {
