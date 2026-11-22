@@ -260,7 +260,7 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Día *</label>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Día previsto / Fecha valor *</label>
             <input type="number" id="form-dia" min="0" max="31" value="1" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
           <div>
@@ -295,6 +295,24 @@
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Nº Cuota</label>
             <input type="text" id="form-cuota" placeholder="Ej. 2/3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Icono (opcional)</label>
+          <select id="form-icono" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+            <option value="">Automático (según empresa/concepto)</option>
+            <option value="fa-solid fa-car">🚗 Coche / Cochera</option>
+            <option value="fa-solid fa-house">🏠 Casa / Comunidad</option>
+            <option value="fa-solid fa-bolt">⚡ Luz / Electricidad</option>
+            <option value="fa-solid fa-droplet">💧 Agua</option>
+            <option value="fa-solid fa-fire">🔥 Gas</option>
+            <option value="fa-solid fa-wifi">📶 Internet / Teléfono</option>
+            <option value="fa-solid fa-shield-halved">🛡️ Seguro</option>
+            <option value="fa-solid fa-landmark">🏛️ Banco / Préstamo / Impuesto</option>
+            <option value="fa-solid fa-cart-shopping">🛒 Compras / Supermercado</option>
+            <option value="fa-solid fa-heart-pulse">❤️ Salud / Médico</option>
+            <option value="fa-solid fa-wrench">🔧 Mantenimiento / Taller</option>
+          </select>
         </div>
 
         <div>
@@ -538,8 +556,23 @@
 
       const esPagado = (fila) => idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
 
-      const pendientes = filas.filter(f => !esPagado(f));
-      const pagados = filas.filter(f => esPagado(f));
+      const valorDiaOrden = (fila) => {
+        const d = idxDia !== -1 ? parseInt(fila[idxDia], 10) : 0;
+        if (isNaN(d)) return 99;
+        if (d === 30) return -2;
+        if (d === 31) return -1;
+        return d;
+      };
+      const ordenarPorDia = (a, b) => {
+        const diffDia = valorDiaOrden(a) - valorDiaOrden(b);
+        if (diffDia !== 0) return diffDia;
+        const cA = idxConcepto !== -1 ? (a[idxConcepto] || "").toString().trim() : "";
+        const cB = idxConcepto !== -1 ? (b[idxConcepto] || "").toString().trim() : "";
+        return cA.localeCompare(cB, "es", { sensitivity: "base" });
+      };
+
+      const pendientes = filas.filter(f => !esPagado(f)).sort(ordenarPorDia);
+      const pagados = filas.filter(f => esPagado(f)).sort(ordenarPorDia);
 
       const totalPendiente = pendientes.reduce((acc, f) => acc + parsearCantidad(f), 0);
       const totalPagado = pagados.reduce((acc, f) => acc + parsearCantidad(f), 0);
@@ -569,9 +602,44 @@
           const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
           const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
 
+          const obtenerFavicon = (texto) => {
+            const t = (texto || "").trim().toUpperCase();
+            const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
+            if (iconosGuardados[t]) {
+              return `<i class="${iconosGuardados[t]} text-slate-500 w-4 text-center shrink-0"></i>`;
+            }
+            const mapa = {
+              "BBVA": "bbva.es",
+              "CORTE INGL": "elcorteingles.es",
+              "DIGI": "digimobil.es",
+              "FIATC": "fiatc.es",
+              "AURA": "auraseguros.com",
+              "APTHUELVA": "apthuelva.es",
+              "ENDESA": "endesa.com",
+              "IBERDROLA": "iberdrola.es",
+              "NATURGY": "naturgy.es",
+              "VODAFONE": "vodafone.es",
+              "MOVISTAR": "movistar.es",
+              "ORANGE": "orange.es",
+              "AMAZON": "amazon.es",
+              "NETFLIX": "netflix.com",
+              "SPOTIFY": "spotify.com"
+            };
+            const clave = Object.keys(mapa).find(k => t.includes(k));
+            if (clave) {
+              return `<img src="https://www.google.com/s2/favicons?domain=${mapa[clave]}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
+            }
+            return `<i class="fa-regular fa-building text-slate-300 w-4 text-center shrink-0"></i>`;
+          };
+
           bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="hover:bg-slate-50/80 transition cursor-pointer">
             <td class="py-3 px-4 whitespace-nowrap text-slate-500">${diaVal}</td>
-            <td class="py-3 px-4 font-medium text-slate-900">${conceptoVal}</td>
+            <td class="py-3 px-4 font-medium text-slate-900">
+              <div class="flex items-center gap-2.5">
+                ${obtenerFavicon(conceptoVal)}
+                <span>${conceptoVal}</span>
+              </div>
+            </td>
             <td class="py-3 px-4 whitespace-nowrap text-right font-semibold ${colorTexto}">${cantVal}</td>
           </tr>`;
         });
@@ -781,6 +849,8 @@
       document.getElementById("form-periodicidad").value = getVal("periodicidad") || "Mensual";
       document.getElementById("form-cuota").value = getVal("cuota");
       document.getElementById("form-notas").value = getVal("notas");
+      const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
+      document.getElementById("form-icono").value = iconosGuardados[getVal("concepto").toUpperCase()] || "";
 
       const pagadoVal = getVal("pagado").toUpperCase() === "SI" ? "SI" : "NO";
       const btnPagado = [...document.querySelectorAll(".btn-pagado")].find(b => b.textContent.trim() === pagadoVal);
@@ -844,6 +914,16 @@
       const btn = document.getElementById("btn-guardar-gasto");
       btn.disabled = true;
       btn.textContent = "Guardando...";
+
+      const conceptoGuardar = document.getElementById("form-concepto").value.trim();
+      const iconoElegido = document.getElementById("form-icono").value;
+      const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
+      if (iconoElegido) {
+        iconosGuardados[conceptoGuardar.toUpperCase()] = iconoElegido;
+      } else {
+        delete iconosGuardados[conceptoGuardar.toUpperCase()];
+      }
+      localStorage.setItem("mis_gastos_iconos", JSON.stringify(iconosGuardados));
 
       const formId = document.getElementById("form-id").value;
       const payload = {
