@@ -870,21 +870,46 @@
 
         let contadorGrupo = 0;
         gruposOrdenados.forEach(item => {
-          const renderIconoNota = (fila) => {
-            if (idxNotas === -1) return "";
-            const nota = (fila[idxNotas] || "").toString().trim();
-            if (!nota) return "";
-            const notaEscapada = nota.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-            return `<div class="relative group/nota inline-flex items-center shrink-0" onclick="event.stopPropagation()">
-              <i class="fa-solid fa-note-sticky text-amber-500 hover:text-amber-600 text-xs cursor-help"></i>
-              <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/nota:flex flex-col items-center z-30 pointer-events-none">
-                <div class="bg-slate-900 text-white text-[11px] font-normal rounded-2xl py-2 px-3.5 w-max max-w-[320px] min-w-[200px] shadow-xl whitespace-normal break-words text-left leading-snug">
-                  <span class="font-bold text-amber-400 block mb-1"><i class="fa-solid fa-note-sticky text-[10px] mr-1"></i>Nota:</span>
-                  <span>${notaEscapada}</span>
-                </div>
-                <div class="w-2.5 h-2.5 bg-slate-900 rotate-45 -mt-1 shadow-xs"></div>
-              </div>
-            </div>`;
+          const renderBadgesFila = (fila) => {
+            let htmlBadges = "";
+
+            // Icono de Nota flotante
+            if (idxNotas !== -1) {
+              const nota = (fila[idxNotas] || "").toString().trim();
+              if (nota) {
+                const notaEscapada = nota.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+                htmlBadges += `<div class="relative group/nota inline-flex items-center shrink-0" onclick="event.stopPropagation()">
+                  <i class="fa-solid fa-note-sticky text-amber-500 hover:text-amber-600 text-xs cursor-help"></i>
+                  <div class="absolute bottom-full right-0 mb-2 hidden group-hover/nota:flex flex-col items-end z-30 pointer-events-none">
+                    <div class="bg-slate-900 text-white text-[11px] font-normal rounded-2xl py-2 px-3.5 w-max max-w-[320px] min-w-[200px] shadow-xl whitespace-normal break-words text-left leading-snug">
+                      <span class="font-bold text-amber-400 block mb-1"><i class="fa-solid fa-note-sticky text-[10px] mr-1"></i>Nota:</span>
+                      <span>${notaEscapada}</span>
+                    </div>
+                    <div class="w-2.5 h-2.5 bg-slate-900 rotate-45 -mt-1 mr-1 shadow-xs"></div>
+                  </div>
+                </div>`;
+              }
+            }
+
+            // Iconos de PDF e Imagen clicables
+            headersGlobales.forEach((h, i) => {
+              const val = (fila[i] || "").toString().trim();
+              if (!val.startsWith("http")) return;
+              const colLower = h.toLowerCase();
+              if (colLower.includes("pdf")) {
+                const urlSegura = val.replace(/'/g, "\\'");
+                htmlBadges += `<button type="button" onclick="event.stopPropagation(); abrirVisorAdjunto('${urlSegura}', 'Documento PDF', 'pdf')" title="Ver PDF" class="text-rose-500 hover:text-rose-600 hover:scale-110 transition shrink-0 p-0.5">
+                  <i class="fa-solid fa-file-pdf text-xs"></i>
+                </button>`;
+              } else if (colLower.includes("captura") || colLower.includes("imagen") || colLower.includes("foto")) {
+                const urlSegura = val.replace(/'/g, "\\'");
+                htmlBadges += `<button type="button" onclick="event.stopPropagation(); abrirVisorAdjunto('${urlSegura}', 'Captura de recibo', 'imagen')" title="Ver captura" class="text-sky-500 hover:text-sky-600 hover:scale-110 transition shrink-0 p-0.5">
+                  <i class="fa-solid fa-image text-xs"></i>
+                </button>`;
+              }
+            });
+
+            return htmlBadges ? `<div class="flex items-center gap-2 shrink-0 ml-auto pl-2">${htmlBadges}</div>` : "";
           };
 
           if (!item.esGrupo || item.filas.length === 1) {
@@ -905,11 +930,13 @@
             bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="hover:bg-slate-50/80 transition cursor-pointer">
               <td class="py-3 px-4 whitespace-nowrap text-slate-500">${diaVal}</td>
               <td class="py-3 px-4 font-medium text-slate-900">
-                <div class="flex items-center gap-2.5">
-                  ${obtenerFavicon(conceptoVal)}
-                  <span>${conceptoVal}</span>
-                  ${fechaTag}
-                  ${renderIconoNota(fila)}
+                <div class="flex items-center justify-between w-full">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    ${obtenerFavicon(conceptoVal)}
+                    <span class="truncate">${conceptoVal}</span>
+                    ${fechaTag}
+                  </div>
+                  ${renderBadgesFila(fila)}
                 </div>
               </td>
               <td class="py-3 px-4 whitespace-nowrap text-right font-semibold ${colorTexto}">${cantVal}</td>
@@ -955,18 +982,20 @@
                 ? `<span class="bg-slate-200/60 text-slate-500 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${mesHijaAbrev} ${anoHija}</span>`
                 : "";
 
-              bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} bg-slate-50/50 hover:bg-slate-100/70 transition cursor-pointer">
-                <td class="py-2.5 px-4 whitespace-nowrap text-slate-300 text-[11px]"></td>
-                <td class="py-2.5 px-4 font-medium text-slate-700 pl-8">
-                  <div class="flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>
-                    <span>${conceptoVal}</span>
-                    ${fechaHijaTag}
-                    ${renderIconoNota(fila)}
-                  </div>
-                </td>
-                <td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-[11px]">${cantVal}</td>
-              </tr>`;
+              bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} bg-slate-50/50 hover:bg-slate-100/70 transition cursor-pointer">` +
+                `<td class="py-2.5 px-4 whitespace-nowrap text-slate-300 text-[11px]"></td>` +
+                `<td class="py-2.5 px-4 font-medium text-slate-700 pl-8">` +
+                  `<div class="flex items-center justify-between w-full">` +
+                    `<div class="flex items-center gap-2 min-w-0">` +
+                      `<span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>` +
+                      `<span class="truncate">${conceptoVal}</span>` +
+                      fechaHijaTag +
+                    `</div>` +
+                    renderBadgesFila(fila) +
+                  `</div>` +
+                `</td>` +
+                `<td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-[11px]">${cantVal}</td>` +
+              `</tr>`;
             });
           }
         });
@@ -1373,14 +1402,14 @@
       // Bloque Destacado de Adjuntos (PDF / Captura)
       if (adjuntos.length > 0) {
         html += `
-          <div class="p-3 bg-slate-900 rounded-2xl text-white">
-            <span class="text-[10px] uppercase tracking-wider font-bold text-slate-300 block mb-2">Archivos adjuntos</span>
+          <div class="p-3 bg-slate-100 border border-slate-200/90 rounded-2xl">
+            <span class="text-[10px] uppercase tracking-wider font-bold text-slate-500 block mb-2">Archivos adjuntos</span>
             <div class="flex flex-wrap items-center gap-2">
               ${adjuntos.map(adj => `
-                <button type="button" onclick="abrirVisorAdjunto('${adj.url}', '${adj.titulo}', '${adj.tipo}')" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/15 px-3 py-2 rounded-xl text-xs font-semibold transition active:scale-95">
-                  <i class="${adj.tipo === 'pdf' ? 'fa-solid fa-file-pdf text-rose-400' : 'fa-solid fa-image text-sky-400'} text-sm"></i>
+                <button type="button" onclick="abrirVisorAdjunto('${adj.url}', '${adj.titulo}', '${adj.tipo}')" class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition active:scale-95 shadow-2xs">
+                  <i class="${adj.tipo === 'pdf' ? 'fa-solid fa-file-pdf text-rose-500' : 'fa-solid fa-image text-sky-500'} text-sm"></i>
                   <span>${adj.titulo}</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-300 ml-1"></i>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400 ml-1"></i>
                 </button>
               `).join("")}
             </div>
@@ -1419,6 +1448,7 @@
       }
 
       iframe.src = urlEmbed;
+      document.body.classList.add("overflow-hidden");
       modal.classList.remove("hidden");
     }
 
@@ -1427,6 +1457,11 @@
       const iframe = document.getElementById("visor-iframe");
       iframe.src = "";
       modal.classList.add("hidden");
+      // Restaurar el scroll solo si el modal de detalle no sigue abierto
+      const detalleAbierto = !document.getElementById("modal-detalle").classList.contains("hidden");
+      if (!detalleAbierto) {
+        document.body.classList.remove("overflow-hidden");
+      }
     }
 
     function editarDesdeDetalle(fila, id) {
