@@ -449,15 +449,20 @@
 
   <!-- ==================== MODAL DETALLE CONCEPTO ==================== -->
   <div id="modal-detalle" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-200 w-full max-w-md rounded-3xl shadow-xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-        <h3 class="text-sm font-bold text-slate-900">Detalle del Gasto</h3>
-        <button onclick="cerrarDetalleGasto()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg">
+    <div class="bg-white border border-slate-200 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-6 py-3.5 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Detalle del Gasto</h3>
+        </div>
+        <button onclick="cerrarDetalleGasto()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg transition">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <div id="contenido-detalle" class="p-6 space-y-2.5 text-xs max-h-[65vh] overflow-y-auto"></div>
-      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between gap-2">
+      <div id="contenido-detalle" class="p-6 space-y-4 text-xs"></div>
+      <div class="px-6 py-3.5 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between gap-2">
         <button type="button" id="btn-eliminar-detalle" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition">
           <i class="fa-regular fa-trash-can"></i> Eliminar
         </button>
@@ -1267,36 +1272,132 @@
       const fila = filasGlobales.find(f => (f[idxId] || "").toString() === id.toString());
       if (!fila) return;
 
-      let html = "";
+      const getCol = (clave) => {
+        const i = headersGlobales.findIndex(h => h.toLowerCase().includes(clave));
+        return i !== -1 && fila[i] !== undefined ? fila[i].toString().trim() : "";
+      };
+
+      const concepto = getCol("concepto");
+      const empresa = getCol("empresa");
+      const cantRaw = getCol("cantidad");
+      const cantFmt = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0,00 €";
+      const pagado = getCol("pagado").toUpperCase() === "SI";
+      const dia = getCol("día") || getCol("dia");
+      const mes = getCol("mes");
+      const ano = getCol("año") || getCol("ano");
+      const periodicidad = getCol("periodicidad");
+      const cuota = getCol("cuota");
+      const fechaPago = getCol("fecha");
+      const notas = getCol("nota");
+
+      // Buscar adjuntos
+      const adjuntos = [];
+      headersGlobales.forEach((h, i) => {
+        const val = (fila[i] || "").toString().trim();
+        if (!val.startsWith("http")) return;
+        const colLower = h.toLowerCase();
+        if (colLower.includes("pdf")) {
+          adjuntos.push({ tipo: "pdf", titulo: "Documento PDF", url: val });
+        } else if (colLower.includes("captura") || colLower.includes("imagen") || colLower.includes("foto")) {
+          adjuntos.push({ tipo: "imagen", titulo: "Captura de recibo", url: val });
+        }
+      });
+
+      // Cabecera destacada (Concepto, Empresa, Pagado y Cantidad)
+      let html = `
+        <div class="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-50 border border-slate-200/80 rounded-2xl">
+          <div class="flex items-center gap-3">
+            <div class="shrink-0 text-lg">${obtenerHtmlIconoConcepto(concepto)}</div>
+            <div>
+              <h4 class="text-sm font-bold text-slate-900 leading-snug">${concepto}</h4>
+              ${empresa ? `<p class="text-[11px] text-slate-500 font-medium">${empresa}</p>` : ""}
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${pagado ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}">
+              <i class="fa-solid ${pagado ? "fa-circle-check" : "fa-circle-xmark"}"></i>
+              ${pagado ? "Pagado" : "Pendiente"}
+            </span>
+            <div class="text-lg font-bold text-slate-900 mt-0.5">${cantFmt}</div>
+          </div>
+        </div>
+      `;
+
+      // Cuadrícula compacta de datos existentes (3 columnas)
+      const campos = [
+        { label: "Día previsto", val: dia },
+        { label: "Mes / Año", val: (mes && ano) ? `${mes} ${ano}` : (mes || ano) },
+        { label: "Periodicidad", val: periodicidad },
+        { label: "Nº Cuota", val: cuota },
+        { label: "Fecha de pago", val: fechaPago }
+      ];
+
+      // Añadir otros campos dinámicos que no sean los estándar ni estén vacíos
       headersGlobales.forEach((h, i) => {
         if (i === idxId) return;
         const nombreCol = h.toLowerCase().trim();
-        let val = fila[i] !== undefined && fila[i] !== "" ? fila[i] : "—";
-
-        if ((nombreCol.includes("pdf") || nombreCol.includes("captura") || nombreCol.includes("imagen")) && val.startsWith("http")) {
-          const esPdf = nombreCol.includes("pdf");
-          const icono = esPdf ? "fa-solid fa-file-pdf text-rose-500" : "fa-solid fa-image text-sky-500";
-          const etiqueta = esPdf ? "Ver PDF" : "Ver Captura";
-          const tipo = esPdf ? "pdf" : "imagen";
-          val = `<button type="button" onclick="abrirVisorAdjunto('${val}', '${etiqueta}', '${tipo}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-semibold transition active:scale-95 shadow-2xs">
-            <i class="${icono}"></i> ${etiqueta}
-          </button>`;
+        if (["id", "concepto", "empresa", "cantidad", "pagado", "día", "dia", "mes", "año", "ano", "periodicidad", "cuota", "fecha", "fecha de pago", "nota", "notas", "pdf", "captura", "imagen", "favicon"].some(k => nombreCol.includes(k))) return;
+        const valExtra = (fila[i] || "").toString().trim();
+        if (valExtra && valExtra !== "—") {
+          campos.push({ label: h, val: valExtra });
         }
-
-        html += `<div class="flex justify-between items-center gap-4 py-1.5 border-b border-slate-100 last:border-0">
-          <span class="text-slate-400 font-medium">${h}</span>
-          <span class="text-slate-900 font-semibold text-right">${val}</span>
-        </div>`;
       });
+
+      const camposConDato = campos.filter(c => c.val && c.val !== "—");
+
+      if (camposConDato.length > 0) {
+        html += `<div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">`;
+        camposConDato.forEach(c => {
+          html += `
+            <div class="bg-slate-50/70 border border-slate-100 rounded-xl px-3 py-2">
+              <span class="block text-[10px] uppercase font-semibold text-slate-400 tracking-wider">${c.label}</span>
+              <span class="text-xs font-semibold text-slate-800 break-words">${c.val}</span>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      // Bloque Notas (si existen)
+      if (notas && notas !== "—") {
+        html += `
+          <div class="p-3 bg-amber-50/60 border border-amber-200/60 rounded-xl">
+            <span class="text-[10px] uppercase font-bold text-amber-700 tracking-wider block mb-0.5">
+              <i class="fa-solid fa-note-sticky mr-1"></i>Notas
+            </span>
+            <p class="text-xs text-amber-950 font-medium whitespace-pre-wrap leading-relaxed">${notas}</p>
+          </div>
+        `;
+      }
+
+      // Bloque Destacado de Adjuntos (PDF / Captura)
+      if (adjuntos.length > 0) {
+        html += `
+          <div class="p-3 bg-slate-900 rounded-2xl text-white">
+            <span class="text-[10px] uppercase tracking-wider font-bold text-slate-300 block mb-2">Archivos adjuntos</span>
+            <div class="flex flex-wrap items-center gap-2">
+              ${adjuntos.map(adj => `
+                <button type="button" onclick="abrirVisorAdjunto('${adj.url}', '${adj.titulo}', '${adj.tipo}')" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/15 px-3 py-2 rounded-xl text-xs font-semibold transition active:scale-95">
+                  <i class="${adj.tipo === 'pdf' ? 'fa-solid fa-file-pdf text-rose-400' : 'fa-solid fa-image text-sky-400'} text-sm"></i>
+                  <span>${adj.titulo}</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-300 ml-1"></i>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
 
       document.getElementById("contenido-detalle").innerHTML = html;
       document.getElementById("btn-editar-detalle").onclick = () => editarDesdeDetalle(fila, id);
       document.getElementById("btn-eliminar-detalle").onclick = () => eliminarGasto(id);
+      document.body.classList.add("overflow-hidden");
       document.getElementById("modal-detalle").classList.remove("hidden");
     }
 
     function cerrarDetalleGasto() {
       document.getElementById("modal-detalle").classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
     }
 
     function abrirVisorAdjunto(urlDrive, titulo, tipo) {
