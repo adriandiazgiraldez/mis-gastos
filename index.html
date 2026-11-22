@@ -675,11 +675,22 @@
           return `<i class="fa-regular fa-building text-slate-300 w-4 text-center shrink-0"></i>`;
         };
 
+        const mapaConceptoEmpresa = {};
+        if (idxConcepto !== -1 && idxEmpresa !== -1) {
+          filasGlobales.forEach(f => {
+            const c = (f[idxConcepto] || "").toString().trim().toUpperCase();
+            const emp = (f[idxEmpresa] || "").toString().trim();
+            if (c && emp) mapaConceptoEmpresa[c] = emp;
+          });
+        }
+
         const gruposOrdenados = [];
         const mapaEmpresas = {};
 
         lista.forEach((fila) => {
-          const empresa = idxEmpresa !== -1 ? (fila[idxEmpresa] || "").toString().trim() : "";
+          const conceptoClave = idxConcepto !== -1 ? (fila[idxConcepto] || "").toString().trim().toUpperCase() : "";
+          const empresaPropia = idxEmpresa !== -1 ? (fila[idxEmpresa] || "").toString().trim() : "";
+          const empresa = empresaPropia || mapaConceptoEmpresa[conceptoClave] || "";
           if (empresa) {
             const claveEmp = empresa.toUpperCase();
             if (!mapaEmpresas[claveEmp]) {
