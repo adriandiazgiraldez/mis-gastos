@@ -46,16 +46,45 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbw03aA0xWvkaw2m5r50GHLRgZTucIsmC_8-UM43id4cnKG9tUXsCg-YhTFGgk7RgIgN/exec";
 
     let tokenActual = null;
+    const CLAVE_TOKEN = "mis_gastos_token";
+
+    function tokenEsValido(token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+        return payload.exp && (payload.exp * 1000 > Date.now());
+      } catch (e) {
+        return false;
+      }
+    }
 
     window.onload = function () {
+      const dominiosOficiales = [
+        "adriandiazgiraldez.github.io"
+      ];
+      // Si NO estás en GitHub Pages, entra directo (OneCompiler / local)
+      const esEntornoPruebas = !dominiosOficiales.includes(window.location.hostname);
+
+      if (esEntornoPruebas) {
+        tokenActual = "misgastos2026";
+        cargarDatos(tokenActual);
+        return;
+      }
+
+      const tokenGuardado = localStorage.getItem(CLAVE_TOKEN);
+      if (tokenGuardado && tokenEsValido(tokenGuardado)) {
+        tokenActual = tokenGuardado;
+        cargarDatos(tokenActual);
+      }
+
       if (typeof google === "undefined" || !google.accounts || !google.accounts.id) {
-        mostrarError("No se pudo cargar el script de Google Identity Services.");
+        if (!tokenActual) mostrarError("No se pudo cargar el script de Google Identity Services.");
         return;
       }
 
       google.accounts.id.initialize({
         client_id: CLIENT_ID,
-        callback: manejarRespuestaGoogle
+        callback: manejarRespuestaGoogle,
+        auto_select: true
       });
 
       google.accounts.id.renderButton(
@@ -70,11 +99,13 @@
         return;
       }
       tokenActual = response.credential;
+      localStorage.setItem(CLAVE_TOKEN, tokenActual);
       cargarDatos(tokenActual);
     }
 
     function cerrarSesion() {
       tokenActual = null;
+      localStorage.removeItem(CLAVE_TOKEN);
       if (window.google && google.accounts && google.accounts.id) {
         google.accounts.id.disableAutoSelect();
       }
@@ -137,6 +168,7 @@
 
       } catch (err) {
         tokenActual = null;
+        localStorage.removeItem(CLAVE_TOKEN);
         contenedorDatos.classList.add("oculto");
         btnSalir.classList.add("oculto");
         panelLogin.classList.remove("oculto");
@@ -144,6 +176,7 @@
         console.error(err);
       }
     }
-  </script>
+
+    </script>
 </body>
 </html>
