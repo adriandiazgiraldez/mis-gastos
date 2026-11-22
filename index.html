@@ -496,12 +496,12 @@
       const anoSel = document.getElementById("filtro-ano")?.value || ahora.getFullYear().toString();
       const mesSel = document.getElementById("filtro-mes")?.value || MESES_LISTA[ahora.getMonth()];
       const diaHoy = ahora.getDate();
-      const diaProximo = diaHoy + 1;
 
       let pendDia = 0;
       let pendProximo = 0;
       let pendMes = 0;
       let totalMes = 0;
+      const pendientesMes = [];
 
       if (idxCant !== -1) {
         filasGlobales.forEach(fila => {
@@ -509,7 +509,7 @@
           const mesFila = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
           if (anoFila !== anoSel || mesFila !== mesSel) return;
 
-          const raw = (fila[idxCant] || "0").toString().replace(/[€\s.]/g, "").replace(",", ".");
+          const raw = (fila[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
           const num = parseFloat(raw) || 0;
           const esPagado = idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
           const diaFila = idxDia !== -1 ? parseInt(fila[idxDia], 10) : -1;
@@ -518,9 +518,18 @@
           if (!esPagado) {
             pendMes += num;
             if (diaFila === diaHoy) pendDia += num;
-            if (diaFila === diaProximo) pendProximo += num;
+            if (!isNaN(diaFila) && diaFila > diaHoy) {
+              pendientesMes.push({ dia: diaFila, num });
+            }
           }
         });
+
+        if (pendientesMes.length > 0) {
+          const proximoDia = Math.min(...pendientesMes.map(g => g.dia));
+          pendProximo = pendientesMes
+            .filter(g => g.dia === proximoDia)
+            .reduce((acc, g) => acc + g.num, 0);
+        }
       }
 
       const fmt = (n) => n.toFixed(2).replace(".", ",") + " €";
@@ -550,7 +559,7 @@
 
       const parsearCantidad = (fila) => {
         if (idxCant === -1) return 0;
-        const raw = (fila[idxCant] || "0").toString().replace(/[€\s.]/g, "").replace(",", ".");
+        const raw = (fila[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
         return parseFloat(raw) || 0;
       };
 
