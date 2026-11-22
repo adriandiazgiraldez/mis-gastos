@@ -11,6 +11,45 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     .oculto { display: none !important; }
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm 10mm;
+      }
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 11px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      aside, header, #sidebar-overlay, #btn-guardar-gasto, .no-print,
+      #buscador-gastos, #contenedor-filtro-concepto, #filtro-ano, #filtro-mes,
+      #btn-calendario, #btn-limpiar-filtros, #toggle-ver-todo, #panel-calendario,
+      #modal-gasto, #modal-detalle, #modal-confirmar-eliminar, #modal-visor,
+      button {
+        display: none !important;
+      }
+      #app-principal {
+        display: block !important;
+      }
+      main {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .shadow-2xs, .shadow-sm, .shadow-xl, .shadow-md {
+        box-shadow: none !important;
+        border-color: #cbd5e1 !important;
+      }
+      tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      /* Desplegar conceptos agrupados al imprimir */
+      [class*="fila-hija-"] {
+        display: table-row !important;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-200/70 text-slate-900 antialiased min-h-screen">
@@ -165,9 +204,20 @@
               <!-- Fila Inferior: Desplegables, Switch iOS "Ver Todo" y Botón Limpiar -->
               <div class="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
                 <div class="flex flex-wrap items-center gap-2">
-                  <select id="filtro-concepto" onchange="filtrarTabla()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-400 max-w-[200px] truncate">
-                    <option value="">Todos los conceptos</option>
-                  </select>
+                  <!-- Custom Dropdown con Favicon para Conceptos -->
+                  <div class="relative inline-block text-left" id="contenedor-filtro-concepto">
+                    <input type="hidden" id="filtro-concepto" value="">
+                    <button type="button" onclick="toggleDropdownFiltroConcepto(event)" id="btn-filtro-concepto" class="inline-flex items-center justify-between gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 max-w-[210px] transition">
+                      <div class="flex items-center gap-2 truncate">
+                        <span id="filtro-concepto-icono" class="shrink-0"><i class="fa-solid fa-layer-group text-slate-400 text-xs"></i></span>
+                        <span id="filtro-concepto-texto" class="truncate">Todos los conceptos</span>
+                      </div>
+                      <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                    </button>
+                    <div id="dropdown-menu-filtro-concepto" class="hidden absolute left-0 mt-1 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-slate-100">
+                      <!-- Opciones generadas dinámicamente con icono -->
+                    </div>
+                  </div>
 
                   <select id="filtro-ano" onchange="onCambioMesOAno()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-400">
                     <option value="">Todos los años</option>
@@ -190,13 +240,28 @@
                   </button>
                 </div>
 
-                <!-- Toggle tipo iOS para ver todo (Todos los años y meses) -->
-                <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                  <span class="text-[11px] font-semibold text-slate-600 select-none">Ver todo</span>
-                  <label class="inline-flex items-center cursor-pointer select-none">
-                    <input type="checkbox" id="toggle-ver-todo" onchange="toggleVerTodo(this.checked)" class="sr-only peer">
-                    <div class="relative w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:bg-slate-900 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div>
-                  </label>
+                <!-- Botones PDF, Imprimir y Toggle iOS -->
+                <div class="flex items-center gap-2">
+                  <!-- Botón Descargar PDF -->
+                  <button type="button" onclick="descargarTablaPDF()" title="Descargar PDF filtrado" class="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 rounded-xl px-3 py-1.5 text-xs font-semibold transition active:scale-95 shadow-2xs">
+                    <i class="fa-regular fa-file-pdf text-rose-500"></i>
+                    <span>PDF</span>
+                  </button>
+
+                  <!-- Botón Imprimir (Ctrl + P) -->
+                  <button type="button" onclick="imprimirTabla()" title="Imprimir (Ctrl+P)" class="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 text-xs font-semibold transition active:scale-95 shadow-2xs">
+                    <i class="fa-solid fa-print text-slate-500"></i>
+                    <span>Imprimir</span>
+                  </button>
+
+                  <!-- Toggle tipo iOS para ver todo -->
+                  <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                    <span class="text-[11px] font-semibold text-slate-600 select-none">Ver todo</span>
+                    <label class="inline-flex items-center cursor-pointer select-none">
+                      <input type="checkbox" id="toggle-ver-todo" onchange="toggleVerTodo(this.checked)" class="sr-only peer">
+                      <div class="relative w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:bg-slate-900 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -922,12 +987,27 @@
       const selectMes = document.getElementById("filtro-mes");
       const selectConcepto = document.getElementById("filtro-concepto");
 
-      if (idxConcepto !== -1 && selectConcepto) {
-        const valActual = selectConcepto.value;
+      const menuConceptos = document.getElementById("dropdown-menu-filtro-concepto");
+      if (idxConcepto !== -1 && menuConceptos) {
         const conceptos = [...new Set(filasGlobales.map(f => (f[idxConcepto] || "").toString().trim()).filter(Boolean))]
           .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
-        selectConcepto.innerHTML = `<option value="">Todos los conceptos</option>` + conceptos.map(c => `<option value="${c}">${c}</option>`).join("");
-        if (conceptos.includes(valActual)) selectConcepto.value = valActual;
+
+        let htmlMenu = `<button type="button" onclick="seleccionarFiltroConcepto('', 'Todos los conceptos', '<i class=\\'fa-solid fa-layer-group text-slate-400 text-xs\\'></i>')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition font-semibold">
+          <i class="fa-solid fa-layer-group text-slate-400 text-xs shrink-0"></i>
+          <span>Todos los conceptos</span>
+        </button>`;
+
+        conceptos.forEach(c => {
+          const iconoHtml = obtenerHtmlIconoConcepto(c);
+          const cEscapado = c.replace(/'/g, "\\'");
+          const iconoHtmlEscapado = iconoHtml.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          htmlMenu += `<button type="button" onclick="seleccionarFiltroConcepto('${cEscapado}', '${cEscapado}', '${iconoHtmlEscapado}')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition">
+            ${iconoHtml}
+            <span class="truncate">${c}</span>
+          </button>`;
+        });
+
+        menuConceptos.innerHTML = htmlMenu;
       }
 
       if (idxAno === -1 || !selectAno) return;
@@ -1020,10 +1100,51 @@
       filtrarTabla();
     }
 
+    function toggleDropdownFiltroConcepto(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById("dropdown-menu-filtro-concepto");
+      if (menu) menu.classList.toggle("hidden");
+    }
+
+    function seleccionarFiltroConcepto(valor, texto, iconoHtml) {
+      document.getElementById("filtro-concepto").value = valor;
+      document.getElementById("filtro-concepto-texto").textContent = texto;
+      document.getElementById("filtro-concepto-icono").innerHTML = iconoHtml;
+      document.getElementById("dropdown-menu-filtro-concepto").classList.add("hidden");
+      filtrarTabla();
+    }
+
+    document.addEventListener("click", (e) => {
+      const cont = document.getElementById("contenedor-filtro-concepto");
+      const menu = document.getElementById("dropdown-menu-filtro-concepto");
+      if (cont && menu && !cont.contains(e.target)) {
+        menu.classList.add("hidden");
+      }
+    });
+
+    function imprimirTabla() {
+      const tituloOriginal = document.title;
+      const etiquetaFiltro = document.getElementById("titulo-mes-ano-actual")?.textContent || "Gastos";
+      document.title = `Gastos_${etiquetaFiltro.replace(/[\s·\/]/g, "_")}`;
+      window.print();
+      document.title = tituloOriginal;
+    }
+
+    function descargarTablaPDF() {
+      // Abre el cuadro nativo vectorial preconfigurando el nombre del archivo
+      imprimirTabla();
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        imprimirTabla();
+      }
+    });
+
     function limpiarFiltros() {
       document.getElementById("buscador-gastos").value = "";
-      const selectConcepto = document.getElementById("filtro-concepto");
-      if (selectConcepto) selectConcepto.value = "";
+      seleccionarFiltroConcepto("", "Todos los conceptos", '<i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>');
 
       const ahora = new Date();
       document.getElementById("filtro-ano").value = ahora.getFullYear().toString();
