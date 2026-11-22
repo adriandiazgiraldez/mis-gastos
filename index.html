@@ -131,18 +131,22 @@
         <section id="vista-gastos-mensuales" class="space-y-6">
 
           <!-- Tarjetas Resumen -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
-              <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Registros cargados</span>
-              <p id="stat-total-filas" class="text-2xl font-bold text-slate-900 mt-1">0</p>
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-rose-600">Pendiente día</span>
+              <p id="stat-pendiente-dia" class="text-2xl font-bold text-rose-600 mt-1">0,00 €</p>
             </div>
             <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
-              <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">Pagado (SI)</span>
-              <p id="stat-pagado" class="text-2xl font-bold text-emerald-600 mt-1">0,00 €</p>
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-amber-600">Pendiente día próximo</span>
+              <p id="stat-pendiente-proximo" class="text-2xl font-bold text-amber-600 mt-1">0,00 €</p>
             </div>
             <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
-              <span class="text-[11px] font-semibold uppercase tracking-wider text-rose-600">Pendiente (NO)</span>
-              <p id="stat-pendiente" class="text-2xl font-bold text-rose-600 mt-1">0,00 €</p>
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-rose-600">Pendiente Mes</span>
+              <p id="stat-pendiente-mes" class="text-2xl font-bold text-rose-600 mt-1">0,00 €</p>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total del Mes</span>
+              <p id="stat-total-mes" class="text-2xl font-bold text-slate-900 mt-1">0,00 €</p>
             </div>
           </div>
 
@@ -464,26 +468,48 @@
     }
 
     function actualizarResumen() {
-      document.getElementById("stat-total-filas").textContent = filasGlobales.length;
-
       const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
       const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+      const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
+      const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
 
-      let sumaPagado = 0;
-      let sumaPendiente = 0;
+      const ahora = new Date();
+      const anoSel = document.getElementById("filtro-ano")?.value || ahora.getFullYear().toString();
+      const mesSel = document.getElementById("filtro-mes")?.value || MESES_LISTA[ahora.getMonth()];
+      const diaHoy = ahora.getDate();
+      const diaProximo = diaHoy + 1;
+
+      let pendDia = 0;
+      let pendProximo = 0;
+      let pendMes = 0;
+      let totalMes = 0;
 
       if (idxCant !== -1) {
         filasGlobales.forEach(fila => {
+          const anoFila = idxAno !== -1 ? (fila[idxAno] || "").toString().trim() : "";
+          const mesFila = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
+          if (anoFila !== anoSel || mesFila !== mesSel) return;
+
           const raw = (fila[idxCant] || "0").toString().replace(/[€\s.]/g, "").replace(",", ".");
           const num = parseFloat(raw) || 0;
           const esPagado = idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
-          if (esPagado) sumaPagado += num;
-          else sumaPendiente += num;
+          const diaFila = idxDia !== -1 ? parseInt(fila[idxDia], 10) : -1;
+
+          totalMes += num;
+          if (!esPagado) {
+            pendMes += num;
+            if (diaFila === diaHoy) pendDia += num;
+            if (diaFila === diaProximo) pendProximo += num;
+          }
         });
       }
 
-      document.getElementById("stat-pagado").textContent = sumaPagado.toFixed(2).replace(".", ",") + " €";
-      document.getElementById("stat-pendiente").textContent = sumaPendiente.toFixed(2).replace(".", ",") + " €";
+      const fmt = (n) => n.toFixed(2).replace(".", ",") + " €";
+      document.getElementById("stat-pendiente-dia").textContent = fmt(pendDia);
+      document.getElementById("stat-pendiente-proximo").textContent = fmt(pendProximo);
+      document.getElementById("stat-pendiente-mes").textContent = fmt(pendMes);
+      document.getElementById("stat-total-mes").textContent = fmt(totalMes);
     }
 
     function renderizarTabla(filas) {
@@ -663,6 +689,7 @@
       const mesMostrar = mes || MESES_LISTA[ahora.getMonth()];
       const anoMostrar = ano || ahora.getFullYear();
       document.getElementById("titulo-mes-ano-actual").textContent = (mes || ano) ? `${mes || "TODOS LOS MESES"} · ${ano || "TODOS LOS AÑOS"}` : `${mesMostrar} ${anoMostrar}`;
+      actualizarResumen();
 
       if (!hayFiltros) {
         renderizarTabla(filasGlobales.slice(-30).reverse());
