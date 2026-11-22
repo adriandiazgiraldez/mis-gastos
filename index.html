@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Gastos - Prueba de Conexión</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 20px; background: #f4f6f8; color: #1f2937; }
+    h1 { font-size: 1.4rem; margin-bottom: 12px; }
+    #estado { padding: 10px 14px; border-radius: 6px; background: #e0f2fe; color: #0369a1; margin-bottom: 16px; font-weight: 500; }
+    .error { background: #fee2e2 !important; color: #b91c1c !important; }
+    .tabla-contenedor { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+    th { background: #f9fafb; font-weight: 600; position: sticky; top: 0; }
+    tr:hover { background: #f8fafc; }
+  </style>
+</head>
+<body>
+
+  <h1>Mis Gastos (Entorno de Pruebas)</h1>
+  <div id="estado">Conectando con Google Sheets...</div>
+  <div class="tabla-contenedor">
+    <table id="tabla-gastos"></table>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbw03aA0xWvkaw2m5r50GHLRgZTucIsmC_8-UM43id4cnKG9tUXsCg-YhTFGgk7RgIgN/exec";
+
+    async function cargarDatos() {
+      const estadoDiv = document.getElementById("estado");
+      const tabla = document.getElementById("tabla-gastos");
+
+      try {
+        const respuesta = await fetch(API_URL);
+        const json = await respuesta.json();
+
+        if (json.status !== "ok") {
+          throw new Error(json.message || "Error desconocido en Apps Script");
+        }
+
+        estadoDiv.textContent = `Conexión exitosa. Mostrando últimos registros de ${json.total} filas totales.`;
+
+        // Construir cabeceras
+        let html = "<thead><tr>";
+        json.headers.forEach(col => {
+          html += `<th>${col}</th>`;
+        });
+        html += "</tr></thead><tbody>";
+
+        // Mostrar los últimos 25 registros invertidos (los más recientes arriba)
+        const ultimasFilas = json.rows.slice(-25).reverse();
+        ultimasFilas.forEach(fila => {
+          html += "<tr>";
+          fila.forEach(celda => {
+            html += `<td>${celda}</td>`;
+          });
+          html += "</tr>";
+        });
+
+        html += "</tbody>";
+        tabla.innerHTML = html;
+
+      } catch (err) {
+        estadoDiv.classList.add("error");
+        estadoDiv.textContent = "Error al cargar: " + err.message;
+        console.error(err);
+      }
+    }
+
+    cargarDatos();
+  </script>
+</body>
+</html>
