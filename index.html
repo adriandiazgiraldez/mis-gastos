@@ -3,50 +3,272 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mis Gastos - Acceso Protegido</title>
+  <title>Mis Gastos · Finanzas Personales</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    body { font-family: system-ui, -apple-system, sans-serif; margin: 20px; background: #f4f6f8; color: #1f2937; }
-    .cabecera { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
-    h1 { font-size: 1.4rem; margin: 0; }
-    .panel-login { background: white; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 440px; margin-bottom: 16px; }
-    .panel-login p { margin-top: 0; color: #4b5563; font-size: 0.95rem; }
-    #estado { padding: 10px 14px; border-radius: 6px; background: #e0f2fe; color: #0369a1; margin-bottom: 16px; font-weight: 500; }
-    .error { background: #fee2e2 !important; color: #b91c1c !important; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     .oculto { display: none !important; }
-    .btn-salir { padding: 7px 12px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
-    .btn-salir:hover { background: #f9fafb; }
-    .tabla-contenedor { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
-    th { background: #f9fafb; font-weight: 600; position: sticky; top: 0; }
-    tr:hover { background: #f8fafc; }
   </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen">
 
-  <div class="cabecera">
-    <h1>Mis Gastos (Entorno de Pruebas)</h1>
-    <button id="btn-cerrar-sesion" class="btn-salir oculto" onclick="cerrarSesion()">Cerrar sesión</button>
+  <!-- ==================== PANTALLA DE LOGIN ==================== -->
+  <div id="panel-login" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-8 max-w-sm w-full shadow-sm text-center space-y-6">
+      <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center mx-auto text-lg shadow-sm">
+        <i class="fa-solid fa-wallet"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-slate-900">Mis Gastos</h1>
+        <p class="text-xs text-slate-500 mt-1">Control financiero personal · Acceso privado</p>
+      </div>
+      <div class="flex justify-center min-h-[44px]">
+        <div id="google-btn"></div>
+      </div>
+      <p id="estado-login" class="text-xs text-slate-400">Inicia sesión con tu cuenta autorizada.</p>
+    </div>
   </div>
 
-  <div id="estado">Inicia sesión con tu cuenta de Google autorizada para ver los datos.</div>
+  <!-- ==================== APLICACIÓN PRINCIPAL ==================== -->
+  <div id="app-principal" class="oculto min-h-screen flex flex-col md:flex-row">
 
-  <div id="panel-login" class="panel-login">
-    <p>Acceso restringido mediante Google Identity Services.</p>
-    <div id="google-btn"></div>
+    <!-- Overlay móvil -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-30 hidden md:hidden"></div>
+
+    <!-- MENÚ LATERAL (SIDEBAR) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200/80 z-40 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-200 flex flex-col justify-between shrink-0">
+      <div>
+        <!-- Logo / Cabecera -->
+        <div class="h-16 px-5 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xs">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+            <span class="font-bold text-sm tracking-tight text-slate-900">Mis Gastos</span>
+          </div>
+          <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-slate-700 p-1.5">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Navegación por secciones -->
+        <nav class="p-3 space-y-1">
+          <button onclick="cambiarSeccion('gastos-mensuales', 'Gastos Mensuales', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-900 text-white transition">
+            <i class="fa-regular fa-calendar-check w-4 text-center"></i>
+            <span>Gastos Mensuales</span>
+          </button>
+          <button onclick="cambiarSeccion('proximo-mes', 'Gastos del Próximo Mes', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <i class="fa-regular fa-calendar-plus w-4 text-center"></i>
+            <span>Próximo Mes</span>
+          </button>
+          <button onclick="cambiarSeccion('anuales', 'Gastos Anuales', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-chart-pie w-4 text-center"></i>
+            <span>Gastos Anuales</span>
+          </button>
+          <button onclick="cambiarSeccion('combustible', 'Gastos de Combustible', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-gas-pump w-4 text-center"></i>
+            <span>Combustible</span>
+          </button>
+          <button onclick="cambiarSeccion('documentos', 'Documentos Familiares', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <i class="fa-regular fa-folder-open w-4 text-center"></i>
+            <span>Documentos</span>
+          </button>
+          <button onclick="cambiarSeccion('mantenimientos', 'Mantenimientos', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-wrench w-4 text-center"></i>
+            <span>Mantenimientos</span>
+          </button>
+          <button onclick="cambiarSeccion('seguros', 'Seguros Actuales', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-shield-halved w-4 text-center"></i>
+            <span>Seguros Actuales</span>
+          </button>
+          <button onclick="cambiarSeccion('ingresos', 'Ingresos por Años', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-arrow-trend-up w-4 text-center"></i>
+            <span>Ingresos</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Pie del sidebar -->
+      <div class="p-3 border-t border-slate-100 space-y-2">
+        <div id="info-usuario" class="px-3 py-1.5 text-[11px] text-slate-400 truncate"></div>
+        <button id="btn-cerrar-sesion" onclick="cerrarSesion()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition">
+          <i class="fa-solid fa-arrow-right-from-bracket w-4 text-center"></i>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="flex-1 flex flex-col min-w-0">
+
+      <!-- Topbar -->
+      <header class="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 sticky top-0 z-20 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <button onclick="toggleSidebar()" class="md:hidden p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i class="fa-solid fa-bars text-sm"></i>
+          </button>
+          <h2 id="titulo-seccion" class="text-base sm:text-lg font-bold tracking-tight text-slate-900">Gastos Mensuales</h2>
+        </div>
+
+        <button onclick="abrirModalGasto()" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition active:scale-95 shadow-xs">
+          <i class="fa-solid fa-plus text-[11px]"></i>
+          <span>Añadir</span>
+        </button>
+      </header>
+
+      <!-- Barra de estado / alertas -->
+      <div id="estado" class="mx-4 sm:mx-8 mt-4 px-4 py-2.5 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 text-xs font-medium hidden"></div>
+
+      <!-- ÁREA DE VISTAS -->
+      <main class="p-4 sm:p-8 flex-1 space-y-6">
+
+        <!-- VISTA: GASTOS MENSUALES -->
+        <section id="vista-gastos-mensuales" class="space-y-6">
+
+          <!-- Tarjetas Resumen -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Registros cargados</span>
+              <p id="stat-total-filas" class="text-2xl font-bold text-slate-900 mt-1">0</p>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">Pagado (SI)</span>
+              <p id="stat-pagado" class="text-2xl font-bold text-emerald-600 mt-1">0,00 €</p>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-rose-600">Pendiente (NO)</span>
+              <p id="stat-pendiente" class="text-2xl font-bold text-rose-600 mt-1">0,00 €</p>
+            </div>
+          </div>
+
+          <!-- Buscador + Tabla -->
+          <div class="bg-white border border-slate-200/80 rounded-2xl shadow-2xs overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="relative flex-1 max-w-md">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-xs text-slate-400"></i>
+                <input type="text" id="buscador-gastos" oninput="filtrarTabla()" placeholder="Buscar por concepto, mes, notas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 focus:bg-white transition">
+              </div>
+              <span id="contador-visible" class="text-xs text-slate-400 font-medium">Mostrando 0 registros</span>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table id="tabla-gastos" class="w-full text-left text-xs text-slate-700">
+                <!-- Se rellena dinámicamente -->
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- VISTA GENÉRICA PARA OTRAS SECCIONES (EN CONSTRUCCIÓN) -->
+        <section id="vista-en-construccion" class="oculto">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-12 text-center max-w-lg mx-auto mt-8 shadow-2xs">
+            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-3 text-lg">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <h3 id="titulo-construccion" class="text-base font-bold text-slate-900">Sección en preparación</h3>
+            <p class="text-xs text-slate-500 mt-1">Esta pestaña se conectará en los próximos pasos con su hoja correspondiente de Google Sheets.</p>
+          </div>
+        </section>
+
+      </main>
+    </div>
   </div>
 
-  <div id="contenedor-datos" class="tabla-contenedor oculto">
-    <table id="tabla-gastos"></table>
+  <!-- ==================== MODAL AÑADIR / EDITAR GASTO ==================== -->
+  <div id="modal-gasto" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white border border-slate-200 w-full max-w-lg rounded-3xl shadow-xl overflow-hidden my-6">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-slate-900">Añadir Gasto</h3>
+        <button onclick="cerrarModalGasto()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="guardarGasto(event)" class="p-6 space-y-4 text-xs max-h-[78vh] overflow-y-auto">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Concepto *</label>
+          <input type="text" id="form-concepto" required placeholder="Ej. Luz, Internet, Supermercado..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Pagado</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="seleccionarPagado('NO', this)" class="btn-pagado py-2 rounded-xl border border-slate-900 bg-slate-900 text-white font-semibold">NO</button>
+              <button type="button" onclick="seleccionarPagado('SI', this)" class="btn-pagado py-2 rounded-xl border border-slate-200 bg-white text-slate-600 font-semibold">SI</button>
+            </div>
+            <input type="hidden" id="form-pagado" value="NO">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Fecha del Pago</label>
+            <input type="date" id="form-fecha-pago" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-slate-400 focus:bg-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Día *</label>
+            <input type="number" id="form-dia" min="0" max="31" value="1" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Cantidad (€) *</label>
+            <input type="number" step="0.01" id="form-cantidad" required placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Mes *</label>
+            <select id="form-mes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+              <option>ENERO</option><option>FEBRERO</option><option>MARZO</option><option>ABRIL</option>
+              <option>MAYO</option><option>JUNIO</option><option>JULIO</option><option>AGOSTO</option>
+              <option>SEPTIEMBRE</option><option>OCTUBRE</option><option selected>NOVIEMBRE</option><option>DICIEMBRE</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Año *</label>
+            <input type="number" id="form-ano" value="2026" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Periodicidad</label>
+            <select id="form-periodicidad" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+              <option>Mensual</option><option>Anual</option><option>Gasto Puntual</option><option>Trimestral</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Nº Cuota</label>
+            <input type="text" id="form-cuota" placeholder="Ej. 2/3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Notas</label>
+          <textarea id="form-notas" rows="2" placeholder="Observaciones opcionales..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-slate-400 focus:bg-white"></textarea>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="cerrarModalGasto()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Cancelar</button>
+          <button type="submit" id="btn-guardar-gasto" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold">Guardar</button>
+        </div>
+      </form>
+    </div>
   </div>
 
+  <!-- ==================== SCRIPT ==================== -->
   <script>
     const CLIENT_ID = "413651977312-hee0sobihfts9daqodq57k6f1brosla7.apps.googleusercontent.com";
     const API_URL = "https://script.google.com/macros/s/AKfycbw03aA0xWvkaw2m5r50GHLRgZTucIsmC_8-UM43id4cnKG9tUXsCg-YhTFGgk7RgIgN/exec";
+    const CLAVE_TOKEN = "mis_gastos_token";
 
     let tokenActual = null;
-    const CLAVE_TOKEN = "mis_gastos_token";
+    let headersGlobales = [];
+    let filasGlobales = [];
 
     function tokenEsValido(token) {
       try {
@@ -58,10 +280,7 @@
     }
 
     window.onload = function () {
-      const dominiosOficiales = [
-        "adriandiazgiraldez.github.io"
-      ];
-      // Si NO estás en GitHub Pages, entra directo (OneCompiler / local)
+      const dominiosOficiales = ["adriandiazgiraldez.github.io"];
       const esEntornoPruebas = !dominiosOficiales.includes(window.location.hostname);
 
       if (esEntornoPruebas) {
@@ -89,7 +308,7 @@
 
       google.accounts.id.renderButton(
         document.getElementById("google-btn"),
-        { theme: "outline", size: "large", text: "signin_with" }
+        { theme: "outline", size: "large", text: "signin_with", shape: "pill" }
       );
     };
 
@@ -109,29 +328,23 @@
       if (window.google && google.accounts && google.accounts.id) {
         google.accounts.id.disableAutoSelect();
       }
-      document.getElementById("contenedor-datos").classList.add("oculto");
-      document.getElementById("btn-cerrar-sesion").classList.add("oculto");
+      document.getElementById("app-principal").classList.add("oculto");
       document.getElementById("panel-login").classList.remove("oculto");
-      const estadoDiv = document.getElementById("estado");
-      estadoDiv.classList.remove("error");
-      estadoDiv.textContent = "Sesión cerrada. Inicia sesión de nuevo para consultar los datos.";
+      document.getElementById("estado-login").textContent = "Sesión cerrada.";
     }
 
     function mostrarError(mensaje) {
       const estadoDiv = document.getElementById("estado");
-      estadoDiv.classList.add("error");
+      estadoDiv.classList.remove("hidden", "bg-blue-50", "text-blue-700", "border-blue-100");
+      estadoDiv.classList.add("bg-rose-50", "text-rose-700", "border-rose-200");
       estadoDiv.textContent = mensaje;
+      document.getElementById("estado-login").textContent = mensaje;
     }
 
     async function cargarDatos(token) {
       const estadoDiv = document.getElementById("estado");
-      const tabla = document.getElementById("tabla-gastos");
-      const contenedorDatos = document.getElementById("contenedor-datos");
-      const panelLogin = document.getElementById("panel-login");
-      const btnSalir = document.getElementById("btn-cerrar-sesion");
-
-      estadoDiv.classList.remove("error");
-      estadoDiv.textContent = "Validando identidad y cargando datos desde Google Sheets...";
+      estadoDiv.classList.remove("hidden");
+      estadoDiv.textContent = "Cargando datos desde Google Sheets...";
 
       try {
         const urlConToken = `${API_URL}?token=${encodeURIComponent(token)}`;
@@ -142,41 +355,164 @@
           throw new Error(json.message || "Acceso denegado o error en Apps Script");
         }
 
-        panelLogin.classList.add("oculto");
-        btnSalir.classList.remove("oculto");
-        contenedorDatos.classList.remove("oculto");
+        document.getElementById("panel-login").classList.add("oculto");
+        document.getElementById("app-principal").classList.remove("oculto");
+        document.getElementById("info-usuario").textContent = json.user;
+        estadoDiv.classList.add("hidden");
 
-        estadoDiv.textContent = `Sesión iniciada como ${json.user}. Mostrando últimos registros de ${json.total} filas totales.`;
+        headersGlobales = json.headers || [];
+        filasGlobales = json.rows || [];
 
-        let html = "<thead><tr>";
-        json.headers.forEach(col => {
-          html += `<th>${col}</th>`;
-        });
-        html += "</tr></thead><tbody>";
-
-        const ultimasFilas = json.rows.slice(-25).reverse();
-        ultimasFilas.forEach(fila => {
-          html += "<tr>";
-          fila.forEach(celda => {
-            html += `<td>${celda}</td>`;
-          });
-          html += "</tr>";
-        });
-
-        html += "</tbody>";
-        tabla.innerHTML = html;
+        actualizarResumen();
+        renderizarTabla(filasGlobales.slice(-30).reverse());
 
       } catch (err) {
         tokenActual = null;
         localStorage.removeItem(CLAVE_TOKEN);
-        contenedorDatos.classList.add("oculto");
-        btnSalir.classList.add("oculto");
-        panelLogin.classList.remove("oculto");
+        document.getElementById("app-principal").classList.add("oculto");
+        document.getElementById("panel-login").classList.remove("oculto");
         mostrarError("Error: " + err.message);
-        console.error(err);
       }
     }
 
-    </script>
+    function actualizarResumen() {
+      document.getElementById("stat-total-filas").textContent = filasGlobales.length;
+
+      const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+      const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
+
+      let sumaPagado = 0;
+      let sumaPendiente = 0;
+
+      if (idxCant !== -1) {
+        filasGlobales.forEach(fila => {
+          const raw = (fila[idxCant] || "0").toString().replace(/[€\s.]/g, "").replace(",", ".");
+          const num = parseFloat(raw) || 0;
+          const esPagado = idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+          if (esPagado) sumaPagado += num;
+          else sumaPendiente += num;
+        });
+      }
+
+      document.getElementById("stat-pagado").textContent = sumaPagado.toFixed(2).replace(".", ",") + " €";
+      document.getElementById("stat-pendiente").textContent = sumaPendiente.toFixed(2).replace(".", ",") + " €";
+    }
+
+    function renderizarTabla(filas) {
+      const tabla = document.getElementById("tabla-gastos");
+      document.getElementById("contador-visible").textContent = `Mostrando ${filas.length} registros`;
+
+      let html = `<thead class="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100"><tr>`;
+      headersGlobales.forEach(col => {
+        html += `<th class="py-3 px-4 font-semibold whitespace-nowrap">${col}</th>`;
+      });
+      html += `</tr></thead><tbody class="divide-y divide-slate-100">`;
+
+      filas.forEach(fila => {
+        html += `<tr class="hover:bg-slate-50/80 transition">`;
+        fila.forEach(celda => {
+          html += `<td class="py-3 px-4 whitespace-nowrap">${celda}</td>`;
+        });
+        html += `</tr>`;
+      });
+
+      html += `</tbody>`;
+      tabla.innerHTML = html;
+    }
+
+    function filtrarTabla() {
+      const q = (document.getElementById("buscador-gastos").value || "").toLowerCase().trim();
+      if (!q) {
+        renderizarTabla(filasGlobales.slice(-30).reverse());
+        return;
+      }
+      const filtradas = filasGlobales.filter(f => f.join(" ").toLowerCase().includes(q));
+      renderizarTabla(filtradas.reverse());
+    }
+
+    // Navegación Sidebar
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("-translate-x-full");
+      document.getElementById("sidebar-overlay").classList.toggle("hidden");
+    }
+
+    function cambiarSeccion(id, titulo, btn) {
+      document.getElementById("titulo-seccion").textContent = titulo;
+      document.querySelectorAll(".nav-btn").forEach(b => {
+        b.classList.remove("bg-slate-900", "text-white", "font-semibold");
+        b.classList.add("text-slate-600", "hover:bg-slate-100", "font-medium");
+      });
+      btn.classList.add("bg-slate-900", "text-white", "font-semibold");
+      btn.classList.remove("text-slate-600", "hover:bg-slate-100", "font-medium");
+
+      if (id === "gastos-mensuales") {
+        document.getElementById("vista-gastos-mensuales").classList.remove("oculto");
+        document.getElementById("vista-en-construccion").classList.add("oculto");
+      } else {
+        document.getElementById("vista-gastos-mensuales").classList.add("oculto");
+        document.getElementById("vista-en-construccion").classList.remove("oculto");
+        document.getElementById("titulo-construccion").textContent = titulo;
+      }
+
+      if (window.innerWidth < 768) toggleSidebar();
+    }
+
+    // Modal Añadir Gasto
+    function abrirModalGasto() {
+      document.getElementById("modal-gasto").classList.remove("hidden");
+    }
+    function cerrarModalGasto() {
+      document.getElementById("modal-gasto").classList.add("hidden");
+    }
+    function seleccionarPagado(valor, btn) {
+      document.getElementById("form-pagado").value = valor;
+      document.querySelectorAll(".btn-pagado").forEach(b => {
+        b.className = "btn-pagado py-2 rounded-xl border border-slate-200 bg-white text-slate-600 font-semibold";
+      });
+      btn.className = "btn-pagado py-2 rounded-xl border border-slate-900 bg-slate-900 text-white font-semibold";
+    }
+    async function guardarGasto(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-guardar-gasto");
+      btn.disabled = true;
+      btn.textContent = "Guardando...";
+
+      const payload = {
+        token: tokenActual,
+        concepto: document.getElementById("form-concepto").value.trim(),
+        pagado: document.getElementById("form-pagado").value,
+        fechaPago: document.getElementById("form-fecha-pago").value,
+        dia: document.getElementById("form-dia").value,
+        cantidad: document.getElementById("form-cantidad").value,
+        mes: document.getElementById("form-mes").value,
+        ano: document.getElementById("form-ano").value,
+        periodicidad: document.getElementById("form-periodicidad").value,
+        cuota: document.getElementById("form-cuota").value.trim(),
+        notas: document.getElementById("form-notas").value.trim()
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+
+        if (json.status !== "ok") {
+          throw new Error(json.message || "Error al guardar en Google Sheets");
+        }
+
+        cerrarModalGasto();
+        e.target.reset();
+        await cargarDatos(tokenActual);
+      } catch (err) {
+        alert("No se pudo guardar: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Guardar";
+      }
+    }
+  </script>
 </body>
 </html>
