@@ -628,6 +628,8 @@
 
       const idxId = headersGlobales.findIndex(h => h.trim().toUpperCase() === "ID");
       const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
+      const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
       const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
       const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
       const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
@@ -650,23 +652,28 @@
 
       const esPagado = (fila) => idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
 
-      const valorDiaOrden = (fila) => {
-        const d = idxDia !== -1 ? parseInt(fila[idxDia], 10) : 0;
-        if (isNaN(d)) return 99;
-        if (d === 30) return -2;
-        if (d === 31) return -1;
-        return d;
-      };
-      const ordenarPorDia = (a, b) => {
-        const diffDia = valorDiaOrden(a) - valorDiaOrden(b);
-        if (diffDia !== 0) return diffDia;
+      const ordenarDescendente = (a, b) => {
+        const anoA = idxAno !== -1 ? (parseInt(a[idxAno], 10) || 0) : 0;
+        const anoB = idxAno !== -1 ? (parseInt(b[idxAno], 10) || 0) : 0;
+        if (anoB !== anoA) return anoB - anoA;
+
+        const mesTextoA = idxMes !== -1 ? (a[idxMes] || "").toString().trim().toUpperCase() : "";
+        const mesTextoB = idxMes !== -1 ? (b[idxMes] || "").toString().trim().toUpperCase() : "";
+        const mesA = MESES_LISTA.indexOf(mesTextoA);
+        const mesB = MESES_LISTA.indexOf(mesTextoB);
+        if (mesB !== mesA) return mesB - mesA;
+
+        const diaA = idxDia !== -1 ? (parseInt(a[idxDia], 10) || 0) : 0;
+        const diaB = idxDia !== -1 ? (parseInt(b[idxDia], 10) || 0) : 0;
+        if (diaB !== diaA) return diaB - diaA;
+
         const cA = idxConcepto !== -1 ? (a[idxConcepto] || "").toString().trim() : "";
         const cB = idxConcepto !== -1 ? (b[idxConcepto] || "").toString().trim() : "";
         return cA.localeCompare(cB, "es", { sensitivity: "base" });
       };
 
-      const pendientes = filas.filter(f => !esPagado(f)).sort(ordenarPorDia);
-      const pagados = filas.filter(f => esPagado(f)).sort(ordenarPorDia);
+      const pendientes = filas.filter(f => !esPagado(f)).sort(ordenarDescendente);
+      const pagados = filas.filter(f => esPagado(f)).sort(ordenarDescendente);
 
       const totalPendiente = pendientes.reduce((acc, f) => acc + parsearCantidad(f), 0);
       const totalPagado = pagados.reduce((acc, f) => acc + parsearCantidad(f), 0);
@@ -778,12 +785,20 @@
             const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
             const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
 
+            const mesVal = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
+            const anoVal = idxAno !== -1 ? (fila[idxAno] || "").toString().trim() : "";
+            const mesAbrev = mesVal ? mesVal.slice(0, 3) : "";
+            const fechaTag = (mesAbrev || anoVal)
+              ? `<span class="bg-slate-100 text-slate-500 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${mesAbrev} ${anoVal}</span>`
+              : "";
+
             bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="hover:bg-slate-50/80 transition cursor-pointer">
               <td class="py-3 px-4 whitespace-nowrap text-slate-500">${diaVal}</td>
               <td class="py-3 px-4 font-medium text-slate-900">
                 <div class="flex items-center gap-2.5">
                   ${obtenerFavicon(conceptoVal)}
                   <span>${conceptoVal}</span>
+                  ${fechaTag}
                   ${renderIconoNota(fila)}
                 </div>
               </td>
@@ -823,6 +838,12 @@
               const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
               const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
               const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
+              const mesHija = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
+              const anoHija = idxAno !== -1 ? (fila[idxAno] || "").toString().trim() : "";
+              const mesHijaAbrev = mesHija ? mesHija.slice(0, 3) : "";
+              const fechaHijaTag = (mesHijaAbrev || anoHija)
+                ? `<span class="bg-slate-200/60 text-slate-500 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${mesHijaAbrev} ${anoHija}</span>`
+                : "";
 
               bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} bg-slate-50/50 hover:bg-slate-100/70 transition cursor-pointer">
                 <td class="py-2.5 px-4 whitespace-nowrap text-slate-300 text-[11px]"></td>
@@ -830,6 +851,7 @@
                   <div class="flex items-center gap-2">
                     <span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>
                     <span>${conceptoVal}</span>
+                    ${fechaHijaTag}
                     ${renderIconoNota(fila)}
                   </div>
                 </td>
