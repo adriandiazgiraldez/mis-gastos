@@ -1075,7 +1075,7 @@
 
             item.filas.forEach((fila, idx) => {
               const esUltima = idx === item.filas.length - 1;
-              const tdBtmHija = esUltima ? "border-b-[3px] border-slate-500" : "border-b border-slate-200";
+              const tdBtmHija = esUltima ? "border-b-[3px] border-slate-800" : "border-b border-slate-600";
 
               const idFila = idxId !== -1 ? fila[idxId] : "";
               const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
@@ -1364,9 +1364,7 @@
       const ahora = new Date();
       const mesMostrar = mes || MESES_LISTA[ahora.getMonth()];
       const anoMostrar = ano || ahora.getFullYear();
-      document.getElementById("titulo-mes-ano-actual").textContent = (mes || ano || conceptoSel) 
-        ? `${conceptoSel || "TODOS LOS CONCEPTOS"} · ${mes || "TODOS LOS MESES"} · ${ano || "TODOS LOS AÑOS"}` 
-        : `${mesMostrar} ${anoMostrar}`;
+      document.getElementById("titulo-mes-ano-actual").textContent = `${mes || "TODOS LOS MESES"} ${ano || "TODOS LOS AÑOS"}`.trim();
       actualizarResumen();
 
       if (!hayFiltros) {
