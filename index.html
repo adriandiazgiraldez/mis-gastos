@@ -337,6 +337,26 @@
           </div>
         </div>
 
+        <!-- Fila 5: Adjuntar PDF y Captura -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">PDF</label>
+            <label class="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-slate-400 rounded-xl py-2 px-3 cursor-pointer bg-slate-50/60 transition group">
+              <i class="fa-regular fa-file-pdf text-rose-500 text-sm group-hover:scale-110 transition-transform"></i>
+              <span id="texto-archivo-pdf" class="text-[11px] text-slate-600 truncate font-medium">Adjuntar PDF</span>
+              <input type="file" id="form-file-pdf" accept="application/pdf" onchange="mostrarNombreArchivo('form-file-pdf', 'texto-archivo-pdf', 'PDF adjuntado')" class="hidden">
+            </label>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Captura</label>
+            <label class="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-slate-400 rounded-xl py-2 px-3 cursor-pointer bg-slate-50/60 transition group">
+              <i class="fa-solid fa-camera text-sky-500 text-sm group-hover:scale-110 transition-transform"></i>
+              <span id="texto-archivo-img" class="text-[11px] text-slate-600 truncate font-medium">Hacer foto o elegir</span>
+              <input type="file" id="form-file-img" accept="image/*" onchange="mostrarNombreArchivo('form-file-img', 'texto-archivo-img', 'Imagen adjuntada')" class="hidden">
+            </label>
+          </div>
+        </div>
+
         <!-- Botones de Acción -->
         <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
           <button type="button" onclick="cerrarModalGasto()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition text-xs">Cancelar</button>
@@ -383,6 +403,29 @@
       <div class="flex items-center justify-center gap-2 pt-2">
         <button type="button" onclick="cerrarConfirmarEliminar()" class="flex-1 py-2.5 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancelar</button>
         <button type="button" id="btn-confirmar-eliminar" class="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL VISUALIZADOR DE ADJUNTOS ==================== -->
+  <div id="modal-visor" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-[70] hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-4xl h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div class="flex items-center gap-2">
+          <i id="visor-icono" class="fa-solid fa-file text-slate-600"></i>
+          <span id="visor-titulo" class="text-xs font-bold text-slate-800">Visualizador de Documento</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <a id="visor-enlace-externo" href="#" target="_blank" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition" title="Abrir en pestaña nueva">
+            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+          </a>
+          <button type="button" onclick="cerrarVisorAdjunto()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 bg-slate-100 flex items-center justify-center overflow-hidden relative">
+        <iframe id="visor-iframe" src="" class="w-full h-full border-0"></iframe>
       </div>
     </div>
   </div>
@@ -978,8 +1021,20 @@
       let html = "";
       headersGlobales.forEach((h, i) => {
         if (i === idxId) return;
-        const val = fila[i] !== undefined && fila[i] !== "" ? fila[i] : "—";
-        html += `<div class="flex justify-between gap-4 py-1.5 border-b border-slate-100 last:border-0">
+        const nombreCol = h.toLowerCase().trim();
+        let val = fila[i] !== undefined && fila[i] !== "" ? fila[i] : "—";
+
+        if ((nombreCol.includes("pdf") || nombreCol.includes("captura") || nombreCol.includes("imagen")) && val.startsWith("http")) {
+          const esPdf = nombreCol.includes("pdf");
+          const icono = esPdf ? "fa-solid fa-file-pdf text-rose-500" : "fa-solid fa-image text-sky-500";
+          const etiqueta = esPdf ? "Ver PDF" : "Ver Captura";
+          const tipo = esPdf ? "pdf" : "imagen";
+          val = `<button type="button" onclick="abrirVisorAdjunto('${val}', '${etiqueta}', '${tipo}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-semibold transition active:scale-95 shadow-2xs">
+            <i class="${icono}"></i> ${etiqueta}
+          </button>`;
+        }
+
+        html += `<div class="flex justify-between items-center gap-4 py-1.5 border-b border-slate-100 last:border-0">
           <span class="text-slate-400 font-medium">${h}</span>
           <span class="text-slate-900 font-semibold text-right">${val}</span>
         </div>`;
@@ -993,6 +1048,35 @@
 
     function cerrarDetalleGasto() {
       document.getElementById("modal-detalle").classList.add("hidden");
+    }
+
+    function abrirVisorAdjunto(urlDrive, titulo, tipo) {
+      const modal = document.getElementById("modal-visor");
+      const iframe = document.getElementById("visor-iframe");
+      const tituloEl = document.getElementById("visor-titulo");
+      const iconoEl = document.getElementById("visor-icono");
+      const enlaceExt = document.getElementById("visor-enlace-externo");
+
+      tituloEl.textContent = titulo;
+      iconoEl.className = tipo === "pdf" ? "fa-solid fa-file-pdf text-rose-500 text-sm" : "fa-solid fa-image text-sky-500 text-sm";
+      enlaceExt.href = urlDrive;
+
+      // Transformar enlace a modo incrustado /preview de Google Drive
+      let urlEmbed = urlDrive;
+      const fileIdMatch = urlDrive.match(/\/d\/([a-zA-Z0-9_-]+)/) || urlDrive.match(/id=([a-zA-Z0-9_-]+)/);
+      if (fileIdMatch && fileIdMatch[1]) {
+        urlEmbed = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+      }
+
+      iframe.src = urlEmbed;
+      modal.classList.remove("hidden");
+    }
+
+    function cerrarVisorAdjunto() {
+      const modal = document.getElementById("modal-visor");
+      const iframe = document.getElementById("visor-iframe");
+      iframe.src = "";
+      modal.classList.add("hidden");
     }
 
     function editarDesdeDetalle(fila, id) {
@@ -1194,6 +1278,25 @@
       texto.className = activado ? "text-xs font-bold text-emerald-600" : "text-xs font-bold text-slate-600";
     }
 
+    function mostrarNombreArchivo(inputId, spanId, textoOk) {
+      const input = document.getElementById(inputId);
+      const span = document.getElementById(spanId);
+      if (input.files && input.files[0]) {
+        span.textContent = input.files[0].name || textoOk;
+        span.classList.add("text-slate-900", "font-semibold");
+      }
+    }
+
+    function leerArchivoComoBase64(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+      });
+    }
+
     function abrirModalGasto() {
       document.getElementById("modal-gasto-titulo").textContent = "Añadir Gasto";
       document.getElementById("form-id").value = "";
@@ -1201,6 +1304,10 @@
       document.getElementById("form-empresa").value = "";
       document.getElementById("form-icono").value = "";
       document.getElementById("form-url-icono").value = "";
+      document.getElementById("form-file-pdf").value = "";
+      document.getElementById("form-file-img").value = "";
+      document.getElementById("texto-archivo-pdf").textContent = "Adjuntar PDF";
+      document.getElementById("texto-archivo-img").textContent = "Hacer foto o elegir";
       cambiarTogglePagado(false);
       document.body.classList.add("overflow-hidden");
       document.getElementById("modal-gasto").classList.remove("hidden");
@@ -1234,6 +1341,13 @@
       }
       localStorage.setItem("mis_gastos_iconos", JSON.stringify(iconosGuardados));
 
+      const filePdf = document.getElementById("form-file-pdf").files[0];
+      const fileImg = document.getElementById("form-file-img").files[0];
+      const [pdfBase64, imgBase64] = await Promise.all([
+        leerArchivoComoBase64(filePdf),
+        leerArchivoComoBase64(fileImg)
+      ]);
+
       const formId = document.getElementById("form-id").value;
       const payload = {
         favicon: valorFavicon,
@@ -1250,7 +1364,10 @@
         ano: document.getElementById("form-ano").value,
         periodicidad: document.getElementById("form-periodicidad").value,
         cuota: document.getElementById("form-cuota").value.trim(),
-        notas: document.getElementById("form-notas").value.trim()
+        notas: document.getElementById("form-notas").value.trim(),
+        pdfBase64: pdfBase64,
+        imgBase64: imgBase64,
+        imgMime: fileImg ? fileImg.type : ""
       };
 
       try {
