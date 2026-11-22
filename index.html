@@ -790,7 +790,7 @@
         <tr>
           <th class="py-3 px-4 font-semibold whitespace-nowrap w-16">DÍA</th>
           <th class="py-3 px-4 font-semibold whitespace-nowrap">CONCEPTO</th>
-          <th class="py-3 px-4 font-semibold whitespace-nowrap text-right">CANTIDAD (€)</th>
+          <th class="py-3 px-4 font-semibold whitespace-nowrap text-right hidden sm:table-cell">CANTIDAD (€)</th>
         </tr>
       </thead><tbody class="divide-y divide-slate-600">`;
 
@@ -1022,24 +1022,27 @@
             const colorFila = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
             const bgFilaPastel = mapaColoresPastel[colorFila] || "hover:bg-slate-50/80";
 
+            const badgesFila = renderBadgesFila(fila);
             bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="${bgFilaPastel} transition cursor-pointer">
-              <td class="py-3 px-4 whitespace-nowrap text-slate-500">${diaVal}</td>
+              <td class="py-3 px-4 whitespace-nowrap text-slate-500 align-top sm:align-middle">${diaVal}</td>
               <td class="py-3 px-4 font-medium text-slate-900">
-                <div class="flex items-center justify-between w-full">
+                <div class="flex items-center justify-between w-full gap-2">
                   <div class="flex items-center min-w-0 flex-1">
-                    <div class="flex items-center gap-2.5 w-64 sm:w-80 shrink-0 pr-3">
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1 sm:flex-none sm:w-80 sm:shrink-0 pr-2 sm:pr-3">
                       ${obtenerFavicon(conceptoVal)}
                       <span class="truncate">${conceptoVal}</span>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
+                    <div class="hidden sm:flex items-center gap-2 shrink-0">
                       ${perTag}
                       ${fechaTag}
                     </div>
                   </div>
-                  ${renderBadgesFila(fila)}
+                  <span class="sm:hidden font-semibold ${colorTexto} whitespace-nowrap shrink-0">${cantVal}</span>
+                  <div class="hidden sm:flex items-center">${badgesFila}</div>
                 </div>
+                ${(perTag || fechaTag || badgesFila) ? `<div class="flex sm:hidden items-center flex-wrap gap-2 mt-1.5 pl-6">${perTag}${fechaTag}${badgesFila}</div>` : ""}
               </td>
-              <td class="py-3 px-4 whitespace-nowrap text-right font-semibold ${colorTexto}">${cantVal}</td>
+              <td class="py-3 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} hidden sm:table-cell">${cantVal}</td>
             </tr>`;
           } else {
             contadorGrupo++;
@@ -1063,14 +1066,17 @@
                   <span>${diaGrupo}</span>
                 </div>
               </td>
-              <td class="py-3 px-4 font-bold text-slate-900 ${tdBaseTop} ${tdBtmCabecera}">
-                <div class="flex items-center gap-2.5">
-                  ${obtenerFavicon(item.empresa)}
-                  <span>${item.empresa}</span>
-                  <span class="bg-slate-200 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">${item.filas.length} conceptos</span>
+              <td class="py-3 px-4 font-bold text-slate-900 border-r-[3px] sm:border-r-0 border-slate-500 ${tdBaseTop} ${tdBtmCabecera}">
+                <div class="flex items-center justify-between gap-2 w-full">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    ${obtenerFavicon(item.empresa)}
+                    <span class="truncate">${item.empresa}</span>
+                    <span class="bg-slate-200 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0">${item.filas.length} conceptos</span>
+                  </div>
+                  <span class="sm:hidden font-bold ${colorTexto} whitespace-nowrap shrink-0">${sumaFmt}</span>
                 </div>
               </td>
-              <td class="py-3 px-4 whitespace-nowrap text-right font-bold ${colorTexto} border-r-[3px] border-slate-500 ${tdBaseTop} ${tdBtmCabecera}">${sumaFmt}</td>
+              <td class="py-3 px-4 whitespace-nowrap text-right font-bold ${colorTexto} border-r-[3px] border-slate-500 ${tdBaseTop} ${tdBtmCabecera} hidden sm:table-cell">${sumaFmt}</td>
             </tr>`;
 
             item.filas.forEach((fila, idx) => {
@@ -1103,24 +1109,27 @@
               const colorHija = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
               const bgHijaPastel = mapaColoresPastel[colorHija] || "bg-white hover:bg-slate-50";
 
+              const badgesHija = renderBadgesFila(fila);
               bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} ${bgHijaPastel} transition cursor-pointer">` +
                 `<td class="py-2.5 px-4 whitespace-nowrap text-slate-300 text-[11px] border-l-[3px] border-slate-500 ${tdBtmHija}"></td>` +
-                `<td class="py-2.5 px-4 font-medium text-slate-700 pl-8 ${tdBtmHija}">` +
-                  `<div class="flex items-center justify-between w-full">` +
+                `<td class="py-2.5 px-4 font-medium text-slate-700 pl-4 sm:pl-8 border-r-[3px] sm:border-r-0 border-slate-500 ${tdBtmHija}">` +
+                  `<div class="flex items-center justify-between w-full gap-2">` +
                     `<div class="flex items-center min-w-0 flex-1">` +
-                      `<div class="flex items-center gap-2 w-64 sm:w-80 shrink-0 pr-3">` +
+                      `<div class="flex items-center gap-2 min-w-0 flex-1 sm:flex-none sm:w-80 sm:shrink-0 pr-2 sm:pr-3">` +
                         `<span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>` +
                         `<span class="truncate">${conceptoVal}</span>` +
                       `</div>` +
-                      `<div class="flex items-center gap-2 shrink-0">` +
+                      `<div class="hidden sm:flex items-center gap-2 shrink-0">` +
                         perHijaTag +
                         fechaHijaTag +
                       `</div>` +
                     `</div>` +
-                    renderBadgesFila(fila) +
+                    `<span class="sm:hidden font-semibold ${colorTexto} text-[11px] whitespace-nowrap shrink-0">${cantVal}</span>` +
+                    `<div class="hidden sm:flex items-center">${badgesHija}</div>` +
                   `</div>` +
+                  ((perHijaTag || fechaHijaTag || badgesHija) ? `<div class="flex sm:hidden items-center flex-wrap gap-2 mt-1.5 pl-3.5">${perHijaTag}${fechaHijaTag}${badgesHija}</div>` : "") +
                 `</td>` +
-                `<td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-[11px] border-r-[3px] border-slate-500 ${tdBtmHija}">${cantVal}</td>` +
+                `<td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-[11px] border-r-[3px] border-slate-500 ${tdBtmHija} hidden sm:table-cell">${cantVal}</td>` +
               `</tr>`;
             });
           }
