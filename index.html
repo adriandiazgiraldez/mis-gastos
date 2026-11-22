@@ -238,18 +238,23 @@
       </div>
 
       <form onsubmit="guardarGasto(event)" class="p-6 space-y-4 text-xs max-h-[78vh] overflow-y-auto">
-        <div>
+        <div class="relative">
           <label class="block text-[11px] font-semibold text-slate-500 mb-1">Concepto *</label>
-          <input type="text" id="form-concepto" required placeholder="Ej. Luz, Internet, Supermercado..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+          <input type="text" id="form-concepto" required autocomplete="off"
+            onfocus="mostrarDropdownConceptos()" oninput="filtrarDropdownConceptos()"
+            placeholder="Buscar o escribir nuevo concepto..."
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+          <div id="dropdown-conceptos" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-52 overflow-y-auto z-50 divide-y divide-slate-100"></div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-3 items-center">
           <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Pagado</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" onclick="seleccionarPagado('NO', this)" class="btn-pagado py-2 rounded-xl border border-slate-900 bg-slate-900 text-white font-semibold">NO</button>
-              <button type="button" onclick="seleccionarPagado('SI', this)" class="btn-pagado py-2 rounded-xl border border-slate-200 bg-white text-slate-600 font-semibold">SI</button>
-            </div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Pagado</label>
+            <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" id="toggle-pagado" onchange="cambiarTogglePagado(this.checked)" class="sr-only peer">
+              <div class="relative w-12 h-7 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-6 after:w-6 after:shadow-xs after:transition-all peer-checked:after:translate-x-5"></div>
+              <span id="texto-toggle-pagado" class="text-xs font-bold text-slate-600">NO</span>
+            </label>
             <input type="hidden" id="form-pagado" value="NO">
           </div>
           <div>
@@ -313,6 +318,7 @@
             <option value="fa-solid fa-heart-pulse">❤️ Salud / Médico</option>
             <option value="fa-solid fa-wrench">🔧 Mantenimiento / Taller</option>
           </select>
+          <input type="text" id="form-url-icono" placeholder="O pega la web de la empresa (ej. mercadona.es)" class="w-full mt-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-slate-400 focus:bg-white">
         </div>
 
         <div>
@@ -615,6 +621,10 @@
             const t = (texto || "").trim().toUpperCase();
             const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
             if (iconosGuardados[t]) {
+              if (iconosGuardados[t].startsWith("url:")) {
+                const dom = iconosGuardados[t].slice(4);
+                return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
+              }
               return `<i class="${iconosGuardados[t]} text-slate-500 w-4 text-center shrink-0"></i>`;
             }
             const mapa = {
@@ -859,11 +869,12 @@
       document.getElementById("form-cuota").value = getVal("cuota");
       document.getElementById("form-notas").value = getVal("notas");
       const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
-      document.getElementById("form-icono").value = iconosGuardados[getVal("concepto").toUpperCase()] || "";
+      const guardado = iconosGuardados[getVal("concepto").toUpperCase()] || "";
+      document.getElementById("form-icono").value = guardado.startsWith("url:") ? "" : guardado;
+      document.getElementById("form-url-icono").value = guardado.startsWith("url:") ? guardado.slice(4) : "";
 
-      const pagadoVal = getVal("pagado").toUpperCase() === "SI" ? "SI" : "NO";
-      const btnPagado = [...document.querySelectorAll(".btn-pagado")].find(b => b.textContent.trim() === pagadoVal);
-      if (btnPagado) seleccionarPagado(pagadoVal, btnPagado);
+      const estaPagado = getVal("pagado").toUpperCase() === "SI";
+      cambiarTogglePagado(estaPagado);
 
       document.getElementById("modal-gasto").classList.remove("hidden");
     }
@@ -903,20 +914,96 @@
     }
 
     // Modal Añadir Gasto
+    function obtenerHtmlIconoConcepto(texto) {
+      const t = (texto || "").trim().toUpperCase();
+      const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
+      if (iconosGuardados[t]) {
+        if (iconosGuardados[t].startsWith("url:")) {
+          const dom = iconosGuardados[t].slice(4);
+          return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
+        }
+        return `<i class="${iconosGuardados[t]} text-slate-500 w-4 text-center shrink-0"></i>`;
+      }
+      const mapa = {
+        "BBVA": "bbva.es", "CORTE INGL": "elcorteingles.es", "DIGI": "digimobil.es",
+        "FIATC": "fiatc.es", "AURA": "auraseguros.com", "APTHUELVA": "apthuelva.es",
+        "ENDESA": "endesa.com", "IBERDROLA": "iberdrola.es", "NATURGY": "naturgy.es",
+        "VODAFONE": "vodafone.es", "MOVISTAR": "movistar.es", "ORANGE": "orange.es",
+        "AMAZON": "amazon.es", "NETFLIX": "netflix.com", "SPOTIFY": "spotify.com"
+      };
+      const clave = Object.keys(mapa).find(k => t.includes(k));
+      if (clave) {
+        return `<img src="https://www.google.com/s2/favicons?domain=${mapa[clave]}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
+      }
+      return `<i class="fa-regular fa-building text-slate-300 w-4 text-center shrink-0"></i>`;
+    }
+
+    function mostrarDropdownConceptos() {
+      filtrarDropdownConceptos();
+      document.getElementById("dropdown-conceptos").classList.remove("hidden");
+    }
+
+    function filtrarDropdownConceptos() {
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const dropdown = document.getElementById("dropdown-conceptos");
+      if (idxConcepto === -1 || !dropdown) return;
+
+      const filtro = (document.getElementById("form-concepto").value || "").toLowerCase().trim();
+      const unicos = [...new Set(filasGlobales.map(f => (f[idxConcepto] || "").toString().trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+
+      const filtrados = filtro ? unicos.filter(c => c.toLowerCase().includes(filtro)) : unicos;
+
+      if (filtrados.length === 0) {
+        dropdown.innerHTML = `<div class="px-3.5 py-2.5 text-xs text-slate-400">Nuevo concepto: "${document.getElementById("form-concepto").value}"</div>`;
+        return;
+      }
+
+      dropdown.innerHTML = filtrados.map(c => {
+        const seguro = c.replace(/'/g, "\\'");
+        return `<button type="button" onclick="seleccionarConceptoDropdown('${seguro}')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition">
+          ${obtenerHtmlIconoConcepto(c)}
+          <span class="truncate">${c}</span>
+        </button>`;
+      }).join("");
+    }
+
+    function seleccionarConceptoDropdown(valor) {
+      document.getElementById("form-concepto").value = valor;
+      document.getElementById("dropdown-conceptos").classList.add("hidden");
+      const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
+      document.getElementById("form-icono").value = iconosGuardados[valor.toUpperCase()] || "";
+    }
+
+    document.addEventListener("click", (e) => {
+      const input = document.getElementById("form-concepto");
+      const drop = document.getElementById("dropdown-conceptos");
+      if (input && drop && !input.contains(e.target) && !drop.contains(e.target)) {
+        drop.classList.add("hidden");
+      }
+    });
+
+    function cambiarTogglePagado(activado) {
+      const valor = activado ? "SI" : "NO";
+      document.getElementById("form-pagado").value = valor;
+      document.getElementById("toggle-pagado").checked = activado;
+      const texto = document.getElementById("texto-toggle-pagado");
+      texto.textContent = valor;
+      texto.className = activado ? "text-xs font-bold text-emerald-600" : "text-xs font-bold text-slate-600";
+    }
+
     function abrirModalGasto() {
       document.getElementById("modal-gasto-titulo").textContent = "Añadir Gasto";
       document.getElementById("form-id").value = "";
+      document.getElementById("form-concepto").value = "";
+      document.getElementById("form-icono").value = "";
+      document.getElementById("form-url-icono").value = "";
+      cambiarTogglePagado(false);
       document.getElementById("modal-gasto").classList.remove("hidden");
     }
     function cerrarModalGasto() {
+      document.getElementById("dropdown-conceptos").classList.add("hidden");
       document.getElementById("modal-gasto").classList.add("hidden");
-    }
-    function seleccionarPagado(valor, btn) {
-      document.getElementById("form-pagado").value = valor;
-      document.querySelectorAll(".btn-pagado").forEach(b => {
-        b.className = "btn-pagado py-2 rounded-xl border border-slate-200 bg-white text-slate-600 font-semibold";
-      });
-      btn.className = "btn-pagado py-2 rounded-xl border border-slate-900 bg-slate-900 text-white font-semibold";
     }
     async function guardarGasto(e) {
       e.preventDefault();
@@ -925,9 +1012,14 @@
       btn.textContent = "Guardando...";
 
       const conceptoGuardar = document.getElementById("form-concepto").value.trim();
+      const urlRaw = (document.getElementById("form-url-icono").value || "").trim();
       const iconoElegido = document.getElementById("form-icono").value;
       const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
-      if (iconoElegido) {
+
+      if (urlRaw) {
+        const dominioLimpio = urlRaw.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0];
+        iconosGuardados[conceptoGuardar.toUpperCase()] = "url:" + dominioLimpio;
+      } else if (iconoElegido) {
         iconosGuardados[conceptoGuardar.toUpperCase()] = iconoElegido;
       } else {
         delete iconosGuardados[conceptoGuardar.toUpperCase()];
