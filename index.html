@@ -227,66 +227,69 @@
   </div>
 
   <!-- ==================== MODAL AÑADIR / EDITAR GASTO ==================== -->
-  <div id="modal-gasto" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white border border-slate-200 w-full max-w-lg rounded-3xl shadow-xl overflow-hidden my-6">
-      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+  <div id="modal-gasto" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-2xl rounded-3xl shadow-xl overflow-hidden">
+      <div class="px-6 py-3.5 border-b border-slate-100 flex items-center justify-between">
         <h3 id="modal-gasto-titulo" class="text-sm font-bold text-slate-900">Añadir Gasto</h3>
         <input type="hidden" id="form-id" value="">
-        <button onclick="cerrarModalGasto()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg">
+        <button type="button" onclick="cerrarModalGasto()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg transition">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <form onsubmit="guardarGasto(event)" class="p-6 space-y-4 text-xs max-h-[78vh] overflow-y-auto">
-        <div class="relative">
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Concepto *</label>
-          <input type="text" id="form-concepto" required autocomplete="off"
-            onfocus="mostrarDropdownConceptos()" oninput="filtrarDropdownConceptos()"
-            placeholder="Buscar o escribir nuevo concepto..."
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
-          <div id="dropdown-conceptos" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-52 overflow-y-auto z-50 divide-y divide-slate-100"></div>
+      <form onsubmit="guardarGasto(event)" class="p-5 sm:p-6 space-y-3.5 text-xs">
+        <!-- Fila 1: Concepto y Empresa -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="relative">
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Concepto *</label>
+            <input type="text" id="form-concepto" required autocomplete="off"
+              onfocus="mostrarDropdownConceptos()" oninput="filtrarDropdownConceptos()"
+              placeholder="Buscar o escribir concepto..."
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+            <div id="dropdown-conceptos" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-slate-100"></div>
+          </div>
+          <div class="relative">
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Empresa (opcional, para agrupar)</label>
+            <input type="text" id="form-empresa" autocomplete="off"
+              onfocus="mostrarDropdownEmpresas()" oninput="filtrarDropdownEmpresas()"
+              placeholder="Buscar o escribir empresa..."
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+            <div id="dropdown-empresas" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-slate-100"></div>
+          </div>
         </div>
 
-        <div class="relative">
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Empresa (opcional, para agrupar)</label>
-          <input type="text" id="form-empresa" autocomplete="off"
-            onfocus="mostrarDropdownEmpresas()" oninput="filtrarDropdownEmpresas()"
-            placeholder="Buscar o escribir nueva empresa..."
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
-          <div id="dropdown-empresas" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-52 overflow-y-auto z-50 divide-y divide-slate-100"></div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 items-center">
+        <!-- Fila 2: Pagado, Fecha Pago, Día previsto, Cantidad -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
           <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Pagado</label>
-            <label class="inline-flex items-center gap-3 cursor-pointer select-none">
-              <input type="checkbox" id="toggle-pagado" onchange="cambiarTogglePagado(this.checked)" class="sr-only peer">
-              <div class="relative w-12 h-7 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-6 after:w-6 after:shadow-xs after:transition-all peer-checked:after:translate-x-5"></div>
-              <span id="texto-toggle-pagado" class="text-xs font-bold text-slate-600">NO</span>
-            </label>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Pagado</label>
+            <div class="h-9 flex items-center">
+              <label class="inline-flex items-center gap-2.5 cursor-pointer select-none">
+                <input type="checkbox" id="toggle-pagado" onchange="cambiarTogglePagado(this.checked)" class="sr-only peer">
+                <div class="relative w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:shadow-xs after:transition-all peer-checked:after:translate-x-5"></div>
+                <span id="texto-toggle-pagado" class="text-xs font-bold text-slate-600">NO</span>
+              </label>
+            </div>
             <input type="hidden" id="form-pagado" value="NO">
           </div>
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Fecha del Pago</label>
-            <input type="date" id="form-fecha-pago" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-slate-400 focus:bg-white">
+            <input type="date" id="form-fecha-pago" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Día previsto / Fecha valor *</label>
-            <input type="number" id="form-dia" min="0" max="31" value="1" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Día previsto *</label>
+            <input type="number" id="form-dia" min="0" max="31" value="1" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Cantidad (€) *</label>
-            <input type="number" step="0.01" id="form-cantidad" required placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+            <input type="number" step="0.01" id="form-cantidad" required placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <!-- Fila 3: Mes, Año, Periodicidad, Nº Cuota -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Mes *</label>
-            <select id="form-mes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+            <select id="form-mes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
               <option>ENERO</option><option>FEBRERO</option><option>MARZO</option><option>ABRIL</option>
               <option>MAYO</option><option>JUNIO</option><option>JULIO</option><option>AGOSTO</option>
               <option>SEPTIEMBRE</option><option>OCTUBRE</option><option selected>NOVIEMBRE</option><option>DICIEMBRE</option>
@@ -294,50 +297,50 @@
           </div>
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Año *</label>
-            <input type="number" id="form-ano" value="2026" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+            <input type="number" id="form-ano" value="2026" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Periodicidad</label>
-            <select id="form-periodicidad" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+            <select id="form-periodicidad" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
               <option>Mensual</option><option>Anual</option><option>Gasto Puntual</option><option>Trimestral</option>
             </select>
           </div>
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Nº Cuota</label>
-            <input type="text" id="form-cuota" placeholder="Ej. 2/3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
+            <input type="text" id="form-cuota" placeholder="Ej. 2/3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Icono (opcional)</label>
-          <select id="form-icono" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-slate-400 focus:bg-white">
-            <option value="">Automático (según empresa/concepto)</option>
-            <option value="fa-solid fa-car">🚗 Coche / Cochera</option>
-            <option value="fa-solid fa-house">🏠 Casa / Comunidad</option>
-            <option value="fa-solid fa-bolt">⚡ Luz / Electricidad</option>
-            <option value="fa-solid fa-droplet">💧 Agua</option>
-            <option value="fa-solid fa-fire">🔥 Gas</option>
-            <option value="fa-solid fa-wifi">📶 Internet / Teléfono</option>
-            <option value="fa-solid fa-shield-halved">🛡️ Seguro</option>
-            <option value="fa-solid fa-landmark">🏛️ Banco / Préstamo / Impuesto</option>
-            <option value="fa-solid fa-cart-shopping">🛒 Compras / Supermercado</option>
-            <option value="fa-solid fa-heart-pulse">❤️ Salud / Médico</option>
-            <option value="fa-solid fa-wrench">🔧 Mantenimiento / Taller</option>
-          </select>
-          <input type="text" id="form-url-icono" placeholder="O pega la web de la empresa (ej. mercadona.es)" class="w-full mt-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-slate-400 focus:bg-white">
+        <!-- Fila 4: Icono / Web y Notas en 2 columnas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+          <div class="space-y-1.5">
+            <label class="block text-[11px] font-semibold text-slate-500">Icono / Web</label>
+            <select id="form-icono" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+              <option value="">Automático (según concepto)</option>
+              <option value="fa-solid fa-car">🚗 Coche / Cochera</option>
+              <option value="fa-solid fa-house">🏠 Casa / Comunidad</option>
+              <option value="fa-solid fa-bolt">⚡ Luz / Electricidad</option>
+              <option value="fa-solid fa-droplet">💧 Agua</option>
+              <option value="fa-solid fa-fire">🔥 Gas</option>
+              <option value="fa-solid fa-wifi">📶 Internet / Teléfono</option>
+              <option value="fa-solid fa-shield-halved">🛡️ Seguro</option>
+              <option value="fa-solid fa-landmark">🏛️ Banco / Préstamo / Impuesto</option>
+              <option value="fa-solid fa-cart-shopping">🛒 Compras / Supermercado</option>
+              <option value="fa-solid fa-heart-pulse">❤️ Salud / Médico</option>
+              <option value="fa-solid fa-wrench">🔧 Mantenimiento / Taller</option>
+            </select>
+            <input type="text" id="form-url-icono" placeholder="O web (ej. endesa.com)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Notas</label>
+            <textarea id="form-notas" rows="3" placeholder="Observaciones opcionales..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white resize-none"></textarea>
+          </div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Notas</label>
-          <textarea id="form-notas" rows="2" placeholder="Observaciones opcionales..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-slate-400 focus:bg-white"></textarea>
-        </div>
-
-        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-          <button type="button" onclick="cerrarModalGasto()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Cancelar</button>
-          <button type="submit" id="btn-guardar-gasto" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold">Guardar</button>
+        <!-- Botones de Acción -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="cerrarModalGasto()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition text-xs">Cancelar</button>
+          <button type="submit" id="btn-guardar-gasto" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold transition text-xs shadow-xs">Guardar</button>
         </div>
       </form>
     </div>
@@ -505,6 +508,7 @@
     function actualizarResumen() {
       const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
       const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
+      const idxNotas = headersGlobales.findIndex(h => h.toLowerCase().includes("nota"));
       const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
       const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
       const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
@@ -585,6 +589,7 @@
       const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
       const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
       const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
+      const idxNotas = headersGlobales.findIndex(h => h.toLowerCase().includes("nota"));
 
       let html = `<thead class="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
         <tr>
@@ -705,6 +710,23 @@
 
         let contadorGrupo = 0;
         gruposOrdenados.forEach(item => {
+          const renderIconoNota = (fila) => {
+            if (idxNotas === -1) return "";
+            const nota = (fila[idxNotas] || "").toString().trim();
+            if (!nota) return "";
+            const notaEscapada = nota.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+            return `<div class="relative group/nota inline-flex items-center shrink-0" onclick="event.stopPropagation()">
+              <i class="fa-solid fa-note-sticky text-amber-500 hover:text-amber-600 text-xs cursor-help"></i>
+              <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/nota:flex flex-col items-center z-30 pointer-events-none">
+                <div class="bg-slate-900 text-white text-[11px] font-normal rounded-2xl py-2 px-3.5 w-max max-w-[320px] min-w-[200px] shadow-xl whitespace-normal break-words text-left leading-snug">
+                  <span class="font-bold text-amber-400 block mb-1"><i class="fa-solid fa-note-sticky text-[10px] mr-1"></i>Nota:</span>
+                  <span>${notaEscapada}</span>
+                </div>
+                <div class="w-2.5 h-2.5 bg-slate-900 rotate-45 -mt-1 shadow-xs"></div>
+              </div>
+            </div>`;
+          };
+
           if (!item.esGrupo || item.filas.length === 1) {
             const fila = item.esGrupo ? item.filas[0] : item.fila;
             const idFila = idxId !== -1 ? fila[idxId] : "";
@@ -719,6 +741,7 @@
                 <div class="flex items-center gap-2.5">
                   ${obtenerFavicon(conceptoVal)}
                   <span>${conceptoVal}</span>
+                  ${renderIconoNota(fila)}
                 </div>
               </td>
               <td class="py-3 px-4 whitespace-nowrap text-right font-semibold ${colorTexto}">${cantVal}</td>
@@ -731,9 +754,16 @@
             const sumaGrupo = item.filas.reduce((acc, f) => acc + parsearCantidad(f), 0);
             const sumaFmt = sumaGrupo.toFixed(2).replace(".", ",") + " €";
 
+            // Obtener el día único del grupo (o rango si difieren)
+            const diasUnicos = [...new Set(item.filas.map(f => idxDia !== -1 ? (f[idxDia] || "").toString().trim() : "").filter(Boolean))];
+            const diaGrupo = diasUnicos.join(", ");
+
             bloque += `<tr onclick="toggleGrupoEmpresa('${grupoId}', '${claveGrupo}')" class="hover:bg-slate-50/80 transition cursor-pointer bg-white">
-              <td class="py-3 px-4 whitespace-nowrap text-slate-400">
-                <i id="chevron-${grupoId}" class="fa-solid fa-chevron-right text-[10px] transition-transform duration-150 ${estaCerrado ? "" : "rotate-90"}"></i>
+              <td class="py-3 px-4 whitespace-nowrap text-slate-500 font-medium">
+                <div class="flex items-center gap-1.5">
+                  <i id="chevron-${grupoId}" class="fa-solid fa-chevron-right text-[10px] text-slate-400 transition-transform duration-150 ${estaCerrado ? "" : "rotate-90"}"></i>
+                  <span>${diaGrupo}</span>
+                </div>
               </td>
               <td class="py-3 px-4 font-semibold text-slate-900">
                 <div class="flex items-center gap-2.5">
@@ -747,17 +777,17 @@
 
             item.filas.forEach(fila => {
               const idFila = idxId !== -1 ? fila[idxId] : "";
-              const diaVal = idxDia !== -1 ? fila[idxDia] : "";
               const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
               const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
               const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
 
               bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} bg-slate-50/50 hover:bg-slate-100/70 transition cursor-pointer">
-                <td class="py-2.5 px-4 whitespace-nowrap text-slate-400 text-[11px] pl-6">${diaVal}</td>
+                <td class="py-2.5 px-4 whitespace-nowrap text-slate-300 text-[11px]"></td>
                 <td class="py-2.5 px-4 font-medium text-slate-700 pl-8">
                   <div class="flex items-center gap-2">
                     <span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>
                     <span>${conceptoVal}</span>
+                    ${renderIconoNota(fila)}
                   </div>
                 </td>
                 <td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-[11px]">${cantVal}</td>
@@ -769,6 +799,11 @@
       };
 
       html += renderGrupo(pendientes, "NO", totalPendiente, false);
+      if (pendientes.length > 0 && pagados.length > 0) {
+        html += `<tr class="bg-slate-200/70 border-y border-slate-300/60 select-none">
+          <td colspan="3" class="h-4 p-0"></td>
+        </tr>`;
+      }
       html += renderGrupo(pagados, "SI", totalPagado, true);
 
       html += `</tbody>`;
@@ -986,6 +1021,7 @@
       const estaPagado = getVal("pagado").toUpperCase() === "SI";
       cambiarTogglePagado(estaPagado);
 
+      document.body.classList.add("overflow-hidden");
       document.getElementById("modal-gasto").classList.remove("hidden");
     }
 
@@ -1166,11 +1202,13 @@
       document.getElementById("form-icono").value = "";
       document.getElementById("form-url-icono").value = "";
       cambiarTogglePagado(false);
+      document.body.classList.add("overflow-hidden");
       document.getElementById("modal-gasto").classList.remove("hidden");
     }
     function cerrarModalGasto() {
       document.getElementById("dropdown-conceptos").classList.add("hidden");
       document.getElementById("modal-gasto").classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
     }
     async function guardarGasto(e) {
       e.preventDefault();
