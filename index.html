@@ -225,94 +225,26 @@
 
           <!-- Buscador + Tabla -->
           <div class="bg-white border border-slate-200/80 rounded-2xl shadow-2xs overflow-hidden">
-            <div class="p-4 border-b border-slate-100 space-y-3">
-              <!-- Fila Superior: Buscador Ancho + Contador de Registros -->
-              <div class="flex items-center justify-between gap-3">
-                <div class="relative flex-1 max-w-xl">
-                  <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-xs text-slate-400"></i>
-                  <input type="text" id="buscador-gastos" oninput="filtrarTabla()" placeholder="Buscar por concepto, mes, notas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 focus:bg-white transition">
-                </div>
-                <span id="contador-visible" class="text-xs text-slate-400 font-medium whitespace-nowrap">Mostrando 0 registros</span>
+            <div class="p-3.5 sm:p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <!-- Buscador a la izquierda -->
+              <div class="relative flex-1 min-w-[200px] max-w-xl">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-xs text-slate-400"></i>
+                <input type="text" id="buscador-gastos" oninput="filtrarTabla()" placeholder="Buscar por concepto, mes, notas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 focus:bg-white transition">
               </div>
 
-              <!-- Fila Inferior: Desplegables, Switch iOS "Ver Todo" y Botón Limpiar -->
-              <div class="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
-                <div class="flex flex-wrap items-center gap-2">
-                  <!-- Custom Dropdown con Favicon para Conceptos -->
-                  <div class="relative inline-block text-left" id="contenedor-filtro-concepto">
-                    <input type="hidden" id="filtro-concepto" value="">
-                    <button type="button" onclick="toggleDropdownFiltroConcepto(event)" id="btn-filtro-concepto" class="inline-flex items-center justify-between gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 max-w-[210px] transition">
-                      <div class="flex items-center gap-2 truncate">
-                        <span id="filtro-concepto-icono" class="shrink-0"><i class="fa-solid fa-layer-group text-slate-400 text-xs"></i></span>
-                        <span id="filtro-concepto-texto" class="truncate">Todos los conceptos</span>
-                      </div>
-                      <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
-                    </button>
-                    <div id="dropdown-menu-filtro-concepto" class="hidden absolute left-0 mt-1 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-96 overflow-y-auto z-50 divide-y divide-slate-100">
-                      <!-- Opciones generadas dinámicamente con icono -->
-                    </div>
-                  </div>
+              <!-- Derecha: Botón Filtrar, Botón Hoy y Contador de registros -->
+              <div class="flex items-center gap-2.5 shrink-0">
+                <button type="button" onclick="abrirModalFiltros()" class="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-95 shadow-xs">
+                  <i class="fa-solid fa-sliders text-[11px]"></i>
+                  <span>Filtrar</span>
+                </button>
 
-                  <select id="filtro-ano" onchange="onCambioMesOAno()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-400">
-                    <option value="">Todos los años</option>
-                  </select>
+                <button type="button" onclick="irAHoy()" id="btn-limpiar-filtros" title="Volver a la fecha actual" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-95">
+                  <i class="fa-regular fa-calendar-check text-blue-600"></i>
+                  <span>Hoy</span>
+                </button>
 
-                  <select id="filtro-mes" onchange="onCambioMesOAno()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-400">
-                    <option value="">Todos los meses</option>
-                    <option>ENERO</option><option>FEBRERO</option><option>MARZO</option><option>ABRIL</option>
-                    <option>MAYO</option><option>JUNIO</option><option>JULIO</option><option>AGOSTO</option>
-                    <option>SEPTIEMBRE</option><option>OCTUBRE</option><option>NOVIEMBRE</option><option>DICIEMBRE</option>
-                  </select>
-
-                  <button type="button" onclick="toggleCalendario()" id="btn-calendario" class="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 transition">
-                    <i class="fa-regular fa-calendar"></i>
-                    <span id="texto-btn-calendario">Día</span>
-                  </button>
-
-                  <button type="button" onclick="limpiarFiltros()" id="btn-limpiar-filtros" class="hidden text-xs font-semibold text-rose-600 hover:text-rose-700 px-2 py-1.5 transition">
-                    <i class="fa-solid fa-arrow-rotate-left mr-1"></i>Limpiar
-                  </button>
-                </div>
-
-                <!-- Botones PDF, Imprimir y Toggle iOS -->
-                <div class="flex items-center gap-2">
-                  <!-- Botón Descargar PDF -->
-                  <button type="button" onclick="descargarTablaPDF()" title="Descargar PDF filtrado" class="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 rounded-xl px-3 py-1.5 text-xs font-semibold transition active:scale-95 shadow-2xs">
-                    <i class="fa-regular fa-file-pdf text-rose-500"></i>
-                    <span>PDF</span>
-                  </button>
-
-                  <!-- Botón Imprimir (Ctrl + P) -->
-                  <button type="button" onclick="imprimirTabla()" title="Imprimir (Ctrl+P)" class="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 text-xs font-semibold transition active:scale-95 shadow-2xs">
-                    <i class="fa-solid fa-print text-slate-500"></i>
-                    <span>Imprimir</span>
-                  </button>
-
-                  <!-- Toggle tipo iOS para ver todo -->
-                  <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                    <span class="text-[11px] font-semibold text-slate-600 select-none">Ver todo</span>
-                    <label class="inline-flex items-center cursor-pointer select-none">
-                      <input type="checkbox" id="toggle-ver-todo" onchange="toggleVerTodo(this.checked)" class="sr-only peer">
-                      <div class="relative w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:bg-slate-900 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Calendario Mensual Desplegable -->
-              <div id="panel-calendario" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-3 max-w-xs">
-                <div class="flex items-center justify-between mb-2">
-                  <span id="calendario-titulo" class="text-xs font-bold text-slate-800">Calendario</span>
-                  <button type="button" onclick="seleccionarDiaCalendario(null)" class="text-[11px] font-semibold text-slate-500 hover:text-slate-900">Todos los días</button>
-                </div>
-                <table class="w-full text-center text-[11px] border-collapse">
-                  <thead>
-                    <tr class="text-slate-400 font-semibold">
-                      <th class="py-1">L</th><th class="py-1">M</th><th class="py-1">X</th><th class="py-1">J</th><th class="py-1">V</th><th class="py-1">S</th><th class="py-1">D</th>
-                    </tr>
-                  </thead>
-                  <tbody id="calendario-dias"></tbody>
-                </table>
+                <span id="contador-visible" class="text-xs text-slate-400 font-medium whitespace-nowrap pl-1">Mostrando 0 registros</span>
               </div>
             </div>
 
@@ -701,7 +633,116 @@
       </div>
     </div>
   </div>
+<!-- ==================== MODAL FILTRAR (CUADRADO Y CENTRADO) ==================== -->
+  <div id="modal-filtros" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-md rounded-3xl shadow-2xl overflow-visible flex flex-col">
+      <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-slate-700 text-xs"></i>
+          <h3 class="text-sm font-bold text-slate-900">Filtros de Búsqueda</h3>
+        </div>
+        <button type="button" onclick="cerrarModalFiltros()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
 
+      <div class="p-5 space-y-4 text-xs">
+        <!-- Concepto Dropdown con Buscador Escribible -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Concepto</label>
+          <div class="relative w-full text-left" id="contenedor-filtro-concepto">
+            <input type="hidden" id="filtro-concepto" value="">
+            <button type="button" onclick="toggleDropdownFiltroConcepto(event)" id="btn-filtro-concepto" class="w-full flex items-center justify-between gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 transition">
+              <div class="flex items-center gap-2 truncate">
+                <span id="filtro-concepto-icono" class="shrink-0"><i class="fa-solid fa-layer-group text-slate-400 text-xs"></i></span>
+                <span id="filtro-concepto-texto" class="truncate">Todos los conceptos</span>
+              </div>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+            </button>
+            <div id="dropdown-menu-filtro-concepto" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col">
+              <div class="p-2 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10" onclick="event.stopPropagation()">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-[11px] text-slate-400"></i>
+                  <input type="text" id="input-buscar-filtro-concepto" oninput="filtrarListaDropdownConceptos(this.value)" placeholder="Escribir concepto..." class="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400 transition" autocomplete="off">
+                </div>
+              </div>
+              <div id="lista-opciones-filtro-concepto" class="max-h-48 overflow-y-auto divide-y divide-slate-100"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Año, Mes y Día en Grid Compacto -->
+        <div class="grid grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Año</label>
+            <select id="filtro-ano" onchange="onCambioMesOAno()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-400">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Mes</label>
+            <select id="filtro-mes" onchange="onCambioMesOAno()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-400">
+              <option value="">Todos</option>
+              <option>ENERO</option><option>FEBRERO</option><option>MARZO</option><option>ABRIL</option>
+              <option>MAYO</option><option>JUNIO</option><option>JULIO</option><option>AGOSTO</option>
+              <option>SEPTIEMBRE</option><option>OCTUBRE</option><option>NOVIEMBRE</option><option>DICIEMBRE</option>
+            </select>
+          </div>
+          <div class="relative">
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Día</label>
+            <button type="button" onclick="toggleCalendario()" id="btn-calendario" class="w-full inline-flex items-center justify-between gap-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-700 transition">
+              <span id="texto-btn-calendario" class="truncate">Día</span>
+              <i class="fa-regular fa-calendar text-slate-400 text-[10px]"></i>
+            </button>
+            <!-- Panel Calendario Popover -->
+            <div id="panel-calendario" class="hidden absolute right-0 bottom-full mb-1 bg-white border border-slate-200 rounded-2xl p-3 w-64 shadow-2xl z-50">
+              <div class="flex items-center justify-between mb-2">
+                <span id="calendario-titulo" class="text-xs font-bold text-slate-800">Calendario</span>
+                <button type="button" onclick="seleccionarDiaCalendario(null)" class="text-[11px] font-semibold text-slate-500 hover:text-slate-900">Todos</button>
+              </div>
+              <table class="w-full text-center text-[11px] border-collapse">
+                <thead>
+                  <tr class="text-slate-400 font-semibold">
+                    <th class="py-1">L</th><th class="py-1">M</th><th class="py-1">X</th><th class="py-1">J</th><th class="py-1">V</th><th class="py-1">S</th><th class="py-1">D</th>
+                  </tr>
+                </thead>
+                <tbody id="calendario-dias"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones: PDF, Imprimir y Ver Todo Switch -->
+        <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="descargarTablaPDF()" title="Descargar PDF" class="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 rounded-xl px-3 py-1.5 text-xs font-semibold transition active:scale-95 shadow-2xs">
+              <i class="fa-regular fa-file-pdf text-rose-500"></i>
+              <span>PDF</span>
+            </button>
+            <button type="button" onclick="imprimirTabla()" title="Imprimir" class="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 text-xs font-semibold transition active:scale-95 shadow-2xs">
+              <i class="fa-solid fa-print text-slate-500"></i>
+              <span>Imprimir</span>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5">
+            <span class="text-[11px] font-semibold text-slate-600 select-none">Ver todo</span>
+            <label class="inline-flex items-center cursor-pointer select-none">
+              <input type="checkbox" id="toggle-ver-todo" onchange="toggleVerTodo(this.checked)" class="sr-only peer">
+              <div class="relative w-7 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:bg-slate-900 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-3"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie del Modal: Botón Aplicar / Cerrar -->
+      <div class="px-5 py-3 border-t border-slate-100 bg-slate-50/70 flex justify-end">
+        <button type="button" onclick="cerrarModalFiltros()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold transition text-xs shadow-xs">
+          Aplicar filtros
+        </button>
+      </div>
+    </div>
+  </div>
   <!-- ==================== MODAL VISUALIZADOR DE ADJUNTOS ==================== -->
   <div id="modal-visor" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-[70] hidden flex items-center justify-center p-2 sm:p-4">
     <div class="bg-white border border-slate-200 w-full max-w-4xl h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
@@ -1300,6 +1341,10 @@
       const idxPeriodicidad = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
       const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
       const idxColor = headersGlobales.findIndex(h => h.toLowerCase().includes("etiqueta") || h.toLowerCase().includes("color"));
+      const idxFechaPago = headersGlobales.findIndex(h => {
+        const nom = h.toLowerCase();
+        return nom.includes("fecha") && !nom.includes("limite");
+      });
 
       const parsearCantidad = (fila) => {
         if (idxCant === -1) return 0;
@@ -1310,6 +1355,45 @@
       const esPagado = (fila) => idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
 
       const pesoDia = (d) => (d === 30 || d === 31) ? (d - 100) : d;
+
+      // Obtener la fecha real del recibo (priorizando Fecha de Pago si existe; si no, día previsto + mes + año)
+      const obtenerInfoFechaFila = (fila) => {
+        const valFechaPago = idxFechaPago !== -1 ? (fila[idxFechaPago] || "").toString().trim() : "";
+        if (valFechaPago) {
+          let partes = null;
+          if (valFechaPago.includes("-")) partes = valFechaPago.split("-");
+          else if (valFechaPago.includes("/")) partes = valFechaPago.split("/");
+
+          if (partes && partes.length === 3) {
+            let a, m, d;
+            if (partes[0].length === 4) { // YYYY-MM-DD
+              a = parseInt(partes[0], 10);
+              m = parseInt(partes[1], 10) - 1;
+              d = parseInt(partes[2], 10);
+            } else { // DD/MM/YYYY
+              d = parseInt(partes[0], 10);
+              m = parseInt(partes[1], 10) - 1;
+              a = parseInt(partes[2], 10);
+            }
+            if (!isNaN(a) && !isNaN(m) && !isNaN(d)) {
+              return { dia: d, mesIdx: m, ano: a, clave: `${a}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}` };
+            }
+          }
+        }
+
+        // Si no hay fecha de pago o no es válida, usar día previsto + mes + año
+        const diaNum = idxDia !== -1 ? (parseInt(fila[idxDia], 10) || 1) : 1;
+        const mesTexto = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : mesActualTexto;
+        const mesIdx = MESES_LISTA.indexOf(mesTexto) !== -1 ? MESES_LISTA.indexOf(mesTexto) : ahoraMomento.getMonth();
+        const anoNum = idxAno !== -1 ? (parseInt(fila[idxAno], 10) || ahoraMomento.getFullYear()) : ahoraMomento.getFullYear();
+
+        return {
+          dia: diaNum,
+          mesIdx: mesIdx,
+          ano: anoNum,
+          clave: `${anoNum}-${String(mesIdx + 1).padStart(2, "0")}-${String(diaNum).padStart(2, "0")}`
+        };
+      };
 
       const obtenerFaviconImgOIcon = (texto) => {
         const t = (texto || "").trim().toUpperCase();
@@ -1441,32 +1525,53 @@
             </div>
         `;
 
-        // Agrupar elementos por DÍA
-        const mapaPorDia = {};
-        const diasOrden = [];
+        // Agrupar elementos por fecha completa (clave día/mes/año)
+        const mapaPorFecha = {};
+        const fechasOrdenadas = [];
 
         lista.forEach(fila => {
-          const diaNum = idxDia !== -1 ? (parseInt(fila[idxDia], 10) || 1) : 1;
-          const p = pesoDia(diaNum);
-          if (!mapaPorDia[p]) {
-            mapaPorDia[p] = { dia: diaNum, filas: [] };
-            diasOrden.push(p);
+          const infoFec = obtenerInfoFechaFila(fila);
+          const clave = infoFec.clave;
+          if (!mapaPorFecha[clave]) {
+            mapaPorFecha[clave] = {
+              dia: infoFec.dia,
+              mesTexto: MESES_LISTA[infoFec.mesIdx],
+              ano: infoFec.ano,
+              filas: []
+            };
+            fechasOrdenadas.push(clave);
           }
-          mapaPorDia[p].filas.push(fila);
+          mapaPorFecha[clave].filas.push(fila);
         });
 
-        diasOrden.sort((a, b) => a - b);
+        // Al ver todo o pagados ordenamos de más reciente a más antiguo; si es un mes específico pendiente, cronológico
+        if (esPagados || !esMesYAnioActual) {
+          fechasOrdenadas.sort((a, b) => b.localeCompare(a));
+        } else {
+          fechasOrdenadas.sort((a, b) => a.localeCompare(b));
+        }
 
         let lineaHoyPuesta = false;
+        let ultimoAnoRenderizado = null;
 
-        diasOrden.forEach(peso => {
-          const grupoDia = mapaPorDia[peso];
-          const primerFila = grupoDia.filas[0];
-          const mesTexto = idxMes !== -1 ? (primerFila[idxMes] || "").toString().trim().toUpperCase() : mesActualTexto;
-          const anoNum = idxAno !== -1 ? (primerFila[idxAno] || "").toString().trim() : ahoraMomento.getFullYear();
-          const fechaTitulo = formatearFechaCabecera(grupoDia.dia, mesTexto, anoNum);
+        fechasOrdenadas.forEach((claveFecha, idxClave) => {
+          const grupoDia = mapaPorFecha[claveFecha];
+          const peso = pesoDia(grupoDia.dia);
+          const fechaTitulo = formatearFechaCabecera(grupoDia.dia, grupoDia.mesTexto, grupoDia.ano);
 
-          // Línea temporal "HOY" en recibos no pagados
+          // Cabecera separadora del AÑO cuando cambia o al iniciar
+          if (grupoDia.ano !== ultimoAnoRenderizado) {
+            ultimoAnoRenderizado = grupoDia.ano;
+            bloque += `
+              <div class="pt-2 pb-1">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900 text-white text-xs font-bold tracking-wider shadow-2xs">
+                  <i class="fa-regular fa-calendar-days text-[11px]"></i> ${ultimoAnoRenderizado}
+                </span>
+              </div>
+            `;
+          }
+
+          // Línea temporal "HOY" en recibos no pagados (solo en el mes actual)
           if (!esPagados && esMesYAnioActual && !lineaHoyPuesta && peso >= diaHoyNumero) {
             lineaHoyPuesta = true;
             const diffMs = new Date(anoActualNumero, ahoraMomento.getMonth(), Math.max(peso, diaHoyNumero)).getTime() - ahoraMomento.getTime();
@@ -1582,7 +1687,7 @@
             } else {
               // Tarjeta BBVA agrupada por Empresa
               contadorSub++;
-              const grupoId = `bbva-grp-${peso}-${contadorSub}`;
+              const grupoId = `bbva-grp-${claveFecha.replace(/[^a-zA-Z0-9]/g, '_')}-${contadorSub}`;
               const claveGrupo = `BBVA-${item.empresa.toUpperCase()}`;
               const estaCerrado = !!gruposCerrados[claveGrupo];
               const sumaGrupo = item.filas.reduce((acc, f) => acc + parsearCantidad(f), 0);
@@ -1717,28 +1822,7 @@
       const selectMes = document.getElementById("filtro-mes");
       const selectConcepto = document.getElementById("filtro-concepto");
 
-      const menuConceptos = document.getElementById("dropdown-menu-filtro-concepto");
-      if (idxConcepto !== -1 && menuConceptos) {
-        const conceptos = [...new Set(filasGlobales.map(f => (f[idxConcepto] || "").toString().trim()).filter(Boolean))]
-          .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
-
-        let htmlMenu = `<button type="button" onclick="seleccionarFiltroConcepto('', 'Todos los conceptos', '<i class=\\'fa-solid fa-layer-group text-slate-400 text-xs\\'></i>')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition font-semibold">
-          <i class="fa-solid fa-layer-group text-slate-400 text-xs shrink-0"></i>
-          <span>Todos los conceptos</span>
-        </button>`;
-
-        conceptos.forEach(c => {
-          const iconoHtml = obtenerHtmlIconoConcepto(c);
-          const cEscapado = c.replace(/'/g, "\\'");
-          const iconoHtmlEscapado = iconoHtml.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-          htmlMenu += `<button type="button" onclick="seleccionarFiltroConcepto('${cEscapado}', '${cEscapado}', '${iconoHtmlEscapado}')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition">
-            ${iconoHtml}
-            <span class="truncate">${c}</span>
-          </button>`;
-        });
-
-        menuConceptos.innerHTML = htmlMenu;
-      }
+      renderizarOpcionesFiltroConceptos();
 
       if (idxAno === -1 || !selectAno) return;
 
@@ -1830,10 +1914,65 @@
       filtrarTabla();
     }
 
+    let listaConceptosUnicosCache = [];
+
+    function renderizarOpcionesFiltroConceptos(filtroTexto = "") {
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const contenedorLista = document.getElementById("lista-opciones-filtro-concepto") || document.getElementById("dropdown-menu-filtro-concepto");
+      if (idxConcepto === -1 || !contenedorLista) return;
+
+      if (listaConceptosUnicosCache.length === 0) {
+        listaConceptosUnicosCache = [...new Set(filasGlobales.map(f => (f[idxConcepto] || "").toString().trim()).filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+      }
+
+      const q = quitarAcentos(filtroTexto);
+      const filtrados = q ? listaConceptosUnicosCache.filter(c => quitarAcentos(c).includes(q)) : listaConceptosUnicosCache;
+
+      let html = "";
+      if (!q) {
+        html += `<button type="button" onclick="seleccionarFiltroConcepto('', 'Todos los conceptos', '<i class=\\'fa-solid fa-layer-group text-slate-400 text-xs\\'></i>')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition font-semibold">
+          <i class="fa-solid fa-layer-group text-slate-400 text-xs shrink-0"></i>
+          <span>Todos los conceptos</span>
+        </button>`;
+      }
+
+      if (filtrados.length === 0) {
+        html += `<div class="p-3 text-center text-xs text-slate-400">No se encontraron conceptos</div>`;
+      } else {
+        filtrados.forEach(c => {
+          const iconoHtml = obtenerHtmlIconoConcepto(c);
+          const cEscapado = c.replace(/'/g, "\\'");
+          const iconoHtmlEscapado = iconoHtml.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          html += `<button type="button" onclick="seleccionarFiltroConcepto('${cEscapado}', '${cEscapado}', '${iconoHtmlEscapado}')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition">
+            ${iconoHtml}
+            <span class="truncate">${c}</span>
+          </button>`;
+        });
+      }
+
+      contenedorLista.innerHTML = html;
+    }
+
+    function filtrarListaDropdownConceptos(val) {
+      renderizarOpcionesFiltroConceptos(val);
+    }
+
     function toggleDropdownFiltroConcepto(e) {
       if (e) e.stopPropagation();
       const menu = document.getElementById("dropdown-menu-filtro-concepto");
-      if (menu) menu.classList.toggle("hidden");
+      if (!menu) return;
+      const estaOculto = menu.classList.contains("hidden");
+      menu.classList.toggle("hidden");
+
+      if (estaOculto) {
+        const inputBuscar = document.getElementById("input-buscar-filtro-concepto");
+        if (inputBuscar) {
+          inputBuscar.value = "";
+          renderizarOpcionesFiltroConceptos("");
+          setTimeout(() => inputBuscar.focus(), 50);
+        }
+      }
     }
 
     function seleccionarFiltroConcepto(valor, texto, iconoHtml) {
@@ -1872,7 +2011,19 @@
       }
     });
 
-    function limpiarFiltros() {
+    function abrirModalFiltros() {
+      document.getElementById("modal-filtros").classList.remove("hidden");
+    }
+
+    function cerrarModalFiltros() {
+      document.getElementById("modal-filtros").classList.add("hidden");
+      document.getElementById("panel-calendario").classList.add("hidden");
+      const dropConcepto = document.getElementById("dropdown-menu-filtro-concepto");
+      if (dropConcepto) dropConcepto.classList.add("hidden");
+    }
+
+    function irAHoy() {
+      // Limpia el buscador y restablece los filtros al día, mes y año en curso
       document.getElementById("buscador-gastos").value = "";
       seleccionarFiltroConcepto("", "Todos los conceptos", '<i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>');
 
@@ -1883,10 +2034,14 @@
       const toggleTodo = document.getElementById("toggle-ver-todo");
       if (toggleTodo) toggleTodo.checked = false;
 
-      diaSeleccionado = null;
-      document.getElementById("texto-btn-calendario").textContent = "Día";
+      diaSeleccionado = ahora.getDate();
+      document.getElementById("texto-btn-calendario").textContent = `Día ${diaSeleccionado}`;
       document.getElementById("panel-calendario").classList.add("hidden");
       filtrarTabla();
+    }
+
+    function limpiarFiltros() {
+      irAHoy();
     }
 
     function quitarAcentos(str) {
