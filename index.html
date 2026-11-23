@@ -546,9 +546,14 @@
         <h3 class="text-sm font-bold text-slate-900">¿Eliminar este concepto?</h3>
         <p class="text-xs text-slate-500 mt-1">Esta acción no se puede deshacer y se borrará de la base de datos.</p>
       </div>
-      <div class="flex items-center justify-center gap-2 pt-2">
-        <button type="button" onclick="cerrarConfirmarEliminar()" class="flex-1 py-2.5 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancelar</button>
-        <button type="button" id="btn-confirmar-eliminar" class="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition">Sí, eliminar</button>
+      <div id="contenedor-botones-eliminar" class="flex flex-col gap-2 pt-2">
+        <button type="button" id="btn-confirmar-eliminar-todas" class="hidden w-full py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition shadow-xs">
+          Eliminar todas las cuotas
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="cerrarConfirmarEliminar()" class="flex-1 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancelar</button>
+          <button type="button" id="btn-confirmar-eliminar" class="flex-1 py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 transition">Solo esta cuota</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1080,12 +1085,7 @@
 
             const perVal = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim() : "";
             const cuotaVal = idxCuota !== -1 ? (fila[idxCuota] || "").toString().trim() : "";
-            let etiquetaPer = "";
-            if (perVal && perVal.toLowerCase() !== "gasto puntual") {
-              etiquetaPer = cuotaVal ? `${perVal} (${cuotaVal})` : perVal;
-            } else if (cuotaVal) {
-              etiquetaPer = `Cuota ${cuotaVal}`;
-            }
+            let etiquetaPer = cuotaVal || (perVal && perVal.toLowerCase() !== "gasto puntual" ? perVal : "");
             const perTag = etiquetaPer
               ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${etiquetaPer}</span>`
               : "";
@@ -1177,12 +1177,7 @@
 
               const perHijaVal = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim() : "";
               const cuotaHijaVal = idxCuota !== -1 ? (fila[idxCuota] || "").toString().trim() : "";
-              let etiquetaHijaPer = "";
-              if (perHijaVal && perHijaVal.toLowerCase() !== "gasto puntual") {
-                etiquetaHijaPer = cuotaHijaVal ? `${perHijaVal} (${cuotaHijaVal})` : perHijaVal;
-              } else if (cuotaHijaVal) {
-                etiquetaHijaPer = `Cuota ${cuotaHijaVal}`;
-              }
+              let etiquetaHijaPer = cuotaHijaVal || (perHijaVal && perHijaVal.toLowerCase() !== "gasto puntual" ? perHijaVal : "");
               const perHijaTag = etiquetaHijaPer
                 ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${etiquetaHijaPer}</span>`
                 : "";
@@ -1766,18 +1761,58 @@
     function eliminarGasto(id) {
       const modal = document.getElementById("modal-confirmar-eliminar");
       const btnConfirmar = document.getElementById("btn-confirmar-eliminar");
-      modal.classList.remove("hidden");
+      const btnConfirmarTodas = document.getElementById("btn-confirmar-eliminar-todas");
 
-      btnConfirmar.onclick = async () => {
+      const idxId = headersGlobales.findIndex(h => h.trim().toUpperCase() === "ID");
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
+      const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
+      const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+
+      const filaActual = filasGlobales.find(f => (f[idxId] || "").toString() === id.toString());
+      const conceptoActual = (filaActual && idxConcepto !== -1) ? (filaActual[idxConcepto] || "").toString().trim().toUpperCase() : "";
+      const empresaActual = (filaActual && idxEmpresa !== -1) ? (filaActual[idxEmpresa] || "").toString().trim().toUpperCase() : "";
+      const cuotaActual = (filaActual && idxCuota !== -1) ? (filaActual[idxCuota] || "").toString().trim() : "";
+      const cantActual = (filaActual && idxCant !== -1) ? (filaActual[idxCant] || "").toString().trim() : "";
+
+      // Buscar si existen otras cuotas hermanas de este mismo gasto
+      let idsRelacionados = [id.toString()];
+      const tieneCuotas = cuotaActual && cuotaActual.includes("/");
+
+      if (tieneCuotas && conceptoActual) {
+        filasGlobales.forEach(f => {
+          const cFila = idxConcepto !== -1 ? (f[idxConcepto] || "").toString().trim().toUpperCase() : "";
+          const empFila = idxEmpresa !== -1 ? (f[idxEmpresa] || "").toString().trim().toUpperCase() : "";
+          const cantFila = idxCant !== -1 ? (f[idxCant] || "").toString().trim() : "";
+          const idFila = idxId !== -1 ? (f[idxId] || "").toString() : "";
+
+          if (idFila && cFila === conceptoActual && empFila === empresaActual && cantFila === cantActual) {
+            if (!idsRelacionados.includes(idFila)) {
+              idsRelacionados.push(idFila);
+            }
+          }
+        });
+      }
+
+      const ejecutarBorrado = async (idsABorrar, botonPresionado) => {
+        botonPresionado.disabled = true;
         btnConfirmar.disabled = true;
-        btnConfirmar.textContent = "Eliminando...";
+        if (btnConfirmarTodas) btnConfirmarTodas.disabled = true;
+        const textoOriginal = botonPresionado.textContent;
+        botonPresionado.textContent = "Eliminando...";
 
         try {
           const res = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ token: tokenActual, action: "delete", id: id })
+            body: JSON.stringify({
+              token: tokenActual,
+              action: idsABorrar.length > 1 ? "delete_batch" : "delete",
+              id: idsABorrar.length === 1 ? idsABorrar[0] : undefined,
+              ids: idsABorrar.length > 1 ? idsABorrar : undefined
+            })
           });
+
           const json = await res.json();
           if (json.status !== "ok") throw new Error(json.message || "Error al eliminar");
 
@@ -1788,9 +1823,23 @@
           alert("No se pudo eliminar: " + err.message);
         } finally {
           btnConfirmar.disabled = false;
-          btnConfirmar.textContent = "Sí, eliminar";
+          if (btnConfirmarTodas) btnConfirmarTodas.disabled = false;
+          botonPresionado.textContent = textoOriginal;
         }
       };
+
+      if (idsRelacionados.length > 1) {
+        btnConfirmar.textContent = "Solo esta cuota";
+        btnConfirmarTodas.textContent = `Eliminar las ${idsRelacionados.length} cuotas`;
+        btnConfirmarTodas.classList.remove("hidden");
+        btnConfirmarTodas.onclick = () => ejecutarBorrado(idsRelacionados, btnConfirmarTodas);
+      } else {
+        btnConfirmar.textContent = "Sí, eliminar";
+        btnConfirmarTodas.classList.add("hidden");
+      }
+
+      btnConfirmar.onclick = () => ejecutarBorrado([id.toString()], btnConfirmar);
+      modal.classList.remove("hidden");
     }
 
     function cerrarConfirmarEliminar() {
@@ -2045,48 +2094,66 @@
       const anoInicialNum = parseInt(document.getElementById("form-ano").value, 10);
       const cuotaInicialTexto = document.getElementById("form-cuota").value.trim();
 
-      // Cálculo de instancias repetitivas si es nuevo gasto recurrente
+      // Cálculo de instancias repetitivas si es nuevo gasto
       const filasLote = [];
-      if (!formId && periodicidad !== "Gasto Puntual") {
+      let cuotaFinalPrimerRegistro = cuotaInicialTexto;
+
+      if (!formId) {
+        let cuotaNumActual = 1;
+        let cuotaTotalDenominador = null;
+
+        if (cuotaInicialTexto) {
+          const matchCuota = cuotaInicialTexto.match(/^(\d+)(?:\/(\d+))?$/);
+          if (matchCuota) {
+            if (matchCuota[2]) {
+              cuotaNumActual = parseInt(matchCuota[1], 10) || 1;
+              cuotaTotalDenominador = parseInt(matchCuota[2], 10);
+            } else {
+              const numPuro = parseInt(matchCuota[1], 10);
+              if (numPuro > 1) {
+                cuotaNumActual = 1;
+                cuotaTotalDenominador = numPuro;
+              }
+            }
+          }
+        }
+
         const pasoMeses = {
           "Mensual": 1,
           "Bimensual": 2,
           "Trimestral": 3,
           "Semestral": 6,
-          "Anual": 12
+          "Anual": 12,
+          "Gasto Puntual": 1
         }[periodicidad] || 1;
 
-        const tipoFin = document.getElementById("form-tipo-fin-recurrencia").value;
         let totalIteraciones = 1;
-
-        // Extraer número de cuota inicial si tiene formato "1" o "1/12"
-        let cuotaNumActual = 1;
-        let cuotaTotalDenominador = null;
-        if (cuotaInicialTexto) {
-          const matchCuota = cuotaInicialTexto.match(/^(\d+)(?:\/(\d+))?$/);
-          if (matchCuota) {
-            cuotaNumActual = parseInt(matchCuota[1], 10) || 1;
-            if (matchCuota[2]) cuotaTotalDenominador = parseInt(matchCuota[2], 10);
+        if (cuotaTotalDenominador && cuotaTotalDenominador >= cuotaNumActual) {
+          totalIteraciones = cuotaTotalDenominador - cuotaNumActual + 1;
+        } else if (periodicidad !== "Gasto Puntual") {
+          const tipoFin = document.getElementById("form-tipo-fin-recurrencia").value;
+          if (tipoFin === "indeterminado") {
+            totalIteraciones = Math.floor(12 / pasoMeses);
+          } else if (tipoFin === "cuotas") {
+            const totalCuotasInput = parseInt(document.getElementById("form-total-cuotas").value, 10);
+            if (totalCuotasInput && totalCuotasInput >= cuotaNumActual) {
+              totalIteraciones = totalCuotasInput - cuotaNumActual + 1;
+              cuotaTotalDenominador = totalCuotasInput;
+            }
+          } else if (tipoFin === "fecha") {
+            const mesFinTexto = document.getElementById("form-rec-mes-fin").value;
+            const anoFinNum = parseInt(document.getElementById("form-rec-ano-fin").value, 10);
+            const idxMesIni = MESES_LISTA.indexOf(mesInicialTexto);
+            const idxMesFin = MESES_LISTA.indexOf(mesFinTexto);
+            const diffMeses = ((anoFinNum - anoInicialNum) * 12) + (idxMesFin - idxMesIni);
+            if (diffMeses >= 0) {
+              totalIteraciones = Math.floor(diffMeses / pasoMeses) + 1;
+            }
           }
         }
 
-        if (tipoFin === "indeterminado") {
-          totalIteraciones = Math.floor(12 / pasoMeses); // 1 año vista
-        } else if (tipoFin === "cuotas") {
-          const totalCuotasInput = parseInt(document.getElementById("form-total-cuotas").value, 10);
-          if (totalCuotasInput && totalCuotasInput >= cuotaNumActual) {
-            totalIteraciones = totalCuotasInput - cuotaNumActual + 1;
-            cuotaTotalDenominador = totalCuotasInput;
-          }
-        } else if (tipoFin === "fecha") {
-          const mesFinTexto = document.getElementById("form-rec-mes-fin").value;
-          const anoFinNum = parseInt(document.getElementById("form-rec-ano-fin").value, 10);
-          const idxMesIni = MESES_LISTA.indexOf(mesInicialTexto);
-          const idxMesFin = MESES_LISTA.indexOf(mesFinTexto);
-          const diffMeses = ((anoFinNum - anoInicialNum) * 12) + (idxMesFin - idxMesIni);
-          if (diffMeses >= 0) {
-            totalIteraciones = Math.floor(diffMeses / pasoMeses) + 1;
-          }
+        if (cuotaTotalDenominador) {
+          cuotaFinalPrimerRegistro = `${cuotaNumActual}/${cuotaTotalDenominador}`;
         }
 
         if (totalIteraciones > 1) {
@@ -2108,7 +2175,7 @@
               cantidad: document.getElementById("form-cantidad").value,
               mes: MESES_LISTA[mesIdxIter],
               ano: anoIter.toString(),
-              periodicidad: periodicidad,
+              periodicidad: periodicidad === "Gasto Puntual" ? "Mensual" : periodicidad,
               cuota: strCuota,
               notas: document.getElementById("form-notas").value.trim(),
               pdfBase64: k === 0 ? pdfBase64 : null,
@@ -2136,8 +2203,8 @@
         cantidad: document.getElementById("form-cantidad").value,
         mes: mesInicialTexto,
         ano: anoInicialNum.toString(),
-        periodicidad: periodicidad,
-        cuota: cuotaInicialTexto,
+        periodicidad: (periodicidad === "Gasto Puntual" && filasLote.length > 0) ? "Mensual" : periodicidad,
+        cuota: cuotaFinalPrimerRegistro,
         notas: document.getElementById("form-notas").value.trim(),
         pdfBase64: pdfBase64,
         imgBase64: imgBase64,
