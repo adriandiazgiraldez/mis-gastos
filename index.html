@@ -285,10 +285,9 @@
 
             <div id="titulo-mes-ano-actual" class="py-2.5 px-4 bg-slate-50/70 border-b border-slate-100 text-center text-xs font-bold uppercase tracking-wider text-slate-700"></div>
 
-            <div class="overflow-x-auto">
-              <table id="tabla-gastos" class="w-full text-left text-xs text-slate-700">
-                <!-- Se rellena dinámicamente -->
-              </table>
+            <!-- Contenedor estilo BBVA: Tarjetas y Días agrupados -->
+            <div id="contenedor-gastos-bbva" class="p-3 sm:p-5 space-y-6 bg-slate-100/50">
+              <!-- Se rellena dinámicamente -->
             </div>
           </div>
         </section>
@@ -702,6 +701,8 @@
     let tokenActual = null;
     let headersGlobales = [];
     let filasGlobales = [];
+    let diaSeleccionado = null;
+    const MESES_LISTA = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
 
     let temporizadorPopupAviso = null;
     let avisoProximoMostrado = false;
@@ -1226,7 +1227,7 @@
     }
 
     function renderizarTabla(filas) {
-      const tabla = document.getElementById("tabla-gastos");
+      const contenedor = document.getElementById("contenedor-gastos-bbva") || document.getElementById("tabla-gastos");
       document.getElementById("contador-visible").textContent = `Mostrando ${filas.length} registros`;
 
       const idxId = headersGlobales.findIndex(h => h.trim().toUpperCase() === "ID");
@@ -1240,14 +1241,7 @@
       const idxNotas = headersGlobales.findIndex(h => h.toLowerCase().includes("nota"));
       const idxPeriodicidad = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
       const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
-
-      let html = `<thead class="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-300">
-        <tr>
-          <th class="py-3 px-4 font-semibold whitespace-nowrap w-16">DÍA</th>
-          <th class="py-3 px-4 font-semibold whitespace-nowrap">CONCEPTO</th>
-          <th class="py-3 px-4 font-semibold whitespace-nowrap text-right hidden sm:table-cell">CANTIDAD (€)</th>
-        </tr>
-      </thead><tbody class="divide-y divide-slate-200">`;
+      const idxColor = headersGlobales.findIndex(h => h.toLowerCase().includes("etiqueta") || h.toLowerCase().includes("color"));
 
       const parsearCantidad = (fila) => {
         if (idxCant === -1) return 0;
@@ -1257,464 +1251,371 @@
 
       const esPagado = (fila) => idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
 
+      const pesoDia = (d) => (d === 30 || d === 31) ? (d - 100) : d;
+
+      const obtenerFaviconImgOIcon = (texto) => {
+        const t = (texto || "").trim().toUpperCase();
+        const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
+        if (iconosGuardados[t]) {
+          if (iconosGuardados[t].startsWith("url:")) {
+            const dom = iconosGuardados[t].slice(4);
+            return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=32" alt="" class="w-5 h-5 rounded-full object-cover">`;
+          }
+          return `<i class="${iconosGuardados[t]} text-slate-700 text-xs"></i>`;
+        }
+        const mapa = {
+          "BBVA": "bbva.es", "CORTE INGL": "elcorteingles.es", "DIGI": "digimobil.es",
+          "FIATC": "fiatc.es", "AURA": "auraseguros.com", "APTHUELVA": "apthuelva.es",
+          "ENDESA": "endesa.com", "IBERDROLA": "iberdrola.es", "NATURGY": "naturgy.es",
+          "VODAFONE": "vodafone.es", "MOVISTAR": "movistar.es", "ORANGE": "orange.es",
+          "AMAZON": "amazon.es", "NETFLIX": "netflix.com", "SPOTIFY": "spotify.com"
+        };
+        const clave = Object.keys(mapa).find(k => t.includes(k));
+        if (clave) {
+          return `<img src="https://www.google.com/s2/favicons?domain=${mapa[clave]}&sz=32" alt="" class="w-5 h-5 rounded-full object-cover">`;
+        }
+        // Iníciales estilo BBVA (ej: "PA", "RE", "CH")
+        const palabras = t.split(" ").filter(Boolean);
+        const iniciales = palabras.length > 1 ? (palabras[0][0] + palabras[1][0]) : t.slice(0, 2);
+        return `<span class="text-[11px] font-bold text-slate-700 tracking-tight">${iniciales || "··"}</span>`;
+      };
+
+      const obtenerPaletaCirculo = (texto) => {
+        const paletas = [
+          "bg-indigo-100 text-indigo-700",
+          "bg-sky-100 text-sky-700",
+          "bg-amber-100 text-amber-800",
+          "bg-emerald-100 text-emerald-700",
+          "bg-purple-100 text-purple-700",
+          "bg-rose-100 text-rose-700"
+        ];
+        let hash = 0;
+        for (let i = 0; i < (texto || "").length; i++) hash = texto.charCodeAt(i) + ((hash << 5) - hash);
+        return paletas[Math.abs(hash) % paletas.length];
+      };
+
+      const mapaColoresEtiquetaBorde = {
+        "amarillo": "border-l-4 border-l-amber-400",
+        "naranja": "border-l-4 border-l-orange-500",
+        "rojo": "border-l-4 border-l-rose-500",
+        "verde": "border-l-4 border-l-emerald-500",
+        "azul": "border-l-4 border-l-sky-500",
+        "morado": "border-l-4 border-l-purple-500"
+      };
+
       const ordenarDescendente = (a, b) => {
-        const anoA = idxAno !== -1 ? (parseInt(a[idxAno], 10) || 0) : 0;
-        const anoB = idxAno !== -1 ? (parseInt(b[idxAno], 10) || 0) : 0;
-        if (anoB !== anoA) return anoB - anoA;
-
-        const mesTextoA = idxMes !== -1 ? (a[idxMes] || "").toString().trim().toUpperCase() : "";
-        const mesTextoB = idxMes !== -1 ? (b[idxMes] || "").toString().trim().toUpperCase() : "";
-        const mesA = MESES_LISTA.indexOf(mesTextoA);
-        const mesB = MESES_LISTA.indexOf(mesTextoB);
-        if (mesB !== mesA) return mesB - mesA;
-
         const diaRawA = idxDia !== -1 ? (parseInt(a[idxDia], 10) || 0) : 0;
         const diaRawB = idxDia !== -1 ? (parseInt(b[idxDia], 10) || 0) : 0;
-        const pesoDia = (d) => (d === 30 || d === 31) ? (d - 100) : d;
-        const pesoA = pesoDia(diaRawA);
-        const pesoB = pesoDia(diaRawB);
-        if (pesoA !== pesoB) return pesoA - pesoB;
-
+        const pA = pesoDia(diaRawA);
+        const pB = pesoDia(diaRawB);
+        if (pA !== pB) return pA - pB;
         const cA = idxConcepto !== -1 ? (a[idxConcepto] || "").toString().trim() : "";
         const cB = idxConcepto !== -1 ? (b[idxConcepto] || "").toString().trim() : "";
         return cA.localeCompare(cB, "es", { sensitivity: "base" });
       };
 
-      const pendientes = filas.filter(f => !esPagado(f)).sort(ordenarDescendente);
-      const pagados = filas.filter(f => esPagado(f)).sort(ordenarDescendente);
+      const mapaConceptoEmpresa = {};
+      if (idxConcepto !== -1 && idxEmpresa !== -1) {
+        filasGlobales.forEach(f => {
+          const c = (f[idxConcepto] || "").toString().trim().toUpperCase();
+          const emp = (f[idxEmpresa] || "").toString().trim();
+          if (c && emp) mapaConceptoEmpresa[c] = emp;
+        });
+      }
 
-      const totalPendiente = pendientes.reduce((acc, f) => acc + parsearCantidad(f), 0);
-      const totalPagado = pagados.reduce((acc, f) => acc + parsearCantidad(f), 0);
+      const ahoraMomento = new Date();
+      const diaHoyNumero = ahoraMomento.getDate();
+      const anoActualNumero = ahoraMomento.getFullYear();
+      const mesActualTexto = MESES_LISTA[ahoraMomento.getMonth()];
+      const filtroAnoVal = document.getElementById("filtro-ano")?.value;
+      const filtroMesVal = document.getElementById("filtro-mes")?.value;
+      const esMesYAnioActual = (!filtroAnoVal || parseInt(filtroAnoVal, 10) === anoActualNumero) &&
+                               (!filtroMesVal || filtroMesVal.toUpperCase() === mesActualTexto);
 
-      const esVerTodoActivo = !!document.getElementById("toggle-ver-todo")?.checked;
+      const formatearFechaCabecera = (dia, mesTexto, anoNum) => {
+        const mesIdx = MESES_LISTA.indexOf(mesTexto);
+        const a = parseInt(anoNum, 10) || ahoraMomento.getFullYear();
+        const m = mesIdx !== -1 ? mesIdx : ahoraMomento.getMonth();
+        const d = parseInt(dia, 10) || 1;
+        const nombresDias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const objFecha = new Date(a, m, d);
+        const nombreSemana = nombresDias[objFecha.getDay()];
+        const nombreMesLimpio = MESES_LISTA[m].toLowerCase();
+        return `${nombreSemana}, ${d} de ${nombreMesLimpio} de ${a}`;
+      };
 
-      const renderGrupo = (lista, titulo, total, esVerde) => {
+      const renderBadgesAdjuntos = (fila) => {
+        let htmlBadges = "";
+        headersGlobales.forEach((h, i) => {
+          const val = (fila[i] || "").toString().trim();
+          if (!val.startsWith("http")) return;
+          const colLower = h.toLowerCase();
+          if (colLower.includes("pdf")) {
+            htmlBadges += `<button type="button" onclick="event.stopPropagation(); abrirVisorAdjunto('${val.replace(/'/g, "\\'")}', 'Documento PDF', 'pdf')" title="Ver PDF" class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-rose-50 border border-rose-200/80 text-rose-500 hover:bg-rose-100 hover:scale-105 transition shadow-2xs"><i class="fa-solid fa-file-pdf text-sm"></i></button>`;
+          } else if (colLower.includes("captura") || colLower.includes("imagen") || colLower.includes("foto")) {
+            htmlBadges += `<button type="button" onclick="event.stopPropagation(); abrirVisorAdjunto('${val.replace(/'/g, "\\'")}', 'Captura de recibo', 'imagen')" title="Ver captura" class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-sky-50 border border-sky-200/80 text-sky-500 hover:bg-sky-100 hover:scale-105 transition shadow-2xs"><i class="fa-solid fa-image text-sm"></i></button>`;
+          }
+        });
+        return htmlBadges;
+      };
+
+      let htmlFinal = "";
+
+      const renderSeccionBBVA = (lista, esPagados) => {
         if (lista.length === 0) return "";
-        const mapaColoresPastel = {
-          "amarillo": "bg-amber-100/70 hover:bg-amber-100",
-          "yellow": "bg-amber-100/70 hover:bg-amber-100",
-          "naranja": "bg-orange-100/70 hover:bg-orange-100",
-          "orange": "bg-orange-100/70 hover:bg-orange-100",
-          "rojo": "bg-rose-100/70 hover:bg-rose-100",
-          "red": "bg-rose-100/70 hover:bg-rose-100",
-          "verde": "bg-emerald-100/70 hover:bg-emerald-100",
-          "green": "bg-emerald-100/70 hover:bg-emerald-100",
-          "azul": "bg-sky-100/70 hover:bg-sky-100",
-          "blue": "bg-sky-100/70 hover:bg-sky-100",
-          "morado": "bg-purple-100/70 hover:bg-purple-100",
-          "purple": "bg-purple-100/70 hover:bg-purple-100"
-        };
-        const idxColor = headersGlobales.findIndex(h => h.toLowerCase().includes("etiqueta") || h.toLowerCase().includes("color"));
+        const totalSeccion = lista.reduce((acc, f) => acc + parsearCantidad(f), 0);
+        const totalFmt = totalSeccion.toFixed(2).replace(".", ",") + " €";
+        const badgeColor = esPagados ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200";
+        const tituloSeccion = esPagados ? "PAGADOS" : "PENDIENTES";
+        const iconoSeccion = esPagados ? "fa-check text-emerald-600" : "fa-xmark text-rose-600";
 
-        const colorTexto = esVerde ? "text-emerald-600" : "text-rose-600";
-        const bgGrupo = esVerde ? "bg-emerald-50/60 border-emerald-100" : "bg-rose-50/60 border-rose-100";
-        const icono = esVerde ? "fa-check text-[#00b000]" : "fa-xmark text-[#ff0000]";
-        const etiquetaGrupo = esVerde ? "PAGADOS" : "PENDIENTES";
-        const totalFmt = total.toFixed(2).replace(".", ",") + " €";
-
-        let bloque = `<tr class="${bgGrupo} border-y">
-          <td colspan="3" class="py-2.5 px-4">
-            <div class="flex items-center gap-2.5">
-              <span class="inline-flex items-center gap-1.5 font-bold text-xs ${colorTexto}">
-                <i class="fa-solid ${icono}"></i> ${etiquetaGrupo}
-              </span>
-              <span class="bg-slate-200/80 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">${totalFmt}</span>
+        let bloque = `
+          <div class="space-y-4">
+            <div class="flex items-center justify-between px-1 border-b border-slate-200/80 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg ${badgeColor} border flex items-center justify-center text-xs">
+                  <i class="fa-solid ${iconoSeccion}"></i>
+                </span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-800">${tituloSeccion}</span>
+              </div>
+              <span class="text-xs font-bold text-slate-900 bg-white border border-slate-200/80 px-2.5 py-0.5 rounded-lg shadow-2xs">${totalFmt}</span>
             </div>
-          </td>
-        </tr>`;
+        `;
 
-        const obtenerFavicon = (texto) => {
-          const t = (texto || "").trim().toUpperCase();
-          const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
-          if (iconosGuardados[t]) {
-            if (iconosGuardados[t].startsWith("url:")) {
-              const dom = iconosGuardados[t].slice(4);
-              return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
-            }
-            return `<i class="${iconosGuardados[t]} text-slate-500 w-4 text-center shrink-0"></i>`;
+        // Agrupar elementos por DÍA
+        const mapaPorDia = {};
+        const diasOrden = [];
+
+        lista.forEach(fila => {
+          const diaNum = idxDia !== -1 ? (parseInt(fila[idxDia], 10) || 1) : 1;
+          const p = pesoDia(diaNum);
+          if (!mapaPorDia[p]) {
+            mapaPorDia[p] = { dia: diaNum, filas: [] };
+            diasOrden.push(p);
           }
-          const mapa = {
-            "BBVA": "bbva.es",
-            "CORTE INGL": "elcorteingles.es",
-            "DIGI": "digimobil.es",
-            "FIATC": "fiatc.es",
-            "AURA": "auraseguros.com",
-            "APTHUELVA": "apthuelva.es",
-            "ENDESA": "endesa.com",
-            "IBERDROLA": "iberdrola.es",
-            "NATURGY": "naturgy.es",
-            "VODAFONE": "vodafone.es",
-            "MOVISTAR": "movistar.es",
-            "ORANGE": "orange.es",
-            "AMAZON": "amazon.es",
-            "NETFLIX": "netflix.com",
-            "SPOTIFY": "spotify.com"
-          };
-          const clave = Object.keys(mapa).find(k => t.includes(k));
-          if (clave) {
-            return `<img src="https://www.google.com/s2/favicons?domain=${mapa[clave]}&sz=32" alt="" class="w-4 h-4 rounded-xs shrink-0">`;
-          }
-          return `<i class="fa-regular fa-building text-slate-300 w-4 text-center shrink-0"></i>`;
-        };
-
-        const mapaConceptoEmpresa = {};
-        if (idxConcepto !== -1 && idxEmpresa !== -1) {
-          filasGlobales.forEach(f => {
-            const c = (f[idxConcepto] || "").toString().trim().toUpperCase();
-            const emp = (f[idxEmpresa] || "").toString().trim();
-            if (c && emp) mapaConceptoEmpresa[c] = emp;
-          });
-        }
-
-        const gruposOrdenados = [];
-        const mapaEmpresas = {};
-
-        lista.forEach((fila) => {
-          const conceptoClave = idxConcepto !== -1 ? (fila[idxConcepto] || "").toString().trim().toUpperCase() : "";
-          const empresaPropia = idxEmpresa !== -1 ? (fila[idxEmpresa] || "").toString().trim() : "";
-          const empresa = empresaPropia || mapaConceptoEmpresa[conceptoClave] || "";
-          if (empresa) {
-            const claveEmp = empresa.toUpperCase();
-            if (!mapaEmpresas[claveEmp]) {
-              mapaEmpresas[claveEmp] = { esGrupo: true, empresa, filas: [] };
-              gruposOrdenados.push(mapaEmpresas[claveEmp]);
-            }
-            mapaEmpresas[claveEmp].filas.push(fila);
-          } else {
-            gruposOrdenados.push({ esGrupo: false, fila });
-          }
+          mapaPorDia[p].filas.push(fila);
         });
 
-        const pesoDia = (d) => (d === 30 || d === 31) ? (d - 100) : d;
-        const obtenerPesoItem = (item) => {
-          if (!item.esGrupo) {
-            const d = idxDia !== -1 ? (parseInt(item.fila[idxDia], 10) || 0) : 0;
-            return pesoDia(d);
+        diasOrden.sort((a, b) => a - b);
+
+        let lineaHoyPuesta = false;
+
+        diasOrden.forEach(peso => {
+          const grupoDia = mapaPorDia[peso];
+          const primerFila = grupoDia.filas[0];
+          const mesTexto = idxMes !== -1 ? (primerFila[idxMes] || "").toString().trim().toUpperCase() : mesActualTexto;
+          const anoNum = idxAno !== -1 ? (primerFila[idxAno] || "").toString().trim() : ahoraMomento.getFullYear();
+          const fechaTitulo = formatearFechaCabecera(grupoDia.dia, mesTexto, anoNum);
+
+          // Línea temporal "HOY" en recibos no pagados
+          if (!esPagados && esMesYAnioActual && !lineaHoyPuesta && peso >= diaHoyNumero) {
+            lineaHoyPuesta = true;
+            const diffMs = new Date(anoActualNumero, ahoraMomento.getMonth(), Math.max(peso, diaHoyNumero)).getTime() - ahoraMomento.getTime();
+            let badgeTiempo = "";
+            if (peso === diaHoyNumero) {
+              badgeTiempo = `<span class="bg-amber-100 text-amber-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">¡Vence hoy!</span>`;
+            } else if (diffMs > 0) {
+              const totalHoras = Math.floor(diffMs / (1000 * 60 * 60));
+              const diasR = Math.floor(totalHoras / 24);
+              badgeTiempo = `<span class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <i class="fa-solid fa-hourglass-half mr-1"></i>faltan ${diasR}d y ${totalHoras % 24}h
+              </span>`;
+            }
+
+            bloque += `
+              <div class="rounded-2xl p-3 text-white flex items-center justify-between shadow-xs select-none" style="background-color: #2585d6;">
+                <div class="flex items-center gap-2">
+                  <span class="flex h-2.5 w-2.5 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+                  </span>
+                  <span class="text-xs font-bold">Hoy: ${formatearFechaCabecera(diaHoyNumero, mesActualTexto, anoActualNumero)}</span>
+                </div>
+                ${badgeTiempo}
+              </div>
+            `;
           }
-          const pesos = item.filas.map(f => pesoDia(idxDia !== -1 ? (parseInt(f[idxDia], 10) || 0) : 0));
-          return Math.min(...pesos);
-        };
-        const obtenerNombreItem = (item) => {
-          if (item.esGrupo) return (item.empresa || "").toString().trim();
-          return idxConcepto !== -1 ? (item.fila[idxConcepto] || "").toString().trim() : "";
-        };
-        gruposOrdenados.sort((a, b) => {
-          const diffPeso = obtenerPesoItem(a) - obtenerPesoItem(b);
-          if (diffPeso !== 0) return diffPeso;
-          return obtenerNombreItem(a).localeCompare(obtenerNombreItem(b), "es", { sensitivity: "base" });
-        });
 
-        // Localizar el momento exacto para insertar la línea de "HOY" en la lista de NO pagados
-        let filaHoyInsertada = false;
-        const ahoraMomento = new Date();
-        const diaHoyNumero = ahoraMomento.getDate();
-        const anoActualNumero = ahoraMomento.getFullYear();
-        const mesActualTexto = MESES_LISTA[ahoraMomento.getMonth()];
-        const filtroAnoVal = document.getElementById("filtro-ano")?.value;
-        const filtroMesVal = document.getElementById("filtro-mes")?.value;
-        const esMesYAnioActual = (!filtroAnoVal || parseInt(filtroAnoVal, 10) === anoActualNumero) &&
-                                 (!filtroMesVal || filtroMesVal.toUpperCase() === mesActualTexto);
+          // Total sumado de los conceptos de este día
+          const totalDiaNum = grupoDia.filas.reduce((acc, f) => acc + parsearCantidad(f), 0);
+          const totalDiaFmt = (totalDiaNum > 0 ? "-" : "") + totalDiaNum.toFixed(2).replace(".", ",") + " €";
+          const colorTotalDia = esPagados ? "text-emerald-700 bg-emerald-50 border-emerald-200/80" : "text-rose-600 bg-rose-50 border-rose-200/80";
 
-        let contadorGrupo = 0;
-        gruposOrdenados.forEach((item, indexItem) => {
-          // Si estamos en NO pagados y en el mes actual, comprobar si toca poner la línea temporal antes de este concepto
-          if (!esVerde && esMesYAnioActual && !filaHoyInsertada) {
-            const pesoItemActual = obtenerPesoItem(item);
-            if (pesoItemActual >= diaHoyNumero) {
-              filaHoyInsertada = true;
+          // Cabecera de fecha con total del día a la derecha
+          bloque += `
+            <div class="space-y-2.5 pt-1">
+              <div class="flex items-center justify-between px-1">
+                <h3 class="text-xs font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                  <i class="fa-regular fa-calendar text-slate-400 text-[11px]"></i>
+                  <span>${fechaTitulo}</span>
+                </h3>
+                <span class="text-xs font-bold ${colorTotalDia} border px-2 py-0.5 rounded-lg shadow-2xs">${totalDiaFmt}</span>
+              </div>
+              <div class="space-y-2">
+          `;
 
-              // Calcular cuenta atrás al próximo pago
-              const diaProximoPago = Math.max(pesoItemActual, diaHoyNumero);
-              const fechaObjetivo = new Date(anoActualNumero, ahoraMomento.getMonth(), diaProximoPago, 0, 0, 0);
-              let textoCuentaAtras = "";
-              const diffMs = fechaObjetivo.getTime() - ahoraMomento.getTime();
+          // Agrupar filas del mismo día en Empresas o Conceptos sueltos
+          const mapaEmpresasDia = {};
+          const itemsDiaOrdenados = [];
 
-              if (pesoItemActual === diaHoyNumero) {
-                textoCuentaAtras = `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">¡Vence hoy!</span>`;
-              } else if (diffMs > 0) {
-                const totalHoras = Math.floor(diffMs / (1000 * 60 * 60));
-                const diasRestantes = Math.floor(totalHoras / 24);
-                const horasRestantes = totalHoras % 24;
-                textoCuentaAtras = `<span class="bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-2xs">
-                  <i class="fa-solid fa-hourglass-half mr-1 text-[9px] text-indigo-500"></i>faltan ${diasRestantes}d y ${horasRestantes}h
-                </span>`;
+          grupoDia.filas.forEach(f => {
+            const concepto = idxConcepto !== -1 ? (f[idxConcepto] || "").toString().trim() : "";
+            const empPropia = idxEmpresa !== -1 ? (f[idxEmpresa] || "").toString().trim() : "";
+            const empFinal = empPropia || mapaConceptoEmpresa[concepto.toUpperCase()] || "";
+            if (empFinal) {
+              const claveEmp = empFinal.toUpperCase();
+              if (!mapaEmpresasDia[claveEmp]) {
+                mapaEmpresasDia[claveEmp] = { esGrupo: true, empresa: empFinal, filas: [] };
+                itemsDiaOrdenados.push(mapaEmpresasDia[claveEmp]);
               }
+              mapaEmpresasDia[claveEmp].filas.push(f);
+            } else {
+              itemsDiaOrdenados.push({ esGrupo: false, fila: f });
+            }
+          });
 
-              const nombresDiasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-              const diaSemanaTexto = nombresDiasSemana[ahoraMomento.getDay()];
-              const diaDosDigitos = String(diaHoyNumero).padStart(2, "0");
-              const mesDosDigitos = String(ahoraMomento.getMonth() + 1).padStart(2, "0");
-              const anioDosDigitos = String(anoActualNumero).slice(-2);
-              const fechaHoyFmt = `${diaSemanaTexto}, ${diaDosDigitos}/${mesDosDigitos}/${anioDosDigitos}`;
+          let contadorSub = 0;
+          itemsDiaOrdenados.forEach(item => {
+            if (!item.esGrupo || item.filas.length === 1) {
+              const fila = item.esGrupo ? item.filas[0] : item.fila;
+              const idFila = idxId !== -1 ? fila[idxId] : "";
+              const conceptoVal = idxConcepto !== -1 ? (fila[idxConcepto] || "").toString().trim() : "";
+              const empVal = idxEmpresa !== -1 ? (fila[idxEmpresa] || "").toString().trim() : "";
+              const cantRaw = idxCant !== -1 ? (fila[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".") : "0";
+              const cantNum = parseFloat(cantRaw) || 0;
+              const cantFmt = (cantNum > 0 ? "-" : "") + cantNum.toFixed(2).replace(".", ",") + " €";
+
+              const notasVal = idxNotas !== -1 ? (fila[idxNotas] || "").toString().trim() : "";
+              const cuotaVal = idxCuota !== -1 ? (fila[idxCuota] || "").toString().trim() : "";
+              const perVal = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim() : "";
+              const colorFila = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
+              const claseBorde = mapaColoresEtiquetaBorde[colorFila] || "";
+              const paletaCirculo = obtenerPaletaCirculo(conceptoVal);
+              const badgesAdj = renderBadgesAdjuntos(fila);
+
+              const textoSubtitulo = empVal || (perVal !== "Gasto Puntual" ? perVal : "");
+              const colorCantidadIndividual = esPagados ? "text-emerald-700" : "text-rose-600";
 
               bloque += `
-                <tr class="text-white border-y select-none shadow-sm" style="background-color: #2585d6; border-color: #1d72ba;">
-                  <td colspan="3" class="py-2.5 px-4">
-                    <div class="flex items-center justify-between w-full flex-wrap gap-2">
-                      <div class="flex items-center gap-2.5">
-                        <span class="flex h-2.5 w-2.5 relative">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
-                        </span>
-                        <span class="text-xs font-bold text-white tracking-wide">
-                          Hoy: ${fechaHoyFmt}
-                        </span>
+                <div onclick="abrirDetalleGasto('${idFila}')" class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md transition cursor-pointer flex items-center justify-between gap-3 ${claseBorde}">
+                  <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                    <div class="w-10 h-10 rounded-full ${paletaCirculo} flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs">
+                      ${obtenerFaviconImgOIcon(empVal || conceptoVal)}
+                    </div>
+                    <div class="min-w-0 flex-1 space-y-0.5">
+                      <div class="flex items-center gap-2">
+                        <h4 class="text-xs sm:text-[13px] font-bold text-slate-900 truncate">${conceptoVal}</h4>
+                        ${cuotaVal ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/80 text-[10px] font-bold px-1.5 py-0.2 rounded-md shrink-0">${cuotaVal}</span>` : ""}
                       </div>
-                      <div class="flex items-center gap-2 ml-auto">
-                        <span class="text-[11px] font-medium text-white/90 hidden sm:inline">Próximo cargo:</span>
-                        ${textoCuentaAtras}
+                      ${textoSubtitulo ? `<p class="text-[11px] text-slate-500 truncate">${textoSubtitulo}</p>` : ""}
+                      ${notasVal ? `<p class="text-[11px] text-slate-500 whitespace-normal line-clamp-2 leading-relaxed">${notasVal}</p>` : (!textoSubtitulo ? `<p class="text-[11px] text-slate-400 italic">Sin observaciones</p>` : "")}
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0 pl-2 flex flex-col items-end gap-1.5">
+                    <div class="text-xs sm:text-sm font-bold ${colorCantidadIndividual}">${cantFmt}</div>
+                    ${badgesAdj ? `<div class="flex items-center justify-end gap-1.5">${badgesAdj}</div>` : ""}
+                  </div>
+                </div>
+              `;
+            } else {
+              // Tarjeta BBVA agrupada por Empresa
+              contadorSub++;
+              const grupoId = `bbva-grp-${peso}-${contadorSub}`;
+              const claveGrupo = `BBVA-${item.empresa.toUpperCase()}`;
+              const estaCerrado = !!gruposCerrados[claveGrupo];
+              const sumaGrupo = item.filas.reduce((acc, f) => acc + parsearCantidad(f), 0);
+              const sumaFmt = "-" + sumaGrupo.toFixed(2).replace(".", ",") + " €";
+              const paletaCirculo = obtenerPaletaCirculo(item.empresa);
+
+              bloque += `
+                <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+                  <div onclick="toggleGrupoEmpresa('${grupoId}', '${claveGrupo}')" class="p-4 bg-slate-50/70 hover:bg-slate-100/60 transition cursor-pointer flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div class="w-10 h-10 rounded-full ${paletaCirculo} flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs">
+                        ${obtenerFaviconImgOIcon(item.empresa)}
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2">
+                          <h4 class="text-xs sm:text-[13px] font-bold text-slate-900 truncate">${item.empresa}</h4>
+                          <span class="bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">${item.filas.length} conceptos</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500">Pagos agrupados de la empresa</p>
                       </div>
                     </div>
-                  </td>
-                </tr>
+                    <div class="flex items-center gap-2 shrink-0">
+                      <span class="text-xs sm:text-sm font-bold text-slate-900">${sumaFmt}</span>
+                      <i id="chevron-${grupoId}" class="fa-solid fa-chevron-right text-xs text-slate-400 transition-transform ${estaCerrado ? "" : "rotate-90"}"></i>
+                    </div>
+                  </div>
+
+                  <!-- Conceptos hijos en formato lista BBVA -->
+                  <div class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} divide-y divide-slate-100 bg-white border-t border-slate-100">
+              `;
+
+              item.filas.forEach(filaHija => {
+                const idHija = idxId !== -1 ? filaHija[idxId] : "";
+                const conceptoHija = idxConcepto !== -1 ? (filaHija[idxConcepto] || "").toString().trim() : "";
+                const cantRawHija = idxCant !== -1 ? (filaHija[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".") : "0";
+                const cantNumHija = parseFloat(cantRawHija) || 0;
+                const cantFmtHija = "-" + cantNumHija.toFixed(2).replace(".", ",") + " €";
+                const notasHija = idxNotas !== -1 ? (filaHija[idxNotas] || "").toString().trim() : "";
+                const cuotaHija = idxCuota !== -1 ? (filaHija[idxCuota] || "").toString().trim() : "";
+                const colorHija = idxColor !== -1 ? (filaHija[idxColor] || "").toString().trim().toLowerCase() : "";
+                const claseBordeHija = mapaColoresEtiquetaBorde[colorHija] || "";
+                const badgesHija = renderBadgesAdjuntos(filaHija);
+
+                const colorHijaImporte = esPagados ? "text-emerald-700" : "text-rose-600";
+                bloque += `
+                  <div onclick="abrirDetalleGasto('${idHija}')" class="p-3 pl-12 hover:bg-slate-50 transition cursor-pointer flex items-center justify-between gap-3 ${claseBordeHija}">
+                    <div class="min-w-0 flex-1 space-y-0.5">
+                      <div class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
+                        <h5 class="text-xs font-semibold text-slate-800 truncate">${conceptoHija}</h5>
+                        ${cuotaHija ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[9px] font-bold px-1.5 rounded shrink-0">${cuotaHija}</span>` : ""}
+                      </div>
+                      ${notasHija ? `<p class="text-[11px] text-slate-500 whitespace-normal line-clamp-2 leading-relaxed pl-3">${notasHija}</p>` : ""}
+                    </div>
+                    <div class="text-right shrink-0 flex flex-col items-end gap-1">
+                      <span class="text-xs font-bold ${colorHijaImporte}">${cantFmtHija}</span>
+                      ${badgesHija ? `<div class="flex items-center justify-end gap-1.5">${badgesHija}</div>` : ""}
+                    </div>
+                  </div>
+                `;
+              });
+
+              bloque += `
+                  </div>
+                </div>
               `;
             }
-          }
-          const renderBadgesFila = (fila) => {
-            let htmlBadges = "";
-
-            // Icono de Nota flotante
-            if (idxNotas !== -1) {
-              const nota = (fila[idxNotas] || "").toString().trim();
-              if (nota) {
-                const notaEscapada = nota.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-                htmlBadges += `<div class="relative group/nota inline-flex items-center shrink-0" onclick="event.stopPropagation()">
-                  <i class="fa-solid fa-note-sticky text-amber-500 hover:text-amber-600 text-xs cursor-help"></i>
-                  <div class="absolute bottom-full right-0 mb-2 hidden group-hover/nota:flex flex-col items-end z-30 pointer-events-none">
-                    <div class="bg-slate-900 text-white text-[11px] font-normal rounded-2xl py-2 px-3.5 w-max max-w-[320px] min-w-[200px] shadow-xl whitespace-normal break-words text-left leading-snug">
-                      <span class="font-bold text-amber-400 block mb-1"><i class="fa-solid fa-note-sticky text-[10px] mr-1"></i>Nota:</span>
-                      <span>${notaEscapada}</span>
-                    </div>
-                    <div class="w-2.5 h-2.5 bg-slate-900 rotate-45 -mt-1 mr-1 shadow-xs"></div>
-                  </div>
-                </div>`;
-              }
-            }
-
-            // Iconos de PDF e Imagen clicables
-            headersGlobales.forEach((h, i) => {
-              const val = (fila[i] || "").toString().trim();
-              if (!val.startsWith("http")) return;
-              const colLower = h.toLowerCase();
-              if (colLower.includes("pdf")) {
-                const urlSegura = val.replace(/'/g, "\\'");
-                htmlBadges += `<button type="button" onclick="event.stopPropagation(); abrirVisorAdjunto('${urlSegura}', 'Documento PDF', 'pdf')" title="Ver PDF" class="text-rose-500 hover:text-rose-600 hover:scale-110 transition shrink-0 p-0.5">
-                  <i class="fa-solid fa-file-pdf text-xs"></i>
-                </button>`;
-              } else if (colLower.includes("captura") || colLower.includes("imagen") || colLower.includes("foto")) {
-                const urlSegura = val.replace(/'/g, "\\'");
-                htmlBadges += `<button type="button" onclick="event.stopPropagation(); abrirVisorAdjunto('${urlSegura}', 'Captura de recibo', 'imagen')" title="Ver captura" class="text-sky-500 hover:text-sky-600 hover:scale-110 transition shrink-0 p-0.5">
-                  <i class="fa-solid fa-image text-xs"></i>
-                </button>`;
-              }
-            });
-
-            return htmlBadges ? `<div class="flex items-center gap-2 shrink-0 ml-auto pl-2">${htmlBadges}</div>` : "";
-          };
-
-          if (!item.esGrupo || item.filas.length === 1) {
-            const fila = item.esGrupo ? item.filas[0] : item.fila;
-            const idFila = idxId !== -1 ? fila[idxId] : "";
-            const diaVal = idxDia !== -1 ? fila[idxDia] : "";
-            const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
-            const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
-            const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
-
-            const mesVal = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
-            const anoVal = idxAno !== -1 ? (fila[idxAno] || "").toString().trim() : "";
-            const mesAbrev = mesVal ? mesVal.slice(0, 3) : "";
-            const fechaTag = (esVerTodoActivo && (mesAbrev || anoVal))
-              ? `<span class="bg-slate-100 text-slate-500 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${mesAbrev} ${anoVal}</span>`
-              : "";
-
-            const perVal = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim() : "";
-            const cuotaVal = idxCuota !== -1 ? (fila[idxCuota] || "").toString().trim() : "";
-            let etiquetaPer = cuotaVal || (perVal && perVal.toLowerCase() !== "gasto puntual" ? perVal : "");
-            const perTag = etiquetaPer
-              ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${etiquetaPer}</span>`
-              : "";
-
-            const colorFila = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
-            const bgFilaPastel = mapaColoresPastel[colorFila] || "hover:bg-slate-50/80";
-
-            const iconoEstadoItem = esVerde
-              ? `<i class="fa-solid fa-check text-[#00b000] text-sm shrink-0" title="Pagado"></i>`
-              : `<i class="fa-solid fa-xmark text-[#ff0000] text-sm shrink-0" title="Pendiente"></i>`;
-
-            const badgesFila = renderBadgesFila(fila);
-            bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="${bgFilaPastel} transition cursor-pointer">
-              <td class="py-3 px-4 whitespace-nowrap text-slate-500 align-top sm:align-middle">${diaVal}</td>
-              <td class="py-3 px-4 font-medium text-slate-900">
-                <div class="flex items-center justify-between w-full gap-2">
-                  <div class="flex items-center min-w-0 flex-1">
-                    <div class="flex items-center gap-2 min-w-0 flex-1 sm:flex-none sm:w-80 sm:shrink-0 pr-2 sm:pr-3">
-                      ${iconoEstadoItem}
-                      ${obtenerFavicon(conceptoVal)}
-                      <span class="truncate">${conceptoVal}</span>
-                    </div>
-                    <div class="hidden sm:flex items-center gap-2 shrink-0">
-                      ${perTag}
-                      ${fechaTag}
-                    </div>
-                  </div>
-                  <span class="sm:hidden font-semibold ${colorTexto} whitespace-nowrap shrink-0">${cantVal}</span>
-                  <div class="hidden sm:flex items-center">${badgesFila}</div>
-                </div>
-                ${(perTag || fechaTag || badgesFila) ? `<div class="flex sm:hidden items-center flex-wrap gap-2 mt-1.5 pl-6">${perTag}${fechaTag}${badgesFila}</div>` : ""}
-              </td>
-              <td class="py-3 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} hidden sm:table-cell">${cantVal}</td>
-            </tr>`;
-          } else {
-            contadorGrupo++;
-            const grupoId = `${titulo}-${contadorGrupo}`;
-            const claveGrupo = `${titulo}-${item.empresa.toUpperCase()}`.replace(/'/g, "");
-            const estaCerrado = !!gruposCerrados[claveGrupo];
-            const sumaGrupo = item.filas.reduce((acc, f) => acc + parsearCantidad(f), 0);
-            const sumaFmt = sumaGrupo.toFixed(2).replace(".", ",") + " €";
-
-            // Obtener el día único del grupo (o rango si difieren)
-            const diasUnicos = [...new Set(item.filas.map(f => idxDia !== -1 ? (f[idxDia] || "").toString().trim() : "").filter(Boolean))];
-            const diaGrupo = diasUnicos.join(", ");
-
-            const tdBaseTop = "border-t border-slate-200";
-            const tdBtmCabecera = "border-b border-slate-200";
-
-            const iconoEstadoGrupo = esVerde
-              ? `<i class="fa-solid fa-check text-[#00b000] text-sm shrink-0" title="Pagado"></i>`
-              : `<i class="fa-solid fa-xmark text-[#ff0000] text-sm shrink-0" title="Pendiente"></i>`;
-
-            bloque += `<tr onclick="toggleGrupoEmpresa('${grupoId}', '${claveGrupo}')" class="hover:bg-slate-100/70 transition cursor-pointer bg-slate-50/80">
-              <td class="py-3 px-4 whitespace-nowrap text-slate-700 font-semibold ${tdBaseTop} ${tdBtmCabecera}">
-                <div class="flex items-center gap-1.5">
-                  <i id="chevron-${grupoId}" class="fa-solid fa-chevron-right text-[10px] text-slate-600 transition-transform duration-150 ${estaCerrado ? "" : "rotate-90"}"></i>
-                  <span>${diaGrupo}</span>
-                </div>
-              </td>
-              <td class="py-3 px-4 font-bold text-slate-900 ${tdBaseTop} ${tdBtmCabecera}">
-                <div class="flex items-center justify-between gap-2 w-full">
-                  <div class="flex items-center gap-2 min-w-0">
-                    ${iconoEstadoGrupo}
-                    ${obtenerFavicon(item.empresa)}
-                    <span class="truncate">${item.empresa}</span>
-                    <span class="bg-slate-200 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0">${item.filas.length} conceptos</span>
-                  </div>
-                  <span class="sm:hidden font-bold ${colorTexto} whitespace-nowrap shrink-0">${sumaFmt}</span>
-                </div>
-              </td>
-              <td class="py-3 px-4 whitespace-nowrap text-right font-bold ${colorTexto} ${tdBaseTop} ${tdBtmCabecera} hidden sm:table-cell">${sumaFmt}</td>
-            </tr>`;
-
-            item.filas.forEach((fila, idx) => {
-              const esUltima = idx === item.filas.length - 1;
-              const tdBtmHija = "border-b border-slate-200";
-
-              const idFila = idxId !== -1 ? fila[idxId] : "";
-              const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
-              const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
-              const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
-              const mesHija = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
-              const anoHija = idxAno !== -1 ? (fila[idxAno] || "").toString().trim() : "";
-              const mesHijaAbrev = mesHija ? mesHija.slice(0, 3) : "";
-              const fechaHijaTag = (esVerTodoActivo && (mesHijaAbrev || anoHija))
-                ? `<span class="bg-slate-200/60 text-slate-500 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${mesHijaAbrev} ${anoHija}</span>`
-                : "";
-
-              const perHijaVal = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim() : "";
-              const cuotaHijaVal = idxCuota !== -1 ? (fila[idxCuota] || "").toString().trim() : "";
-              let etiquetaHijaPer = cuotaHijaVal || (perHijaVal && perHijaVal.toLowerCase() !== "gasto puntual" ? perHijaVal : "");
-              const perHijaTag = etiquetaHijaPer
-                ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${etiquetaHijaPer}</span>`
-                : "";
-
-              const colorHija = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
-              const bgHijaPastel = mapaColoresPastel[colorHija] || "bg-white hover:bg-slate-50";
-
-              // Línea de corchete / árbol: continua si no es la última, curva en L al final
-              const ramaCorchete = esUltima
-                ? `<div class="relative w-4 h-5 flex items-center shrink-0">
-                     <span class="absolute left-1.5 top-0 bottom-2.5 w-0.5 bg-slate-300"></span>
-                     <span class="absolute left-1.5 bottom-2.5 w-2.5 h-2.5 border-b-2 border-l-2 border-slate-300 rounded-bl-sm"></span>
-                   </div>`
-                : `<div class="relative w-4 h-5 flex items-center shrink-0">
-                     <span class="absolute left-1.5 top-0 bottom-0 w-0.5 bg-slate-300"></span>
-                     <span class="absolute left-1.5 top-2.5 w-2.5 h-0.5 bg-slate-300"></span>
-                   </div>`;
-
-              const badgesHija = renderBadgesFila(fila);
-              bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} ${bgHijaPastel} transition cursor-pointer">` +
-                `<td class="py-2.5 px-4 whitespace-nowrap text-slate-300 text-[11px] ${tdBtmHija}"></td>` +
-                `<td class="py-2.5 px-4 font-medium text-slate-700 ${tdBtmHija}">` +
-                  `<div class="flex items-center justify-between w-full gap-2">` +
-                    `<div class="flex items-center min-w-0 flex-1">` +
-                      `<div class="flex items-center gap-1.5 min-w-0 flex-1 sm:flex-none sm:w-80 sm:shrink-0 pr-2 sm:pr-3 pl-1 sm:pl-3">` +
-                        ramaCorchete +
-                        `<span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>` +
-                        `<span class="truncate">${conceptoVal}</span>` +
-                      `</div>` +
-                      `<div class="hidden sm:flex items-center gap-2 shrink-0">` +
-                        perHijaTag +
-                        fechaHijaTag +
-                      `</div>` +
-                    `</div>` +
-                    `<span class="sm:hidden font-semibold ${colorTexto} text-[11px] whitespace-nowrap shrink-0">${cantVal}</span>` +
-                    `<div class="hidden sm:flex items-center">${badgesHija}</div>` +
-                  `</div>` +
-                  ((perHijaTag || fechaHijaTag || badgesHija) ? `<div class="flex sm:hidden items-center flex-wrap gap-2 mt-1.5 pl-8">${perHijaTag}${fechaHijaTag}${badgesHija}</div>` : "") +
-                `</td>` +
-                `<td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-[11px] ${tdBtmHija} hidden sm:table-cell">${cantVal}</td>` +
-              `</tr>`;
-            });
-          }
-        });
-
-        // Si todos los conceptos eran de días anteriores y la línea no se insertó antes, se coloca al final
-        if (!esVerde && esMesYAnioActual && !filaHoyInsertada && gruposOrdenados.length > 0) {
-          const nombresDiasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-          const diaSemanaTexto = nombresDiasSemana[ahoraMomento.getDay()];
-          const diaDosDigitos = String(diaHoyNumero).padStart(2, "0");
-          const mesDosDigitos = String(ahoraMomento.getMonth() + 1).padStart(2, "0");
-          const anioDosDigitos = String(anoActualNumero).slice(-2);
-          const fechaHoyFmt = `${diaSemanaTexto}, ${diaDosDigitos}/${mesDosDigitos}/${anioDosDigitos}`;
+          });
 
           bloque += `
-            <tr class="text-white border-y select-none shadow-sm" style="background-color: #2585d6; border-color: #1d72ba;">
-              <td colspan="3" class="py-2.5 px-4">
-                <div class="flex items-center justify-between w-full flex-wrap gap-2">
-                  <div class="flex items-center gap-2.5">
-                    <span class="flex h-2.5 w-2.5 relative">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
-                    </span>
-                    <span class="text-xs font-bold text-white tracking-wide">
-                      Hoy: ${fechaHoyFmt}
-                    </span>
-                  </div>
-                  <span class="bg-white/20 border border-white/40 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full ml-auto">
-                    Sin más cargos previstos este mes
-                  </span>
-                </div>
-              </td>
-            </tr>
+              </div>
+            </div>
           `;
-        }
+        });
 
+        bloque += `</div>`;
         return bloque;
       };
 
-      html += renderGrupo(pendientes, "PENDIENTES", totalPendiente, false);
-      if (pendientes.length > 0 && pagados.length > 0) {
-        html += `<tr class="bg-slate-200/70 border-y border-slate-300/60 select-none">
-          <td colspan="3" class="h-4 p-0"></td>
-        </tr>`;
+      const pendientes = filas.filter(f => !esPagado(f)).sort(ordenarDescendente);
+      const pagados = filas.filter(f => esPagado(f)).sort(ordenarDescendente);
+
+      if (pendientes.length === 0 && pagados.length === 0) {
+        contenedor.innerHTML = `<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">No se encontraron movimientos registrados en las fechas seleccionadas.</div>`;
+        return;
       }
-      html += renderGrupo(pagados, "PAGADOS", totalPagado, true);
 
-      html += `</tbody>`;
-      tabla.innerHTML = html;
+      htmlFinal += renderSeccionBBVA(pendientes, false);
+      if (pendientes.length > 0 && pagados.length > 0) {
+        htmlFinal += `<div class="h-2"></div>`;
+      }
+      htmlFinal += renderSeccionBBVA(pagados, true);
+
+      contenedor.innerHTML = htmlFinal;
     }
-
-    let diaSeleccionado = null;
-    const MESES_LISTA = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
 
     function actualizarReloj() {
       const el = document.getElementById("fecha-hora-actual");
