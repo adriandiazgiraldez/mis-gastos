@@ -615,7 +615,7 @@
   </div>
 
 <!-- ==================== POPUP ADVERTENCIA PRÓXIMO RECIBO ==================== -->
-  <div id="popup-aviso-proximo" class="fixed inset-0 z-[80] pointer-events-none flex items-center justify-center p-4 transition-all duration-500 opacity-0 scale-95 hidden">
+  <div id="popup-aviso-proximo" class="fixed top-0 left-0 right-0 z-[80] pointer-events-none flex justify-center p-4 transition-all duration-500 ease-out opacity-0 -translate-y-full hidden">
     <div class="pointer-events-auto bg-slate-900/95 backdrop-blur-md text-white border border-slate-700/80 rounded-3xl shadow-2xl p-6 max-w-md w-full relative transform transition-all duration-500">
       <button type="button" onclick="cerrarAvisoProximo()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg transition" title="Cerrar advertencia">
         <i class="fa-solid fa-xmark text-sm"></i>
@@ -624,7 +624,7 @@
         <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xl shrink-0">
           <i class="fa-solid fa-triangle-exclamation animate-pulse"></i>
         </div>
-        <div class="space-y-1.5 flex-1 pr-4">
+        <div class="space-y-1.5 flex-1 min-w-0 pr-4">
           <div class="flex items-center gap-2">
             <span id="titulo-aviso-proximo" class="text-xs font-black uppercase tracking-wider text-amber-400">Atención</span>
           </div>
@@ -785,7 +785,7 @@
     function cerrarAvisoProximo() {
       const popup = document.getElementById("popup-aviso-proximo");
       if (!popup) return;
-      popup.classList.add("opacity-0", "scale-95");
+      popup.classList.add("opacity-0", "-translate-y-full");
       if (temporizadorPopupAviso) {
         clearTimeout(temporizadorPopupAviso);
         temporizadorPopupAviso = null;
@@ -798,6 +798,50 @@
           setTimeout(fn, 300);
         }
       }, 500);
+    }
+
+    function obtenerCirculoFaviconPopup(texto) {
+      const t = (texto || "").trim().toUpperCase();
+      const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
+      const paletas = [
+        "bg-indigo-100 text-indigo-700",
+        "bg-sky-100 text-sky-700",
+        "bg-amber-100 text-amber-800",
+        "bg-emerald-100 text-emerald-700",
+        "bg-purple-100 text-purple-700",
+        "bg-rose-100 text-rose-700"
+      ];
+      let hash = 0;
+      for (let i = 0; i < (texto || "").length; i++) hash = texto.charCodeAt(i) + ((hash << 5) - hash);
+      const paleta = paletas[Math.abs(hash) % paletas.length];
+
+      let contenido = "";
+      if (iconosGuardados[t]) {
+        if (iconosGuardados[t].startsWith("url:")) {
+          const dom = iconosGuardados[t].slice(4);
+          contenido = `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=32" alt="" class="w-4 h-4 rounded-full object-cover">`;
+        } else {
+          contenido = `<i class="${iconosGuardados[t]} text-slate-700 text-[10px]"></i>`;
+        }
+      } else {
+        const mapa = {
+          "BBVA": "bbva.es", "CORTE INGL": "elcorteingles.es", "DIGI": "digimobil.es",
+          "FIATC": "fiatc.es", "AURA": "auraseguros.com", "APTHUELVA": "apthuelva.es",
+          "ENDESA": "endesa.com", "IBERDROLA": "iberdrola.es", "NATURGY": "naturgy.es",
+          "VODAFONE": "vodafone.es", "MOVISTAR": "movistar.es", "ORANGE": "orange.es",
+          "AMAZON": "amazon.es", "NETFLIX": "netflix.com", "SPOTIFY": "spotify.com"
+        };
+        const clave = Object.keys(mapa).find(k => t.includes(k));
+        if (clave) {
+          contenido = `<img src="https://www.google.com/s2/favicons?domain=${mapa[clave]}&sz=32" alt="" class="w-4 h-4 rounded-full object-cover">`;
+        } else {
+          const palabras = t.split(" ").filter(Boolean);
+          const iniciales = palabras.length > 1 ? (palabras[0][0] + palabras[1][0]) : t.slice(0, 2);
+          contenido = `<span class="text-[10px] font-bold text-slate-700 tracking-tight">${iniciales || "··"}</span>`;
+        }
+      }
+
+      return `<div class="w-6 h-6 rounded-full ${paleta} flex items-center justify-center shrink-0 border border-white/20 shadow-2xs">${contenido}</div>`;
     }
 
     function mostrarAvisoPendientesAtrasados() {
@@ -890,11 +934,12 @@
       const filasHTML = ordenClaves.map(k => {
         const it = mapaItemsAtrasados[k];
         const importeFmt = it.importe.toFixed(2).replace(".", ",") + "€";
-        return `<div class="flex items-center gap-1.5 text-xs sm:text-[13px] leading-relaxed">
-          <span class="text-rose-400 font-bold">-</span>
-          <span class="text-white font-semibold">${it.nombre}</span>
-          <span class="text-slate-400">=</span>
-          <span class="text-rose-400 font-bold whitespace-nowrap">${importeFmt}</span>
+        return `<div class="flex items-center justify-between gap-3 text-xs sm:text-[13px] leading-relaxed">
+          <div class="flex items-center gap-2 min-w-0">
+            ${obtenerCirculoFaviconPopup(it.nombre)}
+            <span class="text-white font-semibold truncate">${it.nombre}</span>
+          </div>
+          <span class="text-rose-400 font-bold whitespace-nowrap shrink-0 tabular-nums text-right">${importeFmt}</span>
         </div>`;
       }).join("");
 
@@ -908,7 +953,7 @@
       textoEl.innerHTML = textoFinal;
       popup.classList.remove("hidden");
       setTimeout(() => {
-        popup.classList.remove("opacity-0", "scale-95");
+        popup.classList.remove("opacity-0", "-translate-y-full");
       }, 50);
 
       temporizadorPopupAviso = setTimeout(() => {
@@ -1029,11 +1074,12 @@
       const filasHTML = ordenClaves.map(k => {
         const it = mapaItemsProximo[k];
         const importeFmt = it.importe.toFixed(2).replace(".", ",") + "€";
-        return `<div class="flex items-center gap-1.5 text-xs sm:text-[13px] leading-relaxed">
-          <span class="text-amber-400 font-bold">-</span>
-          <span class="text-white font-semibold">${it.nombre}</span>
-          <span class="text-slate-400">=</span>
-          <span class="text-amber-400 font-bold whitespace-nowrap">${importeFmt}</span>
+        return `<div class="flex items-center justify-between gap-3 text-xs sm:text-[13px] leading-relaxed">
+          <div class="flex items-center gap-2 min-w-0">
+            ${obtenerCirculoFaviconPopup(it.nombre)}
+            <span class="text-white font-semibold truncate">${it.nombre}</span>
+          </div>
+          <span class="text-amber-400 font-bold whitespace-nowrap shrink-0 tabular-nums text-right">${importeFmt}</span>
         </div>`;
       }).join("");
 
@@ -1057,7 +1103,7 @@
       textoEl.innerHTML = textoFinal;
       popup.classList.remove("hidden");
       setTimeout(() => {
-        popup.classList.remove("opacity-0", "scale-95");
+        popup.classList.remove("opacity-0", "-translate-y-full");
       }, 50);
 
       avisoProximoMostrado = true;
