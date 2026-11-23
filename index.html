@@ -239,9 +239,9 @@
                   <span>Filtrar</span>
                 </button>
 
-                <button type="button" onclick="irAHoy()" id="btn-limpiar-filtros" title="Volver a la fecha actual" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-95">
-                  <i class="fa-regular fa-calendar-check text-blue-600"></i>
-                  <span>Hoy</span>
+                <button type="button" onclick="limpiarFiltros()" id="btn-limpiar-filtros" title="Limpiar todos los filtros" class="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-95">
+                  <i class="fa-solid fa-arrow-rotate-left"></i>
+                  <span>Limpiar</span>
                 </button>
 
                 <span id="contador-visible" class="text-xs text-slate-400 font-medium whitespace-nowrap pl-1">Mostrando 0 registros</span>
@@ -1544,12 +1544,15 @@
           mapaPorFecha[clave].filas.push(fila);
         });
 
-        // Al ver todo o pagados ordenamos de más reciente a más antiguo; si es un mes específico pendiente, cronológico
-        if (esPagados || !esMesYAnioActual) {
-          fechasOrdenadas.sort((a, b) => b.localeCompare(a));
-        } else {
-          fechasOrdenadas.sort((a, b) => a.localeCompare(b));
-        }
+        // Años en orden descendente (2026, 2025...) y fechas dentro de cada año en orden ascendente
+        fechasOrdenadas.sort((a, b) => {
+          const anoA = a.slice(0, 4);
+          const anoB = b.slice(0, 4);
+          if (anoA !== anoB) {
+            return anoB.localeCompare(anoA);
+          }
+          return a.localeCompare(b);
+        });
 
         let lineaHoyPuesta = false;
         let ultimoAnoRenderizado = null;
@@ -2012,6 +2015,7 @@
     });
 
     function abrirModalFiltros() {
+      document.body.classList.add("overflow-hidden");
       document.getElementById("modal-filtros").classList.remove("hidden");
     }
 
@@ -2020,10 +2024,10 @@
       document.getElementById("panel-calendario").classList.add("hidden");
       const dropConcepto = document.getElementById("dropdown-menu-filtro-concepto");
       if (dropConcepto) dropConcepto.classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
     }
 
-    function irAHoy() {
-      // Limpia el buscador y restablece los filtros al día, mes y año en curso
+    function limpiarFiltros() {
       document.getElementById("buscador-gastos").value = "";
       seleccionarFiltroConcepto("", "Todos los conceptos", '<i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>');
 
@@ -2034,14 +2038,10 @@
       const toggleTodo = document.getElementById("toggle-ver-todo");
       if (toggleTodo) toggleTodo.checked = false;
 
-      diaSeleccionado = ahora.getDate();
-      document.getElementById("texto-btn-calendario").textContent = `Día ${diaSeleccionado}`;
+      diaSeleccionado = null;
+      document.getElementById("texto-btn-calendario").textContent = "Día";
       document.getElementById("panel-calendario").classList.add("hidden");
       filtrarTabla();
-    }
-
-    function limpiarFiltros() {
-      irAHoy();
     }
 
     function quitarAcentos(str) {
