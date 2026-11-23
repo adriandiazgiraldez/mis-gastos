@@ -53,7 +53,7 @@
     }
   </style>
 </head>
-<body class="bg-slate-200/70 text-slate-900 antialiased min-h-screen">
+<body class="bg-slate-300/80 text-slate-900 antialiased min-h-screen">
 
   <!-- ==================== PANTALLA DE LOGIN ==================== -->
   <div id="panel-login" class="min-h-screen flex items-center justify-center p-4">
@@ -1557,9 +1557,9 @@
         const tituloSeccion = esPagados ? "PAGADOS" : "PENDIENTES";
         const iconoSeccion = esPagados ? "fa-check text-emerald-600" : "fa-xmark text-rose-600";
 
-        // Ventana independiente con fondo blanco, bordes redondeados y sombra (solo en escritorio)
+        // Ventana independiente con fondo gris claro, bordes redondeados y sombra (solo en escritorio)
         let bloque = `
-          <div class="bg-transparent sm:bg-white sm:border sm:border-slate-200/80 sm:rounded-2xl p-0 sm:p-5 sm:shadow-2xs space-y-3 sm:space-y-4">
+          <div class="bg-transparent sm:bg-slate-100 sm:border sm:border-slate-200/80 sm:rounded-2xl p-0 sm:p-5 sm:shadow-2xs space-y-3 sm:space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
               <div class="flex items-center gap-2">
                 <span class="w-6 h-6 rounded-lg ${badgeColor} border flex items-center justify-center text-xs">
