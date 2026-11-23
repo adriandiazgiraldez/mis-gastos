@@ -1601,24 +1601,11 @@
         });
 
         let lineaHoyPuesta = false;
-        let ultimoAnoRenderizado = null;
 
         fechasOrdenadas.forEach((claveFecha, idxClave) => {
           const grupoDia = mapaPorFecha[claveFecha];
           const peso = pesoDia(grupoDia.dia);
           const fechaTitulo = formatearFechaCabecera(grupoDia.dia, grupoDia.mesTexto, grupoDia.ano);
-
-          // Cabecera separadora del AÑO cuando cambia o al iniciar
-          if (grupoDia.ano !== ultimoAnoRenderizado) {
-            ultimoAnoRenderizado = grupoDia.ano;
-            bloque += `
-              <div class="pt-2 pb-1">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900 text-white text-xs font-bold tracking-wider shadow-2xs">
-                  <i class="fa-regular fa-calendar-days text-[11px]"></i> ${ultimoAnoRenderizado}
-                </span>
-              </div>
-            `;
-          }
 
           // Línea temporal "HOY" en recibos no pagados (solo en el mes actual)
           if (!esPagados && esMesYAnioActual && !lineaHoyPuesta && peso >= diaHoyNumero) {
