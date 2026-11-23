@@ -647,6 +647,14 @@
       </div>
 
       <div class="p-5 space-y-4 text-xs">
+        <!-- Buscador general (cualquier campo, sin distinguir tildes) -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Buscar en cualquier campo</label>
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-[11px] text-slate-400"></i>
+            <input type="text" id="buscador-modal-filtros" oninput="sincronizarBuscador(this.value)" placeholder="Ej. iPhone 12, notas, empresa, importe..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 focus:bg-white transition" autocomplete="off">
+          </div>
+        </div>
         <!-- Concepto Dropdown con Buscador Escribible -->
         <div>
           <label class="block text-[11px] font-semibold text-slate-500 mb-1">Concepto</label>
@@ -2097,7 +2105,15 @@
       }
     });
 
+    function sincronizarBuscador(valor) {
+      const buscadorPrincipal = document.getElementById("buscador-gastos");
+      if (buscadorPrincipal) buscadorPrincipal.value = valor;
+      filtrarTabla();
+    }
+
     function abrirModalFiltros() {
+      const buscadorModal = document.getElementById("buscador-modal-filtros");
+      if (buscadorModal) buscadorModal.value = document.getElementById("buscador-gastos")?.value || "";
       document.body.classList.add("overflow-hidden");
       document.getElementById("modal-filtros").classList.remove("hidden");
     }
@@ -2112,6 +2128,8 @@
 
     function limpiarFiltros() {
       document.getElementById("buscador-gastos").value = "";
+      const buscadorModal = document.getElementById("buscador-modal-filtros");
+      if (buscadorModal) buscadorModal.value = "";
       seleccionarFiltroConcepto("", "Todos los conceptos", '<i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>');
 
       const ahora = new Date();
@@ -2161,15 +2179,21 @@
       const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
       const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
 
+      if (q) {
+        document.getElementById("titulo-mes-ano-actual").textContent = `RESULTADOS EN TODOS LOS AÑOS`;
+      }
+
       const filtradas = filasGlobales.filter(f => {
         if (q) {
           const textoFila = quitarAcentos(f.join(" "));
           if (!textoFila.includes(q)) return false;
         }
         if (conceptoSel && idxConcepto !== -1 && (f[idxConcepto] || "").toString().trim() !== conceptoSel) return false;
-        if (ano && idxAno !== -1 && (f[idxAno] || "").toString().trim() !== ano) return false;
-        if (mes && idxMes !== -1 && (f[idxMes] || "").toString().trim().toUpperCase() !== mes) return false;
-        if (diaSeleccionado !== null && idxDia !== -1 && parseInt(f[idxDia], 10) !== diaSeleccionado) return false;
+        if (!q) {
+          if (ano && idxAno !== -1 && (f[idxAno] || "").toString().trim() !== ano) return false;
+          if (mes && idxMes !== -1 && (f[idxMes] || "").toString().trim().toUpperCase() !== mes) return false;
+          if (diaSeleccionado !== null && idxDia !== -1 && parseInt(f[idxDia], 10) !== diaSeleccionado) return false;
+        }
         return true;
       });
 
