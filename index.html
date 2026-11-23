@@ -859,14 +859,15 @@
 
         const colorTexto = esVerde ? "text-emerald-600" : "text-rose-600";
         const bgGrupo = esVerde ? "bg-emerald-50/60 border-emerald-100" : "bg-rose-50/60 border-rose-100";
-        const icono = esVerde ? "fa-circle-check" : "fa-circle-xmark";
+        const icono = esVerde ? "fa-check text-[#00b000]" : "fa-xmark text-[#ff0000]";
+        const etiquetaGrupo = esVerde ? "PAGADOS" : "PENDIENTES";
         const totalFmt = total.toFixed(2).replace(".", ",") + " €";
 
         let bloque = `<tr class="${bgGrupo} border-y">
           <td colspan="3" class="py-2.5 px-4">
             <div class="flex items-center gap-2.5">
               <span class="inline-flex items-center gap-1.5 font-bold text-xs ${colorTexto}">
-                <i class="fa-solid ${icono}"></i> ${titulo}
+                <i class="fa-solid ${icono}"></i> ${etiquetaGrupo}
               </span>
               <span class="bg-slate-200/80 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">${totalFmt}</span>
             </div>
@@ -954,8 +955,72 @@
           return obtenerNombreItem(a).localeCompare(obtenerNombreItem(b), "es", { sensitivity: "base" });
         });
 
+        // Localizar el momento exacto para insertar la línea de "HOY" en la lista de NO pagados
+        let filaHoyInsertada = false;
+        const ahoraMomento = new Date();
+        const diaHoyNumero = ahoraMomento.getDate();
+        const anoActualNumero = ahoraMomento.getFullYear();
+        const mesActualTexto = MESES_LISTA[ahoraMomento.getMonth()];
+        const filtroAnoVal = document.getElementById("filtro-ano")?.value;
+        const filtroMesVal = document.getElementById("filtro-mes")?.value;
+        const esMesYAnioActual = (!filtroAnoVal || parseInt(filtroAnoVal, 10) === anoActualNumero) &&
+                                 (!filtroMesVal || filtroMesVal.toUpperCase() === mesActualTexto);
+
         let contadorGrupo = 0;
-        gruposOrdenados.forEach(item => {
+        gruposOrdenados.forEach((item, indexItem) => {
+          // Si estamos en NO pagados y en el mes actual, comprobar si toca poner la línea temporal antes de este concepto
+          if (!esVerde && esMesYAnioActual && !filaHoyInsertada) {
+            const pesoItemActual = obtenerPesoItem(item);
+            if (pesoItemActual >= diaHoyNumero) {
+              filaHoyInsertada = true;
+
+              // Calcular cuenta atrás al próximo pago
+              const diaProximoPago = Math.max(pesoItemActual, diaHoyNumero);
+              const fechaObjetivo = new Date(anoActualNumero, ahoraMomento.getMonth(), diaProximoPago, 0, 0, 0);
+              let textoCuentaAtras = "";
+              const diffMs = fechaObjetivo.getTime() - ahoraMomento.getTime();
+
+              if (pesoItemActual === diaHoyNumero) {
+                textoCuentaAtras = `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">¡Vence hoy!</span>`;
+              } else if (diffMs > 0) {
+                const totalHoras = Math.floor(diffMs / (1000 * 60 * 60));
+                const diasRestantes = Math.floor(totalHoras / 24);
+                const horasRestantes = totalHoras % 24;
+                textoCuentaAtras = `<span class="bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-2xs">
+                  <i class="fa-solid fa-hourglass-half mr-1 text-[9px] text-indigo-500"></i>faltan ${diasRestantes}d y ${horasRestantes}h
+                </span>`;
+              }
+
+              const nombresDiasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+              const diaSemanaTexto = nombresDiasSemana[ahoraMomento.getDay()];
+              const diaDosDigitos = String(diaHoyNumero).padStart(2, "0");
+              const mesDosDigitos = String(ahoraMomento.getMonth() + 1).padStart(2, "0");
+              const anioDosDigitos = String(anoActualNumero).slice(-2);
+              const fechaHoyFmt = `${diaSemanaTexto}, ${diaDosDigitos}/${mesDosDigitos}/${anioDosDigitos}`;
+
+              bloque += `
+                <tr class="text-white border-y select-none shadow-sm" style="background-color: #2585d6; border-color: #1d72ba;">
+                  <td colspan="3" class="py-2.5 px-4">
+                    <div class="flex items-center justify-between w-full flex-wrap gap-2">
+                      <div class="flex items-center gap-2.5">
+                        <span class="flex h-2.5 w-2.5 relative">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+                        </span>
+                        <span class="text-xs font-bold text-white tracking-wide">
+                          Hoy: ${fechaHoyFmt}
+                        </span>
+                      </div>
+                      <div class="flex items-center gap-2 ml-auto">
+                        <span class="text-[11px] font-medium text-white/90 hidden sm:inline">Próximo cargo:</span>
+                        ${textoCuentaAtras}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }
+          }
           const renderBadgesFila = (fila) => {
             let htmlBadges = "";
 
@@ -1028,13 +1093,18 @@
             const colorFila = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
             const bgFilaPastel = mapaColoresPastel[colorFila] || "hover:bg-slate-50/80";
 
+            const iconoEstadoItem = esVerde
+              ? `<i class="fa-solid fa-check text-[#00b000] text-sm shrink-0" title="Pagado"></i>`
+              : `<i class="fa-solid fa-xmark text-[#ff0000] text-sm shrink-0" title="Pendiente"></i>`;
+
             const badgesFila = renderBadgesFila(fila);
             bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="${bgFilaPastel} transition cursor-pointer">
               <td class="py-3 px-4 whitespace-nowrap text-slate-500 align-top sm:align-middle">${diaVal}</td>
               <td class="py-3 px-4 font-medium text-slate-900">
                 <div class="flex items-center justify-between w-full gap-2">
                   <div class="flex items-center min-w-0 flex-1">
-                    <div class="flex items-center gap-2.5 min-w-0 flex-1 sm:flex-none sm:w-80 sm:shrink-0 pr-2 sm:pr-3">
+                    <div class="flex items-center gap-2 min-w-0 flex-1 sm:flex-none sm:w-80 sm:shrink-0 pr-2 sm:pr-3">
+                      ${iconoEstadoItem}
                       ${obtenerFavicon(conceptoVal)}
                       <span class="truncate">${conceptoVal}</span>
                     </div>
@@ -1065,6 +1135,10 @@
             const tdBaseTop = "border-t border-slate-200";
             const tdBtmCabecera = "border-b border-slate-200";
 
+            const iconoEstadoGrupo = esVerde
+              ? `<i class="fa-solid fa-check text-[#00b000] text-sm shrink-0" title="Pagado"></i>`
+              : `<i class="fa-solid fa-xmark text-[#ff0000] text-sm shrink-0" title="Pendiente"></i>`;
+
             bloque += `<tr onclick="toggleGrupoEmpresa('${grupoId}', '${claveGrupo}')" class="hover:bg-slate-100/70 transition cursor-pointer bg-slate-50/80">
               <td class="py-3 px-4 whitespace-nowrap text-slate-700 font-semibold ${tdBaseTop} ${tdBtmCabecera}">
                 <div class="flex items-center gap-1.5">
@@ -1074,7 +1148,8 @@
               </td>
               <td class="py-3 px-4 font-bold text-slate-900 ${tdBaseTop} ${tdBtmCabecera}">
                 <div class="flex items-center justify-between gap-2 w-full">
-                  <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="flex items-center gap-2 min-w-0">
+                    ${iconoEstadoGrupo}
                     ${obtenerFavicon(item.empresa)}
                     <span class="truncate">${item.empresa}</span>
                     <span class="bg-slate-200 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0">${item.filas.length} conceptos</span>
@@ -1086,6 +1161,7 @@
             </tr>`;
 
             item.filas.forEach((fila, idx) => {
+              const esUltima = idx === item.filas.length - 1;
               const tdBtmHija = "border-b border-slate-200";
 
               const idFila = idxId !== -1 ? fila[idxId] : "";
@@ -1114,13 +1190,25 @@
               const colorHija = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
               const bgHijaPastel = mapaColoresPastel[colorHija] || "bg-white hover:bg-slate-50";
 
+              // Línea de corchete / árbol: continua si no es la última, curva en L al final
+              const ramaCorchete = esUltima
+                ? `<div class="relative w-4 h-5 flex items-center shrink-0">
+                     <span class="absolute left-1.5 top-0 bottom-2.5 w-0.5 bg-slate-300"></span>
+                     <span class="absolute left-1.5 bottom-2.5 w-2.5 h-2.5 border-b-2 border-l-2 border-slate-300 rounded-bl-sm"></span>
+                   </div>`
+                : `<div class="relative w-4 h-5 flex items-center shrink-0">
+                     <span class="absolute left-1.5 top-0 bottom-0 w-0.5 bg-slate-300"></span>
+                     <span class="absolute left-1.5 top-2.5 w-2.5 h-0.5 bg-slate-300"></span>
+                   </div>`;
+
               const badgesHija = renderBadgesFila(fila);
               bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} ${bgHijaPastel} transition cursor-pointer">` +
                 `<td class="py-2.5 px-4 whitespace-nowrap text-slate-300 text-[11px] ${tdBtmHija}"></td>` +
-                `<td class="py-2.5 px-4 font-medium text-slate-700 pl-4 sm:pl-8 ${tdBtmHija}">` +
+                `<td class="py-2.5 px-4 font-medium text-slate-700 ${tdBtmHija}">` +
                   `<div class="flex items-center justify-between w-full gap-2">` +
                     `<div class="flex items-center min-w-0 flex-1">` +
-                      `<div class="flex items-center gap-2 min-w-0 flex-1 sm:flex-none sm:w-80 sm:shrink-0 pr-2 sm:pr-3">` +
+                      `<div class="flex items-center gap-1.5 min-w-0 flex-1 sm:flex-none sm:w-80 sm:shrink-0 pr-2 sm:pr-3 pl-1 sm:pl-3">` +
+                        ramaCorchete +
                         `<span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>` +
                         `<span class="truncate">${conceptoVal}</span>` +
                       `</div>` +
@@ -1132,23 +1220,55 @@
                     `<span class="sm:hidden font-semibold ${colorTexto} text-[11px] whitespace-nowrap shrink-0">${cantVal}</span>` +
                     `<div class="hidden sm:flex items-center">${badgesHija}</div>` +
                   `</div>` +
-                  ((perHijaTag || fechaHijaTag || badgesHija) ? `<div class="flex sm:hidden items-center flex-wrap gap-2 mt-1.5 pl-3.5">${perHijaTag}${fechaHijaTag}${badgesHija}</div>` : "") +
+                  ((perHijaTag || fechaHijaTag || badgesHija) ? `<div class="flex sm:hidden items-center flex-wrap gap-2 mt-1.5 pl-8">${perHijaTag}${fechaHijaTag}${badgesHija}</div>` : "") +
                 `</td>` +
                 `<td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-[11px] ${tdBtmHija} hidden sm:table-cell">${cantVal}</td>` +
               `</tr>`;
             });
           }
         });
+
+        // Si todos los conceptos eran de días anteriores y la línea no se insertó antes, se coloca al final
+        if (!esVerde && esMesYAnioActual && !filaHoyInsertada && gruposOrdenados.length > 0) {
+          const nombresDiasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+          const diaSemanaTexto = nombresDiasSemana[ahoraMomento.getDay()];
+          const diaDosDigitos = String(diaHoyNumero).padStart(2, "0");
+          const mesDosDigitos = String(ahoraMomento.getMonth() + 1).padStart(2, "0");
+          const anioDosDigitos = String(anoActualNumero).slice(-2);
+          const fechaHoyFmt = `${diaSemanaTexto}, ${diaDosDigitos}/${mesDosDigitos}/${anioDosDigitos}`;
+
+          bloque += `
+            <tr class="text-white border-y select-none shadow-sm" style="background-color: #2585d6; border-color: #1d72ba;">
+              <td colspan="3" class="py-2.5 px-4">
+                <div class="flex items-center justify-between w-full flex-wrap gap-2">
+                  <div class="flex items-center gap-2.5">
+                    <span class="flex h-2.5 w-2.5 relative">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+                    </span>
+                    <span class="text-xs font-bold text-white tracking-wide">
+                      Hoy: ${fechaHoyFmt}
+                    </span>
+                  </div>
+                  <span class="bg-white/20 border border-white/40 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full ml-auto">
+                    Sin más cargos previstos este mes
+                  </span>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
+
         return bloque;
       };
 
-      html += renderGrupo(pendientes, "NO", totalPendiente, false);
+      html += renderGrupo(pendientes, "PENDIENTES", totalPendiente, false);
       if (pendientes.length > 0 && pagados.length > 0) {
         html += `<tr class="bg-slate-200/70 border-y border-slate-300/60 select-none">
           <td colspan="3" class="h-4 p-0"></td>
         </tr>`;
       }
-      html += renderGrupo(pagados, "SI", totalPagado, true);
+      html += renderGrupo(pagados, "PAGADOS", totalPagado, true);
 
       html += `</tbody>`;
       tabla.innerHTML = html;
