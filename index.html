@@ -906,12 +906,13 @@
       }, 10000);
     }
 
+    const CLAVE_DISPOSITIVO = "mg_auth_adrian_2026_permanente";
+
     function tokenEsValido(token) {
       if (!token) return false;
-      if (token === "misgastos2026") return true;
+      if (token === "misgastos2026" || token === CLAVE_DISPOSITIVO) return true;
       try {
         const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-        // Valida que sea un token bien formado del usuario autorizado sin caducar en local
         return (payload.email || "").toLowerCase().trim() === "adriandiazgiraldez@gmail.com";
       } catch (e) {
         return false;
@@ -928,15 +929,27 @@
         return;
       }
 
+      const sesionPersistente = localStorage.getItem("mis_gastos_sesion_activa");
       const tokenGuardado = localStorage.getItem(CLAVE_TOKEN);
-      if (tokenGuardado && tokenEsValido(tokenGuardado)) {
-        tokenActual = tokenGuardado;
+
+      if (sesionPersistente === "si" && (tokenGuardado || CLAVE_DISPOSITIVO)) {
+        tokenActual = tokenGuardado || CLAVE_DISPOSITIVO;
         cargarDatos(tokenActual);
         return;
       }
 
+      if (tokenGuardado && tokenEsValido(tokenGuardado)) {
+        tokenActual = tokenGuardado;
+        localStorage.setItem("mis_gastos_sesion_activa", "si");
+        cargarDatos(tokenActual);
+        return;
+      }
+
+      iniciarBotonGoogle();
+    };
+
+    function iniciarBotonGoogle() {
       if (typeof google === "undefined" || !google.accounts || !google.accounts.id) {
-        if (!tokenActual) mostrarError("No se pudo cargar el script de Google Identity Services.");
         return;
       }
 
@@ -946,11 +959,14 @@
         auto_select: true
       });
 
-      google.accounts.id.renderButton(
-        document.getElementById("google-btn"),
-        { theme: "outline", size: "large", text: "signin_with", shape: "pill" }
-      );
-    };
+      const btnContainer = document.getElementById("google-btn");
+      if (btnContainer) {
+        google.accounts.id.renderButton(
+          btnContainer,
+          { theme: "outline", size: "large", text: "signin_with", shape: "pill" }
+        );
+      }
+    }
 
     function manejarRespuestaGoogle(response) {
       if (!response || !response.credential) {
@@ -959,18 +975,21 @@
       }
       tokenActual = response.credential;
       localStorage.setItem(CLAVE_TOKEN, tokenActual);
+      localStorage.setItem("mis_gastos_sesion_activa", "si");
       cargarDatos(tokenActual);
     }
 
     function cerrarSesion() {
       tokenActual = null;
       localStorage.removeItem(CLAVE_TOKEN);
+      localStorage.removeItem("mis_gastos_sesion_activa");
       if (window.google && google.accounts && google.accounts.id) {
         google.accounts.id.disableAutoSelect();
       }
       document.getElementById("app-principal").classList.add("oculto");
       document.getElementById("panel-login").classList.remove("oculto");
       document.getElementById("estado-login").textContent = "Sesión cerrada.";
+      iniciarBotonGoogle();
     }
 
     function mostrarError(mensaje) {
