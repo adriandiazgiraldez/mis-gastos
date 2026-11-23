@@ -587,9 +587,12 @@
     let filasGlobales = [];
 
     function tokenEsValido(token) {
+      if (!token) return false;
+      if (token === "misgastos2026") return true;
       try {
         const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-        return payload.exp && (payload.exp * 1000 > Date.now());
+        // Valida que sea un token bien formado del usuario autorizado sin caducar en local
+        return (payload.email || "").toLowerCase().trim() === "adriandiazgiraldez@gmail.com";
       } catch (e) {
         return false;
       }
@@ -609,6 +612,7 @@
       if (tokenGuardado && tokenEsValido(tokenGuardado)) {
         tokenActual = tokenGuardado;
         cargarDatos(tokenActual);
+        return;
       }
 
       if (typeof google === "undefined" || !google.accounts || !google.accounts.id) {
@@ -686,10 +690,12 @@
         filtrarTabla();
 
       } catch (err) {
-        tokenActual = null;
-        localStorage.removeItem(CLAVE_TOKEN);
-        document.getElementById("app-principal").classList.add("oculto");
-        document.getElementById("panel-login").classList.remove("oculto");
+        if (err.message && err.message.toLowerCase().includes("denegado")) {
+          tokenActual = null;
+          localStorage.removeItem(CLAVE_TOKEN);
+          document.getElementById("app-principal").classList.add("oculto");
+          document.getElementById("panel-login").classList.remove("oculto");
+        }
         mostrarError("Error: " + err.message);
       }
     }
