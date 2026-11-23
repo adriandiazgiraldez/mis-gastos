@@ -198,7 +198,7 @@
       <div id="estado" class="mx-4 sm:mx-8 mt-4 px-4 py-2.5 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 text-xs font-medium hidden"></div>
 
       <!-- ÁREA DE VISTAS -->
-      <main class="p-4 sm:p-8 flex-1 space-y-6">
+      <main class="px-2 py-4 sm:p-8 flex-1 space-y-6">
 
         <!-- VISTA: GASTOS MENSUALES -->
         <section id="vista-gastos-mensuales" class="space-y-6">
@@ -251,7 +251,7 @@
             <div id="titulo-mes-ano-actual" class="py-2.5 px-4 bg-slate-50/70 border-b border-slate-100 text-center text-xs font-bold uppercase tracking-wider text-slate-700"></div>
 
             <!-- Contenedor estilo BBVA: Tarjetas y Días agrupados -->
-            <div id="contenedor-gastos-bbva" class="p-3 sm:p-5 space-y-6 bg-slate-100/50">
+            <div id="contenedor-gastos-bbva" class="p-1.5 sm:p-5 space-y-4 sm:space-y-6 bg-slate-100/50">
               <!-- Se rellena dinámicamente -->
             </div>
           </div>
@@ -1559,7 +1559,7 @@
 
         // Ventana independiente con fondo blanco, bordes redondeados y sombra
         let bloque = `
-          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-2.5 sm:p-5 shadow-2xs space-y-3 sm:space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
               <div class="flex items-center gap-2">
                 <span class="w-6 h-6 rounded-lg ${badgeColor} border flex items-center justify-center text-xs">
@@ -1700,8 +1700,8 @@
               const colorCantidadIndividual = esPagados ? "text-emerald-700" : "text-rose-600";
 
               bloque += `
-                <div onclick="abrirDetalleGasto('${idFila}')" class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md transition cursor-pointer flex items-center justify-between gap-3 ${claseBorde}">
-                  <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                <div onclick="abrirDetalleGasto('${idFila}')" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-2xs hover:shadow-md transition cursor-pointer flex items-center justify-between gap-2.5 sm:gap-3 ${claseBorde}">
+                  <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
                     <div class="w-10 h-10 rounded-full ${paletaCirculo} flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs">
                       ${obtenerFaviconImgOIcon(empVal || conceptoVal)}
                     </div>
@@ -3322,7 +3322,7 @@
 
           cerrarConfirmarEliminar();
           cerrarDetalleGasto();
-          await cargarDatos(tokenActual);
+          await cargarDatos(tokenActual, true);
         } catch (err) {
           alert("No se pudo eliminar: " + err.message);
         } finally {
@@ -3541,6 +3541,9 @@
       document.getElementById("form-id").value = "";
       document.getElementById("form-concepto").value = "";
       document.getElementById("form-empresa").value = "";
+      const ahora = new Date();
+      document.getElementById("form-mes").value = document.getElementById("filtro-mes")?.value || MESES_LISTA[ahora.getMonth()];
+      document.getElementById("form-ano").value = document.getElementById("filtro-ano")?.value || ahora.getFullYear().toString();
       document.getElementById("form-periodicidad").value = "Gasto Puntual";
       document.getElementById("form-cuota").value = "";
       document.getElementById("form-icono").value = "";
@@ -3730,7 +3733,7 @@
 
         cerrarModalGasto();
         e.target.reset();
-        await cargarDatos(tokenActual);
+        await cargarDatos(tokenActual, true);
       } catch (err) {
         alert("No se pudo guardar: " + err.message);
       } finally {
