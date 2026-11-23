@@ -677,12 +677,12 @@
           <i id="visor-icono" class="fa-solid fa-file text-slate-600"></i>
           <span id="visor-titulo" class="text-xs font-bold text-slate-800">Visualizador de Documento</span>
         </div>
-        <div class="flex items-center gap-2">
-          <a id="visor-enlace-externo" href="#" target="_blank" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition" title="Abrir en pestaña nueva">
-            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-          </a>
-          <button type="button" onclick="cerrarVisorAdjunto()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition">
-            <i class="fa-solid fa-xmark text-sm"></i>
+        <div class="flex items-center gap-2.5">
+          <button type="button" onclick="compartirDocumentoVisor()" class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition" title="Compartir por WhatsApp, Email...">
+            <i class="fa-solid fa-share-nodes text-base sm:text-lg"></i>
+          </button>
+          <button type="button" onclick="cerrarVisorAdjunto()" class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 transition" title="Cerrar">
+            <i class="fa-solid fa-xmark text-lg sm:text-xl"></i>
           </button>
         </div>
       </div>
@@ -1441,12 +1441,12 @@
           const totalDiaFmt = (totalDiaNum > 0 ? "-" : "") + totalDiaNum.toFixed(2).replace(".", ",") + " €";
           const colorTotalDia = esPagados ? "text-emerald-700 bg-emerald-50 border-emerald-200/80" : "text-rose-600 bg-rose-50 border-rose-200/80";
 
-          // Cabecera de fecha con total del día a la derecha
+          // Cabecera de fecha en azul con total del día a la derecha
           bloque += `
             <div class="space-y-2.5 pt-1">
               <div class="flex items-center justify-between px-1">
-                <h3 class="text-xs font-bold text-slate-800 tracking-tight flex items-center gap-2">
-                  <i class="fa-regular fa-calendar text-slate-400 text-[11px]"></i>
+                <h3 class="text-xs font-bold text-blue-800 tracking-tight flex items-center gap-2">
+                  <i class="fa-regular fa-calendar text-blue-800 text-[11px]"></i>
                   <span>${fechaTitulo}</span>
                 </h3>
                 <span class="text-xs font-bold ${colorTotalDia} border px-2 py-0.5 rounded-lg shadow-2xs">${totalDiaFmt}</span>
@@ -1493,7 +1493,10 @@
               const paletaCirculo = obtenerPaletaCirculo(conceptoVal);
               const badgesAdj = renderBadgesAdjuntos(fila);
 
-              const textoSubtitulo = empVal || (perVal !== "Gasto Puntual" ? perVal : "");
+              const tagPeriodicidad = (perVal && perVal !== "Gasto Puntual")
+                ? `<span class="inline-flex items-center gap-1"><i class="fa-solid fa-arrows-rotate text-[9px] text-sky-500"></i>${perVal}</span>`
+                : "";
+              const textoSubtitulo = empVal || tagPeriodicidad;
               const colorCantidadIndividual = esPagados ? "text-emerald-700" : "text-rose-600";
 
               bloque += `
@@ -1508,7 +1511,7 @@
                         ${cuotaVal ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/80 text-[10px] font-bold px-1.5 py-0.2 rounded-md shrink-0">${cuotaVal}</span>` : ""}
                       </div>
                       ${textoSubtitulo ? `<p class="text-[11px] text-slate-500 truncate">${textoSubtitulo}</p>` : ""}
-                      ${notasVal ? `<p class="text-[11px] text-slate-500 whitespace-normal line-clamp-2 leading-relaxed">${notasVal}</p>` : (!textoSubtitulo ? `<p class="text-[11px] text-slate-400 italic">Sin observaciones</p>` : "")}
+                      ${notasVal ? `<p class="text-[11px] text-blue-800 whitespace-normal line-clamp-2 leading-relaxed">${notasVal}</p>` : (!textoSubtitulo ? `<p class="text-[11px] text-slate-400 italic">Sin observaciones</p>` : "")}
                     </div>
                   </div>
                   <div class="text-right shrink-0 pl-2 flex flex-col items-end gap-1.5">
@@ -1552,7 +1555,18 @@
                   <div class="fila-hija-${grupoId} ${estaCerrado ? "hidden" : ""} divide-y divide-slate-100 bg-white border-t border-slate-100">
               `;
 
-              item.filas.forEach(filaHija => {
+              item.filas.forEach((filaHija, idxHija) => {
+                const esUltimaHija = idxHija === item.filas.length - 1;
+                const ramaCorchete = esUltimaHija
+                  ? `<div class="relative w-4 h-6 flex items-center shrink-0">
+                       <span class="absolute left-1.5 top-0 bottom-3 w-0.5 bg-slate-300"></span>
+                       <span class="absolute left-1.5 bottom-3 w-2.5 h-2.5 border-b-2 border-l-2 border-slate-300 rounded-bl-sm"></span>
+                     </div>`
+                  : `<div class="relative w-4 h-6 flex items-center shrink-0">
+                       <span class="absolute left-1.5 top-0 bottom-0 w-0.5 bg-slate-300"></span>
+                       <span class="absolute left-1.5 top-3 w-2.5 h-0.5 bg-slate-300"></span>
+                     </div>`;
+
                 const idHija = idxId !== -1 ? filaHija[idxId] : "";
                 const conceptoHija = idxConcepto !== -1 ? (filaHija[idxConcepto] || "").toString().trim() : "";
                 const cantRawHija = idxCant !== -1 ? (filaHija[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".") : "0";
@@ -1566,14 +1580,15 @@
 
                 const colorHijaImporte = esPagados ? "text-emerald-700" : "text-rose-600";
                 bloque += `
-                  <div onclick="abrirDetalleGasto('${idHija}')" class="p-3 pl-12 hover:bg-slate-50 transition cursor-pointer flex items-center justify-between gap-3 ${claseBordeHija}">
+                  <div onclick="abrirDetalleGasto('${idHija}')" class="p-3 pl-6 sm:pl-8 hover:bg-slate-50 transition cursor-pointer flex items-center justify-between gap-3 ${claseBordeHija}">
                     <div class="min-w-0 flex-1 space-y-0.5">
-                      <div class="flex items-center gap-1.5">
+                      <div class="flex items-center gap-2">
+                        ${ramaCorchete}
                         <span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
                         <h5 class="text-xs font-semibold text-slate-800 truncate">${conceptoHija}</h5>
                         ${cuotaHija ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[9px] font-bold px-1.5 rounded shrink-0">${cuotaHija}</span>` : ""}
                       </div>
-                      ${notasHija ? `<p class="text-[11px] text-slate-500 whitespace-normal line-clamp-2 leading-relaxed pl-3">${notasHija}</p>` : ""}
+                      ${notasHija ? `<p class="text-[11px] text-blue-800 whitespace-normal line-clamp-2 leading-relaxed pl-8">${notasHija}</p>` : ""}
                     </div>
                     <div class="text-right shrink-0 flex flex-col items-end gap-1">
                       <span class="text-xs font-bold ${colorHijaImporte}">${cantFmtHija}</span>
@@ -2851,16 +2866,17 @@
       document.body.classList.remove("overflow-hidden");
     }
 
+    let adjuntoVisorActual = { url: "", titulo: "" };
+
     function abrirVisorAdjunto(urlDrive, titulo, tipo) {
+      adjuntoVisorActual = { url: urlDrive, titulo: titulo };
       const modal = document.getElementById("modal-visor");
       const iframe = document.getElementById("visor-iframe");
       const tituloEl = document.getElementById("visor-titulo");
       const iconoEl = document.getElementById("visor-icono");
-      const enlaceExt = document.getElementById("visor-enlace-externo");
 
       tituloEl.textContent = titulo;
       iconoEl.className = tipo === "pdf" ? "fa-solid fa-file-pdf text-rose-500 text-sm" : "fa-solid fa-image text-sky-500 text-sm";
-      enlaceExt.href = urlDrive;
 
       // Transformar enlace a modo incrustado /preview de Google Drive
       let urlEmbed = urlDrive;
@@ -2883,6 +2899,36 @@
       const detalleAbierto = !document.getElementById("modal-detalle").classList.contains("hidden");
       if (!detalleAbierto) {
         document.body.classList.remove("overflow-hidden");
+      }
+    }
+
+    async function compartirDocumentoVisor() {
+      const url = adjuntoVisorActual.url;
+      const titulo = adjuntoVisorActual.titulo || "Documento";
+
+      if (!url) return;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: titulo,
+            text: `Aquí tienes el adjunto de: ${titulo}`,
+            url: url
+          });
+        } catch (err) {
+          // Si el usuario cancela la ventana de compartir no hace falta mostrar error
+          if (err.name !== "AbortError") {
+            window.open(url, "_blank");
+          }
+        }
+      } else {
+        // En navegadores de escritorio que no tengan soporte directo a share, copia el enlace al portapapeles
+        try {
+          await navigator.clipboard.writeText(url);
+          alert("Enlace copiado al portapapeles. Ya puedes pegarlo en WhatsApp, correo, etc.");
+        } catch (e) {
+          window.open(url, "_blank");
+        }
       }
     }
 
