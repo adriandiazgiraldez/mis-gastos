@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -99,31 +100,31 @@
             <i class="fa-regular fa-calendar-check w-4 text-center"></i>
             <span>Gastos Mensuales</span>
           </button>
-          <button onclick="cambiarSeccion('proximo-mes', 'Gastos del Próximo Mes', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+          <button onclick="irAProximoMes(this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
             <i class="fa-regular fa-calendar-plus w-4 text-center"></i>
             <span>Próximo Mes</span>
           </button>
-          <button onclick="cambiarSeccion('anuales', 'Gastos Anuales', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+          <button onclick="cambiarSeccion('anuales', 'Gastos Anuales', this, 'MIS GASTOS')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
             <i class="fa-solid fa-chart-pie w-4 text-center"></i>
             <span>Gastos Anuales</span>
           </button>
-          <button onclick="cambiarSeccion('combustible', 'Gastos de Combustible', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+          <button onclick="cambiarSeccion('combustible', 'Gastos de Combustible', this, 'GASOLINA')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
             <i class="fa-solid fa-gas-pump w-4 text-center"></i>
             <span>Combustible</span>
           </button>
-          <button onclick="cambiarSeccion('documentos', 'Documentos Familiares', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+          <button onclick="cambiarSeccion('documentos', 'Documentos Familiares', this, 'DOCUMENTOS')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
             <i class="fa-regular fa-folder-open w-4 text-center"></i>
             <span>Documentos</span>
           </button>
-          <button onclick="cambiarSeccion('mantenimientos', 'Mantenimientos', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+          <button onclick="cambiarSeccion('mantenimientos', 'Mantenimientos', this, 'MANTENIMIENTOS')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
             <i class="fa-solid fa-wrench w-4 text-center"></i>
             <span>Mantenimientos</span>
           </button>
-          <button onclick="cambiarSeccion('seguros', 'Seguros Actuales', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+          <button onclick="cambiarSeccion('seguros', 'Seguros Actuales', this, 'SEGUROS')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
             <i class="fa-solid fa-shield-halved w-4 text-center"></i>
             <span>Seguros Actuales</span>
           </button>
-          <button onclick="cambiarSeccion('ingresos', 'Ingresos por Años', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+          <button onclick="cambiarSeccion('ingresos', 'Ingresos por Años', this, 'MIS INGRESOS')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
             <i class="fa-solid fa-arrow-trend-up w-4 text-center"></i>
             <span>Ingresos</span>
           </button>
@@ -292,14 +293,105 @@
           </div>
         </section>
 
-        <!-- VISTA GENÉRICA PARA OTRAS SECCIONES (EN CONSTRUCCIÓN) -->
-        <section id="vista-en-construccion" class="oculto">
-          <div class="bg-white border border-slate-200/80 rounded-2xl p-12 text-center max-w-lg mx-auto mt-8 shadow-2xs">
-            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-3 text-lg">
-              <i class="fa-solid fa-layer-group"></i>
+        <!-- VISTA: GASTOS ANUALES -->
+        <section id="vista-gastos-anuales" class="oculto space-y-6">
+          <!-- Tarjetas KPI Resumen -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total Acumulado</span>
+              <p id="stat-anual-historico" class="text-2xl font-bold text-slate-900 mt-1">0,00 €</p>
+              <span class="text-[10px] text-slate-400">Todos los años registrados</span>
             </div>
-            <h3 id="titulo-construccion" class="text-base font-bold text-slate-900">Sección en preparación</h3>
-            <p class="text-xs text-slate-500 mt-1">Esta pestaña se conectará en los próximos pasos con su hoja correspondiente de Google Sheets.</p>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">Total Gastos</span>
+                <select id="filtro-ano-anuales" onchange="cambiarAnoVistaAnual(this.value)" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-xs font-bold text-indigo-700 focus:outline-none"></select>
+              </div>
+              <p id="stat-anual-seleccionado" class="text-2xl font-bold text-indigo-600 mt-1">0,00 €</p>
+              <span id="sub-anual-seleccionado" class="text-[10px] text-slate-400">Año en curso</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">Mes con Mayor Gasto</span>
+              <p id="stat-anual-mes-max" class="text-xl font-bold text-slate-900 mt-1.5 truncate">—</p>
+              <span id="sub-anual-mes-max" class="text-[10px] text-emerald-600 font-semibold">0,00 €</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Media Mensual del Año</span>
+              <p id="stat-anual-media-mes" class="text-2xl font-bold text-slate-900 mt-1">0,00 €</p>
+              <span class="text-[10px] text-slate-400">Gasto mensual promedio</span>
+            </div>
+          </div>
+
+          <!-- Gráficas de Barras Verticales -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Gráfica 1: Histórico por Años -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <i class="fa-solid fa-chart-column text-indigo-500"></i> Total Acumulado por Años
+                </h3>
+                <span class="text-[10px] text-slate-400 font-medium">Clic en una barra para filtrar</span>
+              </div>
+              <div class="h-64 relative">
+                <canvas id="grafico-barras-anos"></canvas>
+              </div>
+            </div>
+
+            <!-- Gráfica 2: Desglose por Meses del Año -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <i class="fa-solid fa-chart-simple text-sky-500"></i> Desglose Mensual <span id="label-grafico-ano" class="text-indigo-600 font-bold ml-1"></span>
+                </h3>
+                <span class="text-[10px] text-slate-400 font-medium">Clic en un mes para ver detalle</span>
+              </div>
+              <div class="h-64 relative">
+                <canvas id="grafico-barras-meses"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desglose Árbol Estilo AppSheet (Años y Meses) -->
+          <div class="bg-white border border-slate-200/80 rounded-2xl shadow-2xs p-4 sm:p-5">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-2">
+              <i class="fa-solid fa-list-tree text-slate-500"></i> Desglose por Años y Meses
+            </h3>
+            <div id="arbol-gastos-anuales" class="space-y-2">
+              <!-- Rellenado dinámicamente con desplegables por año y meses con sus importes -->
+            </div>
+          </div>
+
+          <!-- Ranking: Top 10 Conceptos más Caros (Histórico Completo) -->
+          <div class="bg-white border border-slate-200/80 rounded-2xl shadow-2xs p-4 sm:p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-trophy text-amber-500"></i> Top 10 Conceptos con Mayor Gasto Histórico
+              </h3>
+              <span class="text-[10px] text-slate-400 font-medium">Acumulado de todos los años</span>
+            </div>
+            <div class="overflow-hidden border border-slate-100 rounded-xl">
+              <div id="ranking-top-conceptos" class="divide-y divide-slate-100">
+                <!-- Se rellena dinámicamente con el ranking de los 10 mayores gastos -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VISTA DINÁMICA PARA OTRAS PESTAÑAS (COMBUSTIBLE, MANTENIMIENTOS, SEGUROS, ETC.) -->
+        <section id="vista-en-construccion" class="oculto space-y-4">
+          <div class="bg-white border border-slate-200/80 rounded-2xl shadow-2xs overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-3">
+              <div class="relative flex-1 max-w-md">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-xs text-slate-400"></i>
+                <input type="text" id="buscador-seccion-dinamica" oninput="filtrarTablaDinamica()" placeholder="Buscar en esta sección..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 focus:bg-white transition">
+              </div>
+              <span id="contador-seccion-dinamica" class="text-xs text-slate-400 font-medium whitespace-nowrap">0 registros</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table id="tabla-seccion-dinamica" class="w-full text-left text-xs text-slate-700">
+                <!-- Se rellena automáticamente con las columnas y filas de la hoja -->
+              </table>
+            </div>
           </div>
         </section>
 
@@ -1000,15 +1092,22 @@
       document.getElementById("estado-login").textContent = mensaje;
     }
 
-    async function cargarDatos(token, silencioso = false) {
+    let seccionActualId = "gastos-mensuales";
+    let hojaActual = "MIS GASTOS";
+    let headersSeccionActual = [];
+    let filasSeccionActual = [];
+
+    async function cargarDatos(token, silencioso = false, nombreHoja = null) {
       const estadoDiv = document.getElementById("estado");
       if (!silencioso) {
         estadoDiv.classList.remove("hidden");
         estadoDiv.textContent = "Cargando datos desde Google Sheets...";
       }
 
+      const hojaAConsultar = nombreHoja || hojaActual;
+
       try {
-        const urlConToken = `${API_URL}?token=${encodeURIComponent(token)}`;
+        const urlConToken = `${API_URL}?token=${encodeURIComponent(token)}&hoja=${encodeURIComponent(hojaAConsultar)}`;
         const respuesta = await fetch(urlConToken);
         const json = await respuesta.json();
 
@@ -1021,13 +1120,23 @@
         document.getElementById("info-usuario").textContent = json.user;
         estadoDiv.classList.add("hidden");
 
-        headersGlobales = json.headers || [];
-        filasGlobales = json.rows || [];
+        if (hojaAConsultar === "MIS GASTOS") {
+          headersGlobales = json.headers || [];
+          filasGlobales = json.rows || [];
 
-        if (!silencioso) poblarSelectoresFecha();
-        actualizarResumen();
-        filtrarTabla();
-        if (!silencioso) mostrarAvisoProximoRecibo();
+          if (seccionActualId === "anuales") {
+            renderizarVistaAnualCompleta();
+          } else {
+            if (!silencioso) poblarSelectoresFecha();
+            actualizarResumen();
+            filtrarTabla();
+            if (!silencioso) mostrarAvisoProximoRecibo();
+          }
+        } else {
+          headersSeccionActual = json.headers || [];
+          filasSeccionActual = json.rows || [];
+          filtrarTablaDinamica();
+        }
 
       } catch (err) {
         if (err.message && err.message.toLowerCase().includes("denegado")) {
@@ -1623,6 +1732,7 @@
     setInterval(actualizarReloj, 30000);
     setInterval(() => {
       if (!tokenActual) return;
+      if (seccionActualId === "anuales") return; // Evita el parpadeo y la reconstrucción en Gastos Anuales
       const modalAbierto = ["modal-gasto", "modal-detalle", "modal-confirmar-eliminar"]
         .some(id => !document.getElementById(id).classList.contains("hidden"));
       if (!modalAbierto) cargarDatos(tokenActual, true);
@@ -1862,8 +1972,722 @@
       document.getElementById("sidebar-overlay").classList.toggle("hidden");
     }
 
-    function cambiarSeccion(id, titulo, btn) {
+    let chartAnosInstancia = null;
+    let chartMesesInstancia = null;
+    let anoSeleccionadoAnuales = null;
+
+    function activarVistaGastosAnuales() {
+      // Ocultar otras pantallas y encender la sección de Gastos Anuales
+      document.getElementById("vista-gastos-mensuales").classList.add("oculto");
+      document.getElementById("vista-en-construccion").classList.add("oculto");
+      const vistaAnual = document.getElementById("vista-gastos-anuales");
+      if (vistaAnual) vistaAnual.classList.remove("oculto");
+
+      renderizarVistaAnualCompleta();
+    }
+
+    function renderizarVistaAnualCompleta() {
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+      const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
+      const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+
+      if (idxAno === -1 || idxCant === -1) return;
+
+      const anosDisponibles = [...new Set(filasGlobales.map(f => (f[idxAno] || "").toString().trim()).filter(Boolean))]
+        .sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+
+      if (anosDisponibles.length === 0) return;
+
+      const ahoraAno = new Date().getFullYear().toString();
+      if (!anoSeleccionadoAnuales || !anosDisponibles.includes(anoSeleccionadoAnuales)) {
+        anoSeleccionadoAnuales = anosDisponibles.includes(ahoraAno) ? ahoraAno : anosDisponibles[0];
+      }
+
+      // Desplegable de selección de año en los KPI
+      const selAno = document.getElementById("filtro-ano-anuales");
+      if (selAno) {
+        selAno.innerHTML = anosDisponibles.map(a => `<option value="${a}" ${a === anoSeleccionadoAnuales ? "selected" : ""}>${a}</option>`).join("");
+      }
+
+      // Sumatorias analíticas
+      let totalHistorico = 0;
+      const sumaPorAno = {};
+      const sumaPorAnoMes = {};
+
+      anosDisponibles.forEach(a => {
+        sumaPorAno[a] = 0;
+        sumaPorAnoMes[a] = {};
+        MESES_LISTA.forEach(m => sumaPorAnoMes[a][m] = 0);
+      });
+
+      filasGlobales.forEach(f => {
+        const a = (f[idxAno] || "").toString().trim();
+        const m = idxMes !== -1 ? (f[idxMes] || "").toString().trim().toUpperCase() : "";
+        const raw = (f[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
+        const c = parseFloat(raw) || 0;
+
+        totalHistorico += c;
+        if (sumaPorAno[a] !== undefined) {
+          sumaPorAno[a] += c;
+          if (sumaPorAnoMes[a] && sumaPorAnoMes[a][m] !== undefined) {
+            sumaPorAnoMes[a][m] += c;
+          }
+        }
+      });
+
+      const totalAnoSel = sumaPorAno[anoSeleccionadoAnuales] || 0;
+      const mesesSel = sumaPorAnoMes[anoSeleccionadoAnuales] || {};
+
+      let maxMesNombre = "—";
+      let maxMesCant = 0;
+      let mesesConGasto = 0;
+
+      MESES_LISTA.forEach(m => {
+        const c = mesesSel[m] || 0;
+        if (c > 0) mesesConGasto++;
+        if (c > maxMesCant) {
+          maxMesCant = c;
+          maxMesNombre = m;
+        }
+      });
+
+      const mediaMes = (totalAnoSel / (mesesConGasto || 12));
+      const fmt = (n) => (n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+      // Actualizar indicadores numéricos
+      const elHist = document.getElementById("stat-anual-historico");
+      const elSel = document.getElementById("stat-anual-seleccionado");
+      const elSubSel = document.getElementById("sub-anual-seleccionado");
+      const elMax = document.getElementById("stat-anual-mes-max");
+      const elSubMax = document.getElementById("sub-anual-mes-max");
+      const elMed = document.getElementById("stat-anual-media-mes");
+      const elLblAno = document.getElementById("label-grafico-ano");
+
+      if (elHist) elHist.textContent = fmt(totalHistorico);
+      if (elSel) elSel.textContent = fmt(totalAnoSel);
+      if (elSubSel) elSubSel.textContent = `Año ${anoSeleccionadoAnuales}`;
+      if (elMax) elMax.textContent = maxMesNombre;
+      if (elSubMax) elSubMax.textContent = fmt(maxMesCant);
+      if (elMed) elMed.textContent = fmt(mediaMes);
+      if (elLblAno) elLblAno.textContent = `(${anoSeleccionadoAnuales})`;
+
+      // Dibujar las gráficas de barras verticales
+      dibujarGraficosAnuales(anosDisponibles, sumaPorAno, mesesSel);
+
+      // Renderizar el árbol interactivo estilo AppSheet
+      renderizarArbolAnual(anosDisponibles, sumaPorAno, sumaPorAnoMes);
+
+      // Renderizar el Ranking Top 10 conceptos históricos
+      renderizarTopConceptosHistoricos(totalHistorico);
+    }
+
+    function cambiarAnoVistaAnual(nuevoAno) {
+      anoSeleccionadoAnuales = nuevoAno;
+      renderizarVistaAnualCompleta();
+    }
+
+    function dibujarGraficosAnuales(anos, sumaPorAno, mesesSel) {
+      if (typeof Chart === "undefined") return;
+
+      // Gráfico 1: Años (cronológico)
+      const anosCronologicos = [...anos].reverse();
+      const datosAnos = anosCronologicos.map(a => sumaPorAno[a] || 0);
+      const coloresAnos = anosCronologicos.map(a => a === anoSeleccionadoAnuales ? "#4f46e5" : "#94a3b8");
+
+      const canvasAnos = document.getElementById("grafico-barras-anos");
+      if (canvasAnos) {
+        if (chartAnosInstancia) {
+          // Actualización suave y fija sin parpadeo
+          chartAnosInstancia.data.labels = anosCronologicos;
+          chartAnosInstancia.data.datasets[0].data = datosAnos;
+          chartAnosInstancia.data.datasets[0].backgroundColor = coloresAnos;
+          chartAnosInstancia.update("none");
+        } else {
+          const ctxAnos = canvasAnos.getContext("2d");
+          chartAnosInstancia = new Chart(ctxAnos, {
+            type: "bar",
+            data: {
+              labels: anosCronologicos,
+              datasets: [{
+                label: "Total Gastos (€)",
+                data: datosAnos,
+                backgroundColor: coloresAnos,
+                borderRadius: 8,
+                borderSkipped: false
+              }]
+            },
+            options: {
+              animation: false,
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) => ` Total: ${(ctx.parsed.y || 0).toLocaleString("es-ES", { minimumFractionDigits: 2 })} €`
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    font: { size: 10 },
+                    callback: (val) => val >= 1000 ? (val / 1000) + "k €" : val + " €"
+                  },
+                  grid: { color: "#f1f5f9" }
+                },
+                x: {
+                  ticks: { font: { size: 11, weight: "bold" } },
+                  grid: { display: false }
+                }
+              },
+              onClick: (e, elements) => {
+                if (elements && elements.length > 0) {
+                  const idx = elements[0].index;
+                  cambiarAnoVistaAnual(anosCronologicos[idx]);
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // Gráfico 2: Meses del año seleccionado
+      const etiquetasMesesAbrev = MESES_LISTA.map(m => m.slice(0, 3));
+      const datosMeses = MESES_LISTA.map(m => mesesSel[m] || 0);
+
+      const canvasMeses = document.getElementById("grafico-barras-meses");
+      if (canvasMeses) {
+        if (chartMesesInstancia) {
+          // Actualización suave y fija sin parpadeo
+          chartMesesInstancia.data.labels = etiquetasMesesAbrev;
+          chartMesesInstancia.data.datasets[0].data = datosMeses;
+          chartMesesInstancia.update("none");
+        } else {
+          const ctxMeses = canvasMeses.getContext("2d");
+          chartMesesInstancia = new Chart(ctxMeses, {
+            type: "bar",
+            data: {
+              labels: etiquetasMesesAbrev,
+              datasets: [{
+                label: "Gasto del Mes (€)",
+                data: datosMeses,
+                backgroundColor: "#0284c7",
+                hoverBackgroundColor: "#0369a1",
+                borderRadius: 8,
+                borderSkipped: false
+              }]
+            },
+            options: {
+              animation: false,
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    title: (items) => MESES_LISTA[items[0].dataIndex],
+                    label: (ctx) => ` Gasto: ${(ctx.parsed.y || 0).toLocaleString("es-ES", { minimumFractionDigits: 2 })} €`
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    font: { size: 10 },
+                    callback: (val) => val >= 1000 ? (val / 1000) + "k €" : val + " €"
+                  },
+                  grid: { color: "#f1f5f9" }
+                },
+                x: {
+                  ticks: { font: { size: 10, weight: "bold" } },
+                  grid: { display: false }
+                }
+              },
+              onClick: (e, elements) => {
+                if (elements && elements.length > 0) {
+                  const idx = elements[0].index;
+                  const mesClick = MESES_LISTA[idx];
+                  toggleDesplegableMesAnual(anoSeleccionadoAnuales, mesClick);
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+
+    function renderizarArbolAnual(anos, sumaPorAno, sumaPorAnoMes) {
+      const contenedor = document.getElementById("arbol-gastos-anuales");
+      if (!contenedor) return;
+
+      const fmt = (n) => (n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+      let html = "";
+      anos.forEach(ano => {
+        const totalAno = sumaPorAno[ano] || 0;
+
+        html += `
+          <div class="border border-slate-200/90 rounded-2xl overflow-hidden bg-white shadow-2xs">
+            <button type="button" onclick="toggleAnoArbol('${ano}')" class="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100 transition text-left">
+              <div class="flex items-center gap-2.5">
+                <i id="chevron-arbol-${ano}" class="fa-solid fa-chevron-right text-xs text-slate-500 transition-transform"></i>
+                <span class="text-sm font-bold text-slate-900 tracking-tight">${ano}</span>
+              </div>
+              <span class="bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-xs font-bold px-3 py-1 rounded-lg">${fmt(totalAno)}</span>
+            </button>
+            <div id="cuerpo-arbol-${ano}" class="hidden divide-y divide-slate-100 bg-white">
+        `;
+
+        MESES_LISTA.forEach(mes => {
+          const totalMes = sumaPorAnoMes[ano][mes] || 0;
+          const idContenedorDetalle = `detalle-mes-${ano}-${mes}`;
+
+          html += `
+            <div class="flex flex-col">
+              <div onclick="toggleDesplegableMesAnual('${ano}', '${mes}')" class="flex items-center justify-between py-2.5 px-4 pl-9 hover:bg-slate-50/80 cursor-pointer transition select-none group">
+                <div class="flex items-center gap-2.5">
+                  <i id="chevron-mes-${ano}-${mes}" class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:text-indigo-600 transition-transform"></i>
+                  <span class="text-xs font-semibold text-slate-700 group-hover:text-slate-900">${mes}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold ${totalMes > 0 ? 'text-slate-900' : 'text-slate-400'}">${fmt(totalMes)}</span>
+                </div>
+              </div>
+              <div id="${idContenedorDetalle}" class="hidden p-3 bg-slate-100/60 border-t border-slate-100">
+                <!-- Se rellena con la tabla exacta de Gastos Mensuales al desplegar -->
+              </div>
+            </div>
+          `;
+        });
+
+        html += `
+            </div>
+          </div>
+        `;
+      });
+
+      contenedor.innerHTML = html;
+    }
+
+    function toggleAnoArbol(ano) {
+      const cuerpo = document.getElementById(`cuerpo-arbol-${ano}`);
+      const chevron = document.getElementById(`chevron-arbol-${ano}`);
+      if (!cuerpo) return;
+      cuerpo.classList.toggle("hidden");
+      if (chevron) chevron.classList.toggle("rotate-90");
+    }
+
+    function renderizarTopConceptosHistoricos(totalHistorico) {
+      const contenedor = document.getElementById("ranking-top-conceptos");
+      if (!contenedor) return;
+
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
+      const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+
+      if (idxConcepto === -1 || idxCant === -1) {
+        contenedor.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">Datos insuficientes para generar el ranking.</div>`;
+        return;
+      }
+
+      // Mapa para asociar conceptos con sus empresas si están definidas
+      const mapaConceptoEmpresa = {};
+      if (idxEmpresa !== -1) {
+        filasGlobales.forEach(f => {
+          const c = (f[idxConcepto] || "").toString().trim().toUpperCase();
+          const emp = (f[idxEmpresa] || "").toString().trim();
+          if (c && emp) mapaConceptoEmpresa[c] = emp;
+        });
+      }
+
+      // Agrupación acumulada de todos los años y meses por concepto
+      const mapaTotalesConcepto = {};
+      filasGlobales.forEach(f => {
+        const nombreConcepto = (f[idxConcepto] || "").toString().trim();
+        if (!nombreConcepto) return;
+
+        const raw = (f[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
+        const cant = parseFloat(raw) || 0;
+
+        const clave = nombreConcepto.toUpperCase();
+        if (!mapaTotalesConcepto[clave]) {
+          mapaTotalesConcepto[clave] = {
+            nombre: nombreConcepto,
+            empresa: (idxEmpresa !== -1 ? (f[idxEmpresa] || "").toString().trim() : "") || mapaConceptoEmpresa[clave] || "",
+            total: 0,
+            repeticiones: 0
+          };
+        }
+        mapaTotalesConcepto[clave].total += cant;
+        mapaTotalesConcepto[clave].repeticiones += 1;
+      });
+
+      // Ordenar de mayor a menor y tomar los primeros 10
+      const ranking = Object.values(mapaTotalesConcepto)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 10);
+
+      if (ranking.length === 0) {
+        contenedor.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No hay registros suficientes.</div>`;
+        return;
+      }
+
+      const fmt = (n) => (n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+      const maxGastoPrimerPuesto = ranking[0].total || 1;
+
+      let html = "";
+      ranking.forEach((item, index) => {
+        const posicion = index + 1;
+        let badgePosicion = "";
+
+        if (posicion === 1) {
+          badgePosicion = `<span class="w-6 h-6 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center text-xs font-bold shadow-2xs shrink-0"><i class="fa-solid fa-medal"></i></span>`;
+        } else if (posicion === 2) {
+          badgePosicion = `<span class="w-6 h-6 rounded-full bg-slate-300 text-slate-800 flex items-center justify-center text-xs font-bold shadow-2xs shrink-0"><i class="fa-solid fa-medal"></i></span>`;
+        } else if (posicion === 3) {
+          badgePosicion = `<span class="w-6 h-6 rounded-full bg-amber-600 text-amber-50 flex items-center justify-center text-xs font-bold shadow-2xs shrink-0"><i class="fa-solid fa-medal"></i></span>`;
+        } else {
+          badgePosicion = `<span class="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold shrink-0">${posicion}</span>`;
+        }
+
+        const porcentajeRelativo = totalHistorico > 0 ? ((item.total / totalHistorico) * 100).toFixed(1) : 0;
+        const porcentajeBarra = Math.min(100, Math.max(8, (item.total / maxGastoPrimerPuesto) * 100));
+
+        html += `
+          <div class="p-3 sm:px-4 hover:bg-slate-50/80 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              ${badgePosicion}
+              <div class="shrink-0 text-base">${obtenerHtmlIconoConcepto(item.nombre)}</div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-slate-900 truncate">${item.nombre}</span>
+                  ${item.empresa ? `<span class="hidden sm:inline text-[10px] text-slate-400 font-medium truncate">(${item.empresa})</span>` : ""}
+                </div>
+                <div class="w-full max-w-xs bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1 hidden sm:block">
+                  <div class="bg-indigo-600 h-full rounded-full" style="width: ${porcentajeBarra}%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between sm:justify-end gap-3 pl-9 sm:pl-0">
+              <span class="text-[10px] text-slate-400 font-semibold bg-slate-100 px-2 py-0.5 rounded-md whitespace-nowrap">${item.repeticiones} cuotas · ${porcentajeRelativo}%</span>
+              <span class="text-xs sm:text-sm font-bold text-slate-900 whitespace-nowrap">${fmt(item.total)}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      contenedor.innerHTML = html;
+    }
+
+    function toggleDesplegableMesAnual(ano, mes) {
+      // Asegurarse de que el año esté desplegado
+      const cuerpoAno = document.getElementById(`cuerpo-arbol-${ano}`);
+      const chevronAno = document.getElementById(`chevron-arbol-${ano}`);
+      if (cuerpoAno && cuerpoAno.classList.contains("hidden")) {
+        cuerpoAno.classList.remove("hidden");
+        if (chevronAno) chevronAno.classList.add("rotate-90");
+      }
+
+      const contenedor = document.getElementById(`detalle-mes-${ano}-${mes}`);
+      const chevronMes = document.getElementById(`chevron-mes-${ano}-${mes}`);
+      if (!contenedor) return;
+
+      const estaOculto = contenedor.classList.contains("hidden");
+
+      if (estaOculto) {
+        // Filtrar los gastos que pertenecen exactamente a este año y mes
+        const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+        const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
+
+        const filasDelMes = filasGlobales.filter(f => {
+          const anoFila = idxAno !== -1 ? (f[idxAno] || "").toString().trim() : "";
+          const mesFila = idxMes !== -1 ? (f[idxMes] || "").toString().trim().toUpperCase() : "";
+          return anoFila === ano && mesFila === mes;
+        });
+
+        if (filasDelMes.length === 0) {
+          contenedor.innerHTML = `<div class="p-4 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">No hay gastos registrados en ${mes} ${ano}.</div>`;
+        } else {
+          // Reutilizamos la tabla idéntica de Gastos Mensuales inyectada en un contenedor blanco
+          contenedor.innerHTML = `
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
+              <div class="overflow-x-auto">
+                <table id="tabla-anual-${ano}-${mes}" class="w-full text-left text-xs text-slate-700"></table>
+              </div>
+            </div>
+          `;
+          renderizarTablaEnContenedor(filasDelMes, `tabla-anual-${ano}-${mes}`);
+        }
+
+        contenedor.classList.remove("hidden");
+        if (chevronMes) chevronMes.classList.add("rotate-90");
+      } else {
+        contenedor.classList.add("hidden");
+        if (chevronMes) chevronMes.classList.remove("rotate-90");
+      }
+    }
+
+    function renderizarTablaEnContenedor(filas, idElementoTabla) {
+      const tabla = document.getElementById(idElementoTabla);
+      if (!tabla) return;
+
+      const idxId = headersGlobales.findIndex(h => h.trim().toUpperCase() === "ID");
+      const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
+      const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
+      const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+      const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
+      const idxNotas = headersGlobales.findIndex(h => h.toLowerCase().includes("nota"));
+      const idxPeriodicidad = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
+      const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
+
+      let html = `<thead class="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-300">
+        <tr>
+          <th class="py-3 px-4 font-semibold whitespace-nowrap w-16">DÍA</th>
+          <th class="py-3 px-4 font-semibold whitespace-nowrap">CONCEPTO</th>
+          <th class="py-3 px-4 font-semibold whitespace-nowrap text-right hidden sm:table-cell">CANTIDAD (€)</th>
+        </tr>
+      </thead><tbody class="divide-y divide-slate-200">`;
+
+      const parsearCantidad = (fila) => {
+        if (idxCant === -1) return 0;
+        const raw = (fila[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
+        return parseFloat(raw) || 0;
+      };
+
+      const esPagado = (fila) => idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+
+      const ordenarDescendente = (a, b) => {
+        const diaRawA = idxDia !== -1 ? (parseInt(a[idxDia], 10) || 0) : 0;
+        const diaRawB = idxDia !== -1 ? (parseInt(b[idxDia], 10) || 0) : 0;
+        const pesoDia = (d) => (d === 30 || d === 31) ? (d - 100) : d;
+        const pesoA = pesoDia(diaRawA);
+        const pesoB = pesoDia(diaRawB);
+        if (pesoA !== pesoB) return pesoA - pesoB;
+
+        const cA = idxConcepto !== -1 ? (a[idxConcepto] || "").toString().trim() : "";
+        const cB = idxConcepto !== -1 ? (b[idxConcepto] || "").toString().trim() : "";
+        return cA.localeCompare(cB, "es", { sensitivity: "base" });
+      };
+
+      const pendientes = filas.filter(f => !esPagado(f)).sort(ordenarDescendente);
+      const pagados = filas.filter(f => esPagado(f)).sort(ordenarDescendente);
+
+      const totalPendiente = pendientes.reduce((acc, f) => acc + parsearCantidad(f), 0);
+      const totalPagado = pagados.reduce((acc, f) => acc + parsearCantidad(f), 0);
+
+      const renderGrupo = (lista, titulo, total, esVerde) => {
+        if (lista.length === 0) return "";
+        const mapaColoresPastel = {
+          "amarillo": "bg-amber-100/70 hover:bg-amber-100",
+          "naranja": "bg-orange-100/70 hover:bg-orange-100",
+          "rojo": "bg-rose-100/70 hover:bg-rose-100",
+          "verde": "bg-emerald-100/70 hover:bg-emerald-100",
+          "azul": "bg-sky-100/70 hover:bg-sky-100",
+          "morado": "bg-purple-100/70 hover:bg-purple-100"
+        };
+        const idxColor = headersGlobales.findIndex(h => h.toLowerCase().includes("etiqueta") || h.toLowerCase().includes("color"));
+
+        const colorTexto = esVerde ? "text-emerald-600" : "text-rose-600";
+        const bgGrupo = esVerde ? "bg-emerald-50/60 border-emerald-100" : "bg-rose-50/60 border-rose-100";
+        const icono = esVerde ? "fa-check text-[#00b000]" : "fa-xmark text-[#ff0000]";
+        const etiquetaGrupo = esVerde ? "PAGADOS" : "PENDIENTES";
+        const totalFmt = total.toFixed(2).replace(".", ",") + " €";
+
+        let bloque = `<tr class="${bgGrupo} border-y">
+          <td colspan="3" class="py-2 px-4">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 font-bold text-xs ${colorTexto}">
+                <i class="fa-solid ${icono}"></i> ${etiquetaGrupo}
+              </span>
+              <span class="bg-slate-200/80 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">${totalFmt}</span>
+            </div>
+          </td>
+        </tr>`;
+
+        const mapaConceptoEmpresa = {};
+        if (idxConcepto !== -1 && idxEmpresa !== -1) {
+          filasGlobales.forEach(f => {
+            const c = (f[idxConcepto] || "").toString().trim().toUpperCase();
+            const emp = (f[idxEmpresa] || "").toString().trim();
+            if (c && emp) mapaConceptoEmpresa[c] = emp;
+          });
+        }
+
+        const gruposOrdenados = [];
+        const mapaEmpresas = {};
+
+        lista.forEach((fila) => {
+          const conceptoClave = idxConcepto !== -1 ? (fila[idxConcepto] || "").toString().trim().toUpperCase() : "";
+          const empresaPropia = idxEmpresa !== -1 ? (fila[idxEmpresa] || "").toString().trim() : "";
+          const empresa = empresaPropia || mapaConceptoEmpresa[conceptoClave] || "";
+          if (empresa) {
+            const claveEmp = empresa.toUpperCase();
+            if (!mapaEmpresas[claveEmp]) {
+              mapaEmpresas[claveEmp] = { esGrupo: true, empresa, filas: [] };
+              gruposOrdenados.push(mapaEmpresas[claveEmp]);
+            }
+            mapaEmpresas[claveEmp].filas.push(fila);
+          } else {
+            gruposOrdenados.push({ esGrupo: false, fila });
+          }
+        });
+
+        const pesoDia = (d) => (d === 30 || d === 31) ? (d - 100) : d;
+        const obtenerPesoItem = (item) => {
+          if (!item.esGrupo) {
+            const d = idxDia !== -1 ? (parseInt(item.fila[idxDia], 10) || 0) : 0;
+            return pesoDia(d);
+          }
+          const pesos = item.filas.map(f => pesoDia(idxDia !== -1 ? (parseInt(f[idxDia], 10) || 0) : 0));
+          return Math.min(...pesos);
+        };
+        const obtenerNombreItem = (item) => {
+          if (item.esGrupo) return (item.empresa || "").toString().trim();
+          return idxConcepto !== -1 ? (item.fila[idxConcepto] || "").toString().trim() : "";
+        };
+
+        gruposOrdenados.sort((a, b) => {
+          const diffPeso = obtenerPesoItem(a) - obtenerPesoItem(b);
+          if (diffPeso !== 0) return diffPeso;
+          return obtenerNombreItem(a).localeCompare(obtenerNombreItem(b), "es", { sensitivity: "base" });
+        });
+
+        let contadorSubGrupo = 0;
+        gruposOrdenados.forEach((item) => {
+          const renderBadges = (fila) => {
+            let htmlBadges = "";
+            if (idxNotas !== -1) {
+              const nota = (fila[idxNotas] || "").toString().trim();
+              if (nota) {
+                htmlBadges += `<i class="fa-solid fa-note-sticky text-amber-500 text-xs" title="${nota.replace(/"/g, '&quot;')}"></i>`;
+              }
+            }
+            headersGlobales.forEach((h, i) => {
+              const val = (fila[i] || "").toString().trim();
+              if (!val.startsWith("http")) return;
+              const colLower = h.toLowerCase();
+              if (colLower.includes("pdf")) {
+                htmlBadges += `<button type="button" onclick="event.stopPropagation(); abrirVisorAdjunto('${val}', 'Documento PDF', 'pdf')" class="text-rose-500 hover:scale-110 p-0.5"><i class="fa-solid fa-file-pdf text-xs"></i></button>`;
+              } else if (colLower.includes("captura") || colLower.includes("imagen")) {
+                htmlBadges += `<button type="button" onclick="event.stopPropagation(); abrirVisorAdjunto('${val}', 'Captura', 'imagen')" class="text-sky-500 hover:scale-110 p-0.5"><i class="fa-solid fa-image text-xs"></i></button>`;
+              }
+            });
+            return htmlBadges ? `<div class="flex items-center gap-1.5 shrink-0 ml-auto pl-2">${htmlBadges}</div>` : "";
+          };
+
+          if (!item.esGrupo || item.filas.length === 1) {
+            const fila = item.esGrupo ? item.filas[0] : item.fila;
+            const idFila = idxId !== -1 ? fila[idxId] : "";
+            const diaVal = idxDia !== -1 ? fila[idxDia] : "";
+            const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
+            const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
+            const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
+
+            const perVal = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim() : "";
+            const cuotaVal = idxCuota !== -1 ? (fila[idxCuota] || "").toString().trim() : "";
+            let etiquetaPer = cuotaVal || (perVal && perVal.toLowerCase() !== "gasto puntual" ? perVal : "");
+            const perTag = etiquetaPer ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">${etiquetaPer}</span>` : "";
+
+            const colorFila = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
+            const bgFilaPastel = mapaColoresPastel[colorFila] || "hover:bg-slate-50";
+
+            bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="${bgFilaPastel} transition cursor-pointer">
+              <td class="py-2.5 px-4 whitespace-nowrap text-slate-500">${diaVal}</td>
+              <td class="py-2.5 px-4 font-medium text-slate-900">
+                <div class="flex items-center justify-between w-full gap-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <i class="fa-solid ${esVerde ? 'fa-check text-[#00b000]' : 'fa-xmark text-[#ff0000]'} text-xs shrink-0"></i>
+                    ${obtenerHtmlIconoConcepto(conceptoVal)}
+                    <span class="truncate">${conceptoVal}</span>
+                    ${perTag}
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="sm:hidden font-semibold ${colorTexto} whitespace-nowrap">${cantVal}</span>
+                    ${renderBadges(fila)}
+                  </div>
+                </div>
+              </td>
+              <td class="py-2.5 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} hidden sm:table-cell">${cantVal}</td>
+            </tr>`;
+          } else {
+            contadorSubGrupo++;
+            const subId = `${idElementoTabla}-${contadorSubGrupo}`;
+            const sumaGrupo = item.filas.reduce((acc, f) => acc + parsearCantidad(f), 0);
+            const sumaFmt = sumaGrupo.toFixed(2).replace(".", ",") + " €";
+            const diasUnicos = [...new Set(item.filas.map(f => idxDia !== -1 ? (f[idxDia] || "").toString().trim() : "").filter(Boolean))].join(", ");
+
+            bloque += `<tr onclick="document.querySelectorAll('.hija-${subId}').forEach(el => el.classList.toggle('hidden')); document.getElementById('chv-${subId}').classList.toggle('rotate-90')" class="hover:bg-slate-100 transition cursor-pointer bg-slate-50/80">
+              <td class="py-2.5 px-4 whitespace-nowrap text-slate-700 font-semibold border-t border-slate-200">
+                <div class="flex items-center gap-1.5">
+                  <i id="chv-${subId}" class="fa-solid fa-chevron-right text-[10px] text-slate-600 transition-transform rotate-90"></i>
+                  <span>${diasUnicos}</span>
+                </div>
+              </td>
+              <td class="py-2.5 px-4 font-bold text-slate-900 border-t border-slate-200">
+                <div class="flex items-center justify-between gap-2 w-full">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <i class="fa-solid ${esVerde ? 'fa-check text-[#00b000]' : 'fa-xmark text-[#ff0000]'} text-xs shrink-0"></i>
+                    ${obtenerHtmlIconoConcepto(item.empresa)}
+                    <span class="truncate">${item.empresa}</span>
+                    <span class="bg-slate-200 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0">${item.filas.length} conceptos</span>
+                  </div>
+                  <span class="sm:hidden font-bold ${colorTexto} whitespace-nowrap">${sumaFmt}</span>
+                </div>
+              </td>
+              <td class="py-2.5 px-4 whitespace-nowrap text-right font-bold ${colorTexto} border-t border-slate-200 hidden sm:table-cell">${sumaFmt}</td>
+            </tr>`;
+
+            item.filas.forEach((fila) => {
+              const idFila = idxId !== -1 ? fila[idxId] : "";
+              const conceptoVal = idxConcepto !== -1 ? fila[idxConcepto] : "";
+              const cantRaw = idxCant !== -1 ? (fila[idxCant] || "").toString().trim() : "";
+              const cantVal = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0 €";
+
+              bloque += `<tr onclick="abrirDetalleGasto('${idFila}')" class="hija-${subId} bg-white hover:bg-slate-50 transition cursor-pointer">
+                <td class="py-2 px-4 whitespace-nowrap text-slate-300"></td>
+                <td class="py-2 px-4 font-medium text-slate-700 pl-8">
+                  <div class="flex items-center justify-between w-full gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
+                      <span class="truncate">${conceptoVal}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="sm:hidden font-semibold ${colorTexto} text-xs whitespace-nowrap">${cantVal}</span>
+                      ${renderBadges(fila)}
+                    </div>
+                  </div>
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap text-right font-semibold ${colorTexto} text-xs hidden sm:table-cell">${cantVal}</td>
+              </tr>`;
+            });
+          }
+        });
+
+        return bloque;
+      };
+
+      html += renderGrupo(pendientes, "PENDIENTES", totalPendiente, false);
+      if (pendientes.length > 0 && pagados.length > 0) {
+        html += `<tr class="bg-slate-200/70 border-y border-slate-300/60 select-none"><td colspan="3" class="h-3 p-0"></td></tr>`;
+      }
+      html += renderGrupo(pagados, "PAGADOS", totalPagado, true);
+
+      html += `</tbody>`;
+      tabla.innerHTML = html;
+    }
+
+    function cambiarSeccion(id, titulo, btn, nombreHojaSheet = "MIS GASTOS") {
+      seccionActualId = id;
+      hojaActual = nombreHojaSheet;
       document.getElementById("titulo-seccion").textContent = titulo;
+
       document.querySelectorAll(".nav-btn").forEach(b => {
         b.classList.remove("bg-slate-900", "text-white", "font-semibold");
         b.classList.add("text-slate-600", "hover:bg-slate-100", "font-medium");
@@ -1871,15 +2695,124 @@
       btn.classList.add("bg-slate-900", "text-white", "font-semibold");
       btn.classList.remove("text-slate-600", "hover:bg-slate-100", "font-medium");
 
+      const vistaAnualEl = document.getElementById("vista-gastos-anuales");
+      if (vistaAnualEl) vistaAnualEl.classList.add("oculto");
+
       if (id === "gastos-mensuales") {
         document.getElementById("vista-gastos-mensuales").classList.remove("oculto");
         document.getElementById("vista-en-construccion").classList.add("oculto");
+        const ahora = new Date();
+        document.getElementById("filtro-ano").value = ahora.getFullYear().toString();
+        document.getElementById("filtro-mes").value = MESES_LISTA[ahora.getMonth()];
+        const toggleTodo = document.getElementById("toggle-ver-todo");
+        if (toggleTodo) toggleTodo.checked = false;
+        diaSeleccionado = null;
+        document.getElementById("texto-btn-calendario").textContent = "Día";
+        filtrarTabla();
+      } else if (id === "anuales") {
+        activarVistaGastosAnuales();
       } else {
         document.getElementById("vista-gastos-mensuales").classList.add("oculto");
         document.getElementById("vista-en-construccion").classList.remove("oculto");
-        document.getElementById("titulo-construccion").textContent = titulo;
+        const buscadorDin = document.getElementById("buscador-seccion-dinamica");
+        if (buscadorDin) buscadorDin.value = "";
+        cargarDatos(tokenActual, false, nombreHojaSheet);
       }
 
+      if (window.innerWidth < 768) toggleSidebar();
+    }
+
+    function filtrarTablaDinamica() {
+      const q = quitarAcentos(document.getElementById("buscador-seccion-dinamica")?.value || "");
+      const filtradas = q
+        ? filasSeccionActual.filter(f => quitarAcentos(f.join(" ")).includes(q))
+        : filasSeccionActual;
+
+      renderizarTablaDinamica(filtradas);
+    }
+
+    function renderizarTablaDinamica(filas) {
+      const tabla = document.getElementById("tabla-seccion-dinamica");
+      const contador = document.getElementById("contador-seccion-dinamica");
+      if (!tabla) return;
+      if (contador) contador.textContent = `${filas.length} registros`;
+
+      if (!headersSeccionActual || headersSeccionActual.length === 0) {
+        tabla.innerHTML = `<tbody><tr><td class="p-6 text-center text-slate-400">No hay datos en esta hoja.</td></tr></tbody>`;
+        return;
+      }
+
+      let html = `<thead class="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-300"><tr>`;
+      headersSeccionActual.forEach(h => {
+        html += `<th class="py-3 px-4 font-semibold whitespace-nowrap">${h}</th>`;
+      });
+      html += `</tr></thead><tbody class="divide-y divide-slate-200">`;
+
+      if (filas.length === 0) {
+        html += `<tr><td colspan="${headersSeccionActual.length}" class="p-6 text-center text-slate-400">No se encontraron registros.</td></tr>`;
+      } else {
+        filas.forEach(f => {
+          html += `<tr class="hover:bg-slate-50/80 transition">`;
+          headersSeccionActual.forEach((_, colIdx) => {
+            let val = (f[colIdx] !== undefined) ? f[colIdx].toString() : "";
+            if (val.startsWith("http://") || val.startsWith("https://")) {
+              val = `<a href="${val}" target="_blank" class="inline-flex items-center gap-1 text-sky-600 hover:underline font-medium"><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Ver enlace</a>`;
+            }
+            html += `<td class="py-3 px-4 whitespace-nowrap">${val}</td>`;
+          });
+          html += `</tr>`;
+        });
+      }
+
+      html += `</tbody>`;
+      tabla.innerHTML = html;
+    }
+
+    function irAProximoMes(btn) {
+      document.getElementById("titulo-seccion").textContent = "Gastos del Próximo Mes";
+      document.querySelectorAll(".nav-btn").forEach(b => {
+        b.classList.remove("bg-slate-900", "text-white", "font-semibold");
+        b.classList.add("text-slate-600", "hover:bg-slate-100", "font-medium");
+      });
+      btn.classList.add("bg-slate-900", "text-white", "font-semibold");
+      btn.classList.remove("text-slate-600", "hover:bg-slate-100", "font-medium");
+
+      document.getElementById("vista-gastos-mensuales").classList.remove("oculto");
+      document.getElementById("vista-en-construccion").classList.add("oculto");
+
+      const ahora = new Date();
+      let mesIndexSig = ahora.getMonth() + 1;
+      let anoSig = ahora.getFullYear();
+
+      if (mesIndexSig > 11) {
+        mesIndexSig = 0;
+        anoSig++;
+      }
+
+      const mesNombreSig = MESES_LISTA[mesIndexSig];
+      const anoTextoSig = anoSig.toString();
+
+      const selAno = document.getElementById("filtro-ano");
+      const selMes = document.getElementById("filtro-mes");
+
+      if (![...selAno.options].some(o => o.value === anoTextoSig)) {
+        const opt = document.createElement("option");
+        opt.value = anoTextoSig;
+        opt.textContent = anoTextoSig;
+        selAno.appendChild(opt);
+      }
+
+      selAno.value = anoTextoSig;
+      selMes.value = mesNombreSig;
+
+      const toggleTodo = document.getElementById("toggle-ver-todo");
+      if (toggleTodo) toggleTodo.checked = false;
+
+      diaSeleccionado = null;
+      document.getElementById("texto-btn-calendario").textContent = "Día";
+      document.getElementById("panel-calendario").classList.add("hidden");
+
+      filtrarTabla();
       if (window.innerWidth < 768) toggleSidebar();
     }
 
