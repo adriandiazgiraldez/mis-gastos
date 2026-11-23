@@ -78,16 +78,22 @@
     <!-- Overlay móvil -->
     <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-30 hidden md:hidden"></div>
 
-    <!-- MENÚ LATERAL (SIDEBAR) -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200/80 z-40 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-200 flex flex-col justify-between shrink-0">
-      <div>
+    <!-- MENÚ LATERAL (SIDEBAR COLAPSABLE CON FLECHA) -->
+    <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-white border-r border-slate-200/80 z-40 transform -translate-x-full md:translate-x-0 transition-all duration-300 flex flex-col justify-between shrink-0">
+      
+      <!-- Flecha lateral para colapsar/expandir en escritorio -->
+      <button type="button" onclick="toggleSidebarColapsado()" id="btn-toggle-colapso" title="Colapsar menú" class="hidden md:flex absolute -right-3.5 top-6 z-50 w-7 h-7 bg-white border border-slate-200 rounded-full items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-50 shadow-sm transition-transform duration-300 active:scale-95">
+        <i id="icono-flecha-sidebar" class="fa-solid fa-chevron-left text-[11px] transition-transform duration-300"></i>
+      </button>
+
+      <div class="overflow-x-hidden">
         <!-- Logo / Cabecera -->
-        <div class="h-16 px-5 border-b border-slate-100 flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xs">
+        <div class="h-16 px-4 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xs shrink-0" title="Mis Gastos">
               <i class="fa-solid fa-wallet"></i>
             </div>
-            <span class="font-bold text-sm tracking-tight text-slate-900">Mis Gastos</span>
+            <span class="sidebar-label font-bold text-sm tracking-tight text-slate-900 truncate">Mis Gastos</span>
           </div>
           <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-slate-700 p-1.5">
             <i class="fa-solid fa-xmark"></i>
@@ -95,48 +101,75 @@
         </div>
 
         <!-- Navegación por secciones -->
-        <nav class="p-3 space-y-1">
-          <button onclick="cambiarSeccion('gastos-mensuales', 'Gastos Mensuales', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-900 text-white transition">
-            <i class="fa-regular fa-calendar-check w-4 text-center"></i>
-            <span>Gastos Mensuales</span>
+        <nav class="p-2 space-y-1">
+          <button onclick="cambiarSeccion('gastos-mensuales', 'Gastos Mensuales', this)" title="Gastos Mensuales" class="nav-btn relative w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-900 text-white transition">
+            <div class="relative shrink-0 w-5 flex items-center justify-center">
+              <i class="fa-regular fa-calendar-check text-sm"></i>
+              <!-- Badge rojo con contador de conceptos pendientes del mes actual -->
+              <span id="badge-pendientes-mes" class="hidden absolute -top-2 -right-2 min-w-[17px] h-[17px] px-1 bg-rose-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-xs">0</span>
+            </div>
+            <span class="sidebar-label truncate">Gastos Mensuales</span>
           </button>
-          <button onclick="irAProximoMes(this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-regular fa-calendar-plus w-4 text-center"></i>
-            <span>Próximo Mes</span>
+
+          <button onclick="irAProximoMes(this)" title="Próximo Mes" class="nav-btn w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <div class="shrink-0 w-5 flex items-center justify-center">
+              <i class="fa-regular fa-calendar-plus text-sm"></i>
+            </div>
+            <span class="sidebar-label truncate">Próximo Mes</span>
           </button>
-          <button onclick="cambiarSeccion('anuales', 'Gastos Anuales', this, 'MIS GASTOS')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-chart-pie w-4 text-center"></i>
-            <span>Gastos Anuales</span>
+
+          <button onclick="cambiarSeccion('anuales', 'Gastos Anuales', this, 'MIS GASTOS')" title="Gastos Anuales" class="nav-btn w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <div class="shrink-0 w-5 flex items-center justify-center">
+              <i class="fa-solid fa-chart-pie text-sm"></i>
+            </div>
+            <span class="sidebar-label truncate">Gastos Anuales</span>
           </button>
-          <button onclick="cambiarSeccion('combustible', 'Gastos de Combustible', this, 'GASOLINA')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-gas-pump w-4 text-center"></i>
-            <span>Combustible</span>
+
+          <button onclick="cambiarSeccion('combustible', 'Gastos de Combustible', this, 'GASOLINA')" title="Combustible" class="nav-btn w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <div class="shrink-0 w-5 flex items-center justify-center">
+              <i class="fa-solid fa-gas-pump text-sm"></i>
+            </div>
+            <span class="sidebar-label truncate">Combustible</span>
           </button>
-          <button onclick="cambiarSeccion('documentos', 'Documentos Familiares', this, 'DOCUMENTOS')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-regular fa-folder-open w-4 text-center"></i>
-            <span>Documentos</span>
+
+          <button onclick="cambiarSeccion('documentos', 'Documentos Familiares', this, 'DOCUMENTOS')" title="Documentos" class="nav-btn w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <div class="shrink-0 w-5 flex items-center justify-center">
+              <i class="fa-regular fa-folder-open text-sm"></i>
+            </div>
+            <span class="sidebar-label truncate">Documentos</span>
           </button>
-          <button onclick="cambiarSeccion('mantenimientos', 'Mantenimientos', this, 'MANTENIMIENTOS')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-wrench w-4 text-center"></i>
-            <span>Mantenimientos</span>
+
+          <button onclick="cambiarSeccion('mantenimientos', 'Mantenimientos', this, 'MANTENIMIENTOS')" title="Mantenimientos" class="nav-btn w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <div class="shrink-0 w-5 flex items-center justify-center">
+              <i class="fa-solid fa-wrench text-sm"></i>
+            </div>
+            <span class="sidebar-label truncate">Mantenimientos</span>
           </button>
-          <button onclick="cambiarSeccion('seguros', 'Seguros Actuales', this, 'SEGUROS')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-shield-halved w-4 text-center"></i>
-            <span>Seguros Actuales</span>
+
+          <button onclick="cambiarSeccion('seguros', 'Seguros Actuales', this, 'SEGUROS')" title="Seguros Actuales" class="nav-btn w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <div class="shrink-0 w-5 flex items-center justify-center">
+              <i class="fa-solid fa-shield-halved text-sm"></i>
+            </div>
+            <span class="sidebar-label truncate">Seguros Actuales</span>
           </button>
-          <button onclick="cambiarSeccion('ingresos', 'Ingresos por Años', this, 'MIS INGRESOS')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-arrow-trend-up w-4 text-center"></i>
-            <span>Ingresos</span>
+
+          <button onclick="cambiarSeccion('ingresos', 'Ingresos por Años', this, 'MIS INGRESOS')" title="Ingresos" class="nav-btn w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <div class="shrink-0 w-5 flex items-center justify-center">
+              <i class="fa-solid fa-arrow-trend-up text-sm"></i>
+            </div>
+            <span class="sidebar-label truncate">Ingresos</span>
           </button>
         </nav>
       </div>
 
       <!-- Pie del sidebar -->
-      <div class="p-3 border-t border-slate-100 space-y-2">
-        <div id="info-usuario" class="px-3 py-1.5 text-[11px] text-slate-400 truncate"></div>
-        <button id="btn-cerrar-sesion" onclick="cerrarSesion()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition">
-          <i class="fa-solid fa-arrow-right-from-bracket w-4 text-center"></i>
-          <span>Cerrar sesión</span>
+      <div class="p-2 border-t border-slate-100 space-y-1 overflow-x-hidden">
+        <div id="info-usuario" class="sidebar-label px-3 py-1.5 text-[11px] text-slate-400 truncate"></div>
+        <button id="btn-cerrar-sesion" onclick="cerrarSesion()" title="Cerrar sesión" class="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition">
+          <div class="shrink-0 w-5 flex items-center justify-center">
+            <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+          </div>
+          <span class="sidebar-label truncate">Cerrar sesión</span>
         </button>
       </div>
     </aside>
@@ -1205,6 +1238,31 @@
       document.getElementById("stat-pendiente-proximo").textContent = fmt(pendProximo);
       document.getElementById("stat-pendiente-mes").textContent = fmt(pendMes);
       document.getElementById("stat-total-mes").textContent = fmt(totalMes);
+
+      // Calcular número de conceptos pendientes del mes y año actual en tiempo real para el icono
+      const anoHoyStr = ahora.getFullYear().toString();
+      const mesHoyStr = MESES_LISTA[ahora.getMonth()];
+      let countPendientesMesActual = 0;
+
+      filasGlobales.forEach(fila => {
+        const anoFila = idxAno !== -1 ? (fila[idxAno] || "").toString().trim() : "";
+        const mesFila = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
+        const esPagado = idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+
+        if (anoFila === anoHoyStr && mesFila === mesHoyStr && !esPagado) {
+          countPendientesMesActual++;
+        }
+      });
+
+      const badgeMes = document.getElementById("badge-pendientes-mes");
+      if (badgeMes) {
+        if (countPendientesMesActual > 0) {
+          badgeMes.textContent = countPendientesMesActual;
+          badgeMes.classList.remove("hidden");
+        } else {
+          badgeMes.classList.add("hidden");
+        }
+      }
     }
 
     let gruposCerrados = JSON.parse(localStorage.getItem("mis_gastos_grupos_cerrados") || "{}");
@@ -1880,11 +1938,56 @@
       renderizarTabla(filtradas);
     }
 
-    // Navegación Sidebar
+    // Navegación Sidebar y Colapso con Flecha
     function toggleSidebar() {
       document.getElementById("sidebar").classList.toggle("-translate-x-full");
       document.getElementById("sidebar-overlay").classList.toggle("hidden");
     }
+
+    function toggleSidebarColapsado() {
+      const sidebar = document.getElementById("sidebar");
+      const flecha = document.getElementById("icono-flecha-sidebar");
+      const btnColapso = document.getElementById("btn-toggle-colapso");
+      if (!sidebar) return;
+
+      const estaColapsado = sidebar.classList.contains("w-16");
+
+      if (estaColapsado) {
+        // Expandir a texto e iconos
+        sidebar.classList.remove("w-16");
+        sidebar.classList.add("w-64");
+        if (flecha) flecha.classList.remove("rotate-180");
+        if (btnColapso) btnColapso.title = "Colapsar menú";
+        document.querySelectorAll(".sidebar-label").forEach(el => el.classList.remove("hidden"));
+        localStorage.setItem("mis_gastos_sidebar_colapsado", "no");
+      } else {
+        // Colapsar a solo iconos
+        sidebar.classList.remove("w-64");
+        sidebar.classList.add("w-16");
+        if (flecha) flecha.classList.add("rotate-180");
+        if (btnColapso) btnColapso.title = "Expandir menú";
+        document.querySelectorAll(".sidebar-label").forEach(el => el.classList.add("hidden"));
+        localStorage.setItem("mis_gastos_sidebar_colapsado", "si");
+      }
+    }
+
+    // Restaurar preferencia del usuario al cargar
+    (function restaurarEstadoSidebar() {
+      if (window.innerWidth >= 768 && localStorage.getItem("mis_gastos_sidebar_colapsado") === "si") {
+        setTimeout(() => {
+          const sidebar = document.getElementById("sidebar");
+          const flecha = document.getElementById("icono-flecha-sidebar");
+          const btnColapso = document.getElementById("btn-toggle-colapso");
+          if (sidebar) {
+            sidebar.classList.remove("w-64");
+            sidebar.classList.add("w-16");
+          }
+          if (flecha) flecha.classList.add("rotate-180");
+          if (btnColapso) btnColapso.title = "Expandir menú";
+          document.querySelectorAll(".sidebar-label").forEach(el => el.classList.add("hidden"));
+        }, 0);
+      }
+    })();
 
     let chartAnosInstancia = null;
     let chartMesesInstancia = null;
