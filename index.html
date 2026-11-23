@@ -614,9 +614,9 @@
     </div>
   </div>
 
-<!-- ==================== POPUP ADVERTENCIA PRÓXIMO RECIBO ==================== -->
+<!-- ==================== <!-- ==================== POPUP ADVERTENCIA PRÓXIMO RECIBO ==================== -->
   <div id="popup-aviso-proximo" class="fixed top-0 left-0 right-0 z-[80] pointer-events-none flex justify-center p-4 transition-all duration-500 ease-out opacity-0 -translate-y-full hidden">
-    <div class="pointer-events-auto bg-slate-900/95 backdrop-blur-md text-white border border-slate-700/80 rounded-3xl shadow-2xl p-6 max-w-md w-full relative transform transition-all duration-500">
+    <div id="popup-aviso-tarjeta" class="pointer-events-auto touch-none select-none bg-slate-900/95 backdrop-blur-md text-white border border-slate-700/80 rounded-3xl shadow-2xl p-6 max-w-md w-full relative transform transition-all duration-500">
       <button type="button" onclick="cerrarAvisoProximo()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg transition" title="Cerrar advertencia">
         <i class="fa-solid fa-xmark text-sm"></i>
       </button>
@@ -799,6 +799,57 @@
         }
       }, 500);
     }
+
+    // Gesto táctil tipo iOS (deslizar hacia arriba para cerrar la notificación)
+    (function inicializarGestoSwipePopup() {
+      const tarjeta = document.getElementById("popup-aviso-tarjeta");
+      if (!tarjeta) return;
+
+      let startY = 0;
+      let currentY = 0;
+      let arrastrando = false;
+
+      tarjeta.addEventListener("touchstart", (e) => {
+        if (e.touches.length !== 1) return;
+        startY = e.touches[0].clientY;
+        currentY = 0;
+        arrastrando = true;
+        tarjeta.classList.remove("transition-all", "duration-500");
+      }, { passive: true });
+
+      tarjeta.addEventListener("touchmove", (e) => {
+        if (!arrastrando || e.touches.length !== 1) return;
+        const deltaY = e.touches[0].clientY - startY;
+        if (deltaY < 0) {
+          currentY = deltaY;
+          tarjeta.style.transform = `translateY(${deltaY}px)`;
+          tarjeta.style.opacity = Math.max(0.2, 1 + deltaY / 150);
+        } else {
+          // Ligera resistencia elástica si desliza hacia abajo
+          currentY = deltaY * 0.2;
+          tarjeta.style.transform = `translateY(${currentY}px)`;
+        }
+      }, { passive: true });
+
+      tarjeta.addEventListener("touchend", () => {
+        if (!arrastrando) return;
+        arrastrando = false;
+        tarjeta.classList.add("transition-all", "duration-500");
+
+        if (currentY < -40) {
+          // Si deslizó al menos 40px hacia arriba, se cierra
+          cerrarAvisoProximo();
+          setTimeout(() => {
+            tarjeta.style.transform = "";
+            tarjeta.style.opacity = "";
+          }, 500);
+        } else {
+          // Si no llegó, vuelve suavemente a su sitio
+          tarjeta.style.transform = "";
+          tarjeta.style.opacity = "";
+        }
+      });
+    })();
 
     function obtenerCirculoFaviconPopup(texto) {
       const t = (texto || "").trim().toUpperCase();
