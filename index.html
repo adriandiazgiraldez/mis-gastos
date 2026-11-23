@@ -570,9 +570,9 @@
         </div>
         <div class="space-y-1.5 flex-1 pr-4">
           <div class="flex items-center gap-2">
-            <span class="text-xs font-black uppercase tracking-wider text-amber-400">Atención</span>
+            <span id="titulo-aviso-proximo" class="text-xs font-black uppercase tracking-wider text-amber-400">Atención</span>
           </div>
-          <p id="texto-aviso-proximo" class="text-xs sm:text-sm font-medium text-slate-200 leading-relaxed"></p>
+          <div id="texto-aviso-proximo" class="text-xs sm:text-sm font-medium text-slate-200 leading-relaxed"></div>
         </div>
       </div>
     </div>
@@ -613,18 +613,140 @@
 
     let temporizadorPopupAviso = null;
     let avisoProximoMostrado = false;
+    let callbackDespuesCerrarAviso = null;
 
     function cerrarAvisoProximo() {
       const popup = document.getElementById("popup-aviso-proximo");
       if (!popup) return;
       popup.classList.add("opacity-0", "scale-95");
-      setTimeout(() => {
-        popup.classList.add("hidden");
-      }, 500);
       if (temporizadorPopupAviso) {
         clearTimeout(temporizadorPopupAviso);
         temporizadorPopupAviso = null;
       }
+      setTimeout(() => {
+        popup.classList.add("hidden");
+        if (callbackDespuesCerrarAviso) {
+          const fn = callbackDespuesCerrarAviso;
+          callbackDespuesCerrarAviso = null;
+          setTimeout(fn, 300);
+        }
+      }, 500);
+    }
+
+    function mostrarAvisoPendientesAtrasados() {
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
+      const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
+      const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+      const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
+      const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+
+      if (idxDia === -1) return;
+
+      const ahora = new Date();
+      const diaHoy = ahora.getDate();
+      const anoActual = ahora.getFullYear();
+      const mesActual = MESES_LISTA[ahora.getMonth()];
+
+      const filtroAnoVal = document.getElementById("filtro-ano")?.value;
+      const filtroMesVal = document.getElementById("filtro-mes")?.value;
+      const esMesActual = (!filtroAnoVal || parseInt(filtroAnoVal, 10) === anoActual) &&
+                          (!filtroMesVal || filtroMesVal.toUpperCase() === mesActual);
+
+      if (!esMesActual) return;
+
+      const mapaConceptoEmpresa = {};
+      if (idxConcepto !== -1 && idxEmpresa !== -1) {
+        filasGlobales.forEach(f => {
+          const c = (f[idxConcepto] || "").toString().trim().toUpperCase();
+          const emp = (f[idxEmpresa] || "").toString().trim();
+          if (c && emp) mapaConceptoEmpresa[c] = emp;
+        });
+      }
+
+      const pesoDia = (d) => (d === 30 || d === 31) ? (d - 100) : d;
+      const pesoHoy = pesoDia(diaHoy);
+
+      // Recopilar recibos no pagados con fecha anterior o igual a hoy
+      const mapaItemsAtrasados = {};
+      const ordenClaves = [];
+      let totalRecibosContados = 0;
+
+      filasGlobales.forEach(fila => {
+        const anoFila = idxAno !== -1 ? parseInt(fila[idxAno], 10) : anoActual;
+        const mesFila = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : mesActual;
+        const esPagado = idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+
+        if (esPagado || anoFila !== anoActual || mesFila !== mesActual) return;
+
+        const diaNum = parseInt(fila[idxDia], 10);
+        if (isNaN(diaNum)) return;
+
+        const pFila = pesoDia(diaNum);
+        if (pFila <= pesoHoy) {
+          totalRecibosContados++;
+          const conceptoClave = idxConcepto !== -1 ? (fila[idxConcepto] || "").toString().trim() : "";
+          const empresaPropia = idxEmpresa !== -1 ? (fila[idxEmpresa] || "").toString().trim() : "";
+          const empresaFinal = empresaPropia || mapaConceptoEmpresa[conceptoClave.toUpperCase()] || "";
+
+          const esGrupoEmpresa = !!empresaFinal;
+          const nombreVisible = esGrupoEmpresa ? empresaFinal : conceptoClave;
+          const claveUnica = esGrupoEmpresa ? `EMP_${empresaFinal.toUpperCase()}` : `CON_${conceptoClave.toUpperCase()}`;
+
+          const raw = idxCant !== -1 ? (fila[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".") : "0";
+          const cant = parseFloat(raw) || 0;
+
+          if (!mapaItemsAtrasados[claveUnica]) {
+            mapaItemsAtrasados[claveUnica] = { nombre: nombreVisible, importe: 0 };
+            ordenClaves.push(claveUnica);
+          }
+          mapaItemsAtrasados[claveUnica].importe += cant;
+        }
+      });
+
+      if (ordenClaves.length === 0) return;
+
+      const popup = document.getElementById("popup-aviso-proximo");
+      const tituloEl = document.getElementById("titulo-aviso-proximo");
+      const textoEl = document.getElementById("texto-aviso-proximo");
+      if (!popup || !tituloEl || !textoEl) return;
+
+      tituloEl.textContent = "Recuerda";
+      tituloEl.className = "text-xs font-black uppercase tracking-wider text-rose-400";
+
+      const esPlural = totalRecibosContados > 1;
+      const encabezado = esPlural
+        ? `Tienes pendientes <span class="text-rose-400 font-bold">${totalRecibosContados} recibos</span> aún por pagar:`
+        : `Tienes pendiente <span class="text-rose-400 font-bold">1 recibo</span> aún por pagar:`;
+
+      const filasHTML = ordenClaves.map(k => {
+        const it = mapaItemsAtrasados[k];
+        const importeFmt = it.importe.toFixed(2).replace(".", ",") + "€";
+        return `<div class="flex items-center gap-1.5 text-xs sm:text-[13px] leading-relaxed">
+          <span class="text-rose-400 font-bold">-</span>
+          <span class="text-white font-semibold">${it.nombre}</span>
+          <span class="text-slate-400">=</span>
+          <span class="text-rose-400 font-bold whitespace-nowrap">${importeFmt}</span>
+        </div>`;
+      }).join("");
+
+      const textoFinal = `
+        <div class="space-y-2.5">
+          <p class="text-slate-200 text-xs sm:text-[13px] leading-snug">${encabezado}</p>
+          <div class="space-y-1 pt-0.5">${filasHTML}</div>
+        </div>
+      `;
+
+      textoEl.innerHTML = textoFinal;
+      popup.classList.remove("hidden");
+      setTimeout(() => {
+        popup.classList.remove("opacity-0", "scale-95");
+      }, 50);
+
+      temporizadorPopupAviso = setTimeout(() => {
+        cerrarAvisoProximo();
+      }, 10000);
     }
 
     function mostrarAvisoProximoRecibo() {
@@ -690,7 +812,10 @@
         }
       });
 
-      if (candidatos.length === 0) return;
+      if (candidatos.length === 0) {
+        mostrarAvisoPendientesAtrasados();
+        return;
+      }
 
       const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
       const menorPeso = Math.min(...candidatos.map(c => c.peso));
@@ -753,8 +878,14 @@
       `;
 
       const popup = document.getElementById("popup-aviso-proximo");
+      const tituloEl = document.getElementById("titulo-aviso-proximo");
       const textoEl = document.getElementById("texto-aviso-proximo");
       if (!popup || !textoEl) return;
+
+      if (tituloEl) {
+        tituloEl.textContent = "Atención";
+        tituloEl.className = "text-xs font-black uppercase tracking-wider text-amber-400";
+      }
 
       textoEl.innerHTML = textoFinal;
       popup.classList.remove("hidden");
@@ -764,7 +895,12 @@
 
       avisoProximoMostrado = true;
 
-      // Desaparece automáticamente entre 6 y 8 segundos (7s configurado)
+      // Al cerrarse el primer aviso, encadenar el segundo si existen recibos atrasados
+      callbackDespuesCerrarAviso = () => {
+        mostrarAvisoPendientesAtrasados();
+      };
+
+      // Desaparece automáticamente a los 10 segundos
       temporizadorPopupAviso = setTimeout(() => {
         cerrarAvisoProximo();
       }, 10000);
