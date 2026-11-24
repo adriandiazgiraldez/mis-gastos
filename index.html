@@ -1521,7 +1521,139 @@
       </div>
     </div>
   </div>
+<!-- ==================== MODAL AÑADIR COMBUSTIBLE ==================== -->
+  <div id="modal-combustible" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-lg max-h-[92dvh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <!-- Cabecera con Matrícula -->
+      <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/70">
+        <div class="flex items-center gap-3 flex-wrap">
+          <h3 class="text-sm font-bold text-slate-900">Añadir Combustible</h3>
+          <div id="comb-cabecera-matricula" class="hidden inline-flex items-center border-2 border-slate-800 rounded-md overflow-hidden bg-white shadow-2xs h-7">
+            <div class="bg-[#003399] text-white px-1.5 h-full flex flex-col items-center justify-center leading-none">
+              <span class="text-[7px] text-amber-300">★</span>
+              <span class="text-[9px] font-bold">E</span>
+            </div>
+            <span id="comb-cabecera-matricula-texto" class="px-2.5 text-xs font-black tracking-widest text-slate-900 font-mono">0000 XXX</span>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalCombustible()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
 
+      <form onsubmit="guardarCombustible(event)" class="p-5 space-y-4 text-xs overflow-y-auto flex-1">
+        <!-- Cantidad (Teclado numérico iPhone) -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Cantidad (€) *</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">€</span>
+            <input type="number" step="0.01" inputmode="decimal" id="comb-cantidad" required placeholder="0,00" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-4 py-2.5 text-base font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white">
+          </div>
+        </div>
+
+        <!-- Vehículo -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-[11px] font-semibold text-slate-500">Vehículo *</label>
+            <button type="button" onclick="abrirModalVehiculos()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+              <i class="fa-solid fa-gear text-[10px]"></i> Gestionar vehículos
+            </button>
+          </div>
+          <input type="hidden" id="comb-vehiculo" required>
+          <div id="comb-lista-vehiculos" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+        </div>
+
+        <!-- Combustible -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Combustible *</label>
+          <input type="hidden" id="comb-tipo" required>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="seleccionarTipoCombustible('Diésel')" id="btn-comb-diesel" class="btn-tipo-comb flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold transition">
+              <i class="fa-solid fa-gas-pump text-amber-500"></i> Diésel
+            </button>
+            <button type="button" onclick="seleccionarTipoCombustible('Gasolina')" id="btn-comb-gasolina" class="btn-tipo-comb flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold transition">
+              <i class="fa-solid fa-gas-pump text-emerald-500"></i> Gasolina
+            </button>
+          </div>
+        </div>
+
+        <!-- Año y Mes -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Año *</label>
+            <input type="number" id="comb-ano" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Mes *</label>
+            <select id="comb-mes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-slate-400">
+              <option>ENERO</option><option>FEBRERO</option><option>MARZO</option><option>ABRIL</option>
+              <option>MAYO</option><option>JUNIO</option><option>JULIO</option><option>AGOSTO</option>
+              <option>SEPTIEMBRE</option><option>OCTUBRE</option><option>NOVIEMBRE</option><option>DICIEMBRE</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Día de la Semana y Fecha -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Día de la Semana</label>
+            <input type="text" id="comb-dia-semana" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 font-medium">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Fecha *</label>
+            <input type="date" id="comb-fecha" onchange="actualizarFechaCombustible()" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-slate-400">
+          </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="cerrarModalCombustible()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition text-xs">Cancelar</button>
+          <button type="submit" id="btn-guardar-combustible" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold transition text-xs shadow-xs">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL GESTIONAR VEHÍCULOS ==================== -->
+  <div id="modal-vehiculos" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-[60] hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88dvh]">
+      <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <h3 class="text-sm font-bold text-slate-900">Mis Vehículos</h3>
+        <button type="button" onclick="cerrarModalVehiculos()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+        <form onsubmit="guardarVehiculo(event)" class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 space-y-2.5">
+          <input type="hidden" id="veh-edit-idx" value="">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1">Nombre / Modelo *</label>
+              <input type="text" id="veh-nombre" required placeholder="Ej. MERCEDES" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs uppercase focus:outline-none focus:border-slate-400">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1">Matrícula *</label>
+              <input type="text" id="veh-matricula" required placeholder="Ej. 0429 KSZ" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs uppercase font-mono focus:outline-none focus:border-slate-400">
+            </div>
+          </div>
+          <div class="flex items-end gap-2">
+            <div class="flex-1">
+              <label class="block text-[10px] font-bold text-slate-500 mb-1">Combustible *</label>
+              <select id="veh-combustible" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400">
+                <option value="Diésel">Diésel</option>
+                <option value="Gasolina">Gasolina</option>
+              </select>
+            </div>
+            <button type="submit" id="btn-guardar-vehiculo" class="px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition">Añadir</button>
+            <button type="button" onclick="cancelarEdicionVehiculo()" id="btn-cancelar-vehiculo" class="hidden px-3 py-1.5 rounded-xl bg-slate-200 text-slate-700 font-semibold text-xs">Cancelar</button>
+          </div>
+        </form>
+
+        <div id="lista-gestion-vehiculos" class="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden bg-white"></div>
+      </div>
+    </div>
+  </div>
   <!-- ==================== SCRIPT ==================== -->
   <script>
     const CLIENT_ID = "413651977312-hee0sobihfts9daqodq57k6f1brosla7.apps.googleusercontent.com";
@@ -6207,6 +6339,10 @@
     }
 
     function abrirModalGasto() {
+      if (seccionActualId === "combustible") {
+        abrirModalCombustible();
+        return;
+      }
       document.getElementById("modal-gasto-titulo").textContent = "Añadir Gasto";
       document.getElementById("form-id").value = "";
       document.getElementById("form-concepto").value = "";
@@ -6776,6 +6912,224 @@
       } catch (err) {
         alert("No se pudo eliminar el abono: " + err.message);
       }
+    }
+  /* ==================== SECCIÓN COMBUSTIBLE Y VEHÍCULOS ==================== */
+    const VEHICULOS_DEFECTO = [
+      { nombre: "MERCEDES", matricula: "0429 KSZ", combustible: "Diésel" },
+      { nombre: "SEAT LEON", matricula: "8187 LMB", combustible: "Gasolina" },
+      { nombre: "MOTO KYMCO", matricula: "9367 KDC", combustible: "Gasolina" }
+    ];
+
+    function obtenerVehiculos() {
+      const guardados = localStorage.getItem("mis_gastos_vehiculos");
+      if (guardados) {
+        try { return JSON.parse(guardados); } catch (e) {}
+      }
+      localStorage.setItem("mis_gastos_vehiculos", JSON.stringify(VEHICULOS_DEFECTO));
+      return VEHICULOS_DEFECTO;
+    }
+
+    function abrirModalCombustible() {
+      const ahora = new Date();
+      const yyyy = ahora.getFullYear();
+      const mm = String(ahora.getMonth() + 1).padStart(2, "0");
+      const dd = String(ahora.getDate()).padStart(2, "0");
+
+      document.getElementById("comb-cantidad").value = "";
+      document.getElementById("comb-fecha").value = `${yyyy}-${mm}-${dd}`;
+      actualizarFechaCombustible();
+
+      document.getElementById("comb-vehiculo").value = "";
+      document.getElementById("comb-tipo").value = "";
+      document.getElementById("comb-cabecera-matricula").classList.add("hidden");
+      seleccionarTipoCombustible("");
+      renderizarBotonesVehiculos();
+
+      document.body.classList.add("overflow-hidden");
+      document.getElementById("modal-combustible").classList.remove("hidden");
+      setTimeout(() => document.getElementById("comb-cantidad").focus(), 100);
+    }
+
+    function cerrarModalCombustible() {
+      document.getElementById("modal-combustible").classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+    }
+
+    function actualizarFechaCombustible() {
+      const val = document.getElementById("comb-fecha").value;
+      if (!val) return;
+      const [y, m, d] = val.split("-").map(Number);
+      const fecha = new Date(y, m - 1, d);
+      const dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+      document.getElementById("comb-dia-semana").value = dias[fecha.getDay()];
+      document.getElementById("comb-mes").value = MESES_LISTA[m - 1];
+      document.getElementById("comb-ano").value = y;
+    }
+
+    function renderizarBotonesVehiculos() {
+      const vehiculos = obtenerVehiculos();
+      const cont = document.getElementById("comb-lista-vehiculos");
+      const selActual = document.getElementById("comb-vehiculo").value;
+
+      cont.innerHTML = vehiculos.map((v, idx) => {
+        const etiqueta = `${v.nombre} | ${v.matricula}`;
+        const activo = selActual === etiqueta;
+        const clases = activo
+          ? "bg-slate-900 text-white border-slate-900"
+          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50";
+        return `<button type="button" onclick="seleccionarVehiculoComb(${idx})" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border font-semibold text-xs transition ${clases}">
+          <i class="fa-solid fa-car-side ${activo ? 'text-rose-400' : 'text-rose-500'}"></i>
+          <span class="truncate">${etiqueta}</span>
+        </button>`;
+      }).join("");
+    }
+
+    function seleccionarVehiculoComb(idx) {
+      const v = obtenerVehiculos()[idx];
+      if (!v) return;
+      document.getElementById("comb-vehiculo").value = `${v.nombre} | ${v.matricula}`;
+      document.getElementById("comb-cabecera-matricula-texto").textContent = v.matricula;
+      document.getElementById("comb-cabecera-matricula").classList.remove("hidden");
+      seleccionarTipoCombustible(v.combustible);
+      renderizarBotonesVehiculos();
+    }
+
+    function seleccionarTipoCombustible(tipo) {
+      document.getElementById("comb-tipo").value = tipo;
+      const btnD = document.getElementById("btn-comb-diesel");
+      const btnG = document.getElementById("btn-comb-gasolina");
+      [btnD, btnG].forEach(b => {
+        b.classList.remove("bg-slate-900", "text-white", "border-slate-900");
+        b.classList.add("bg-white", "text-slate-700", "border-slate-200");
+      });
+      if (tipo === "Diésel") {
+        btnD.classList.add("bg-slate-900", "text-white", "border-slate-900");
+        btnD.classList.remove("bg-white", "text-slate-700", "border-slate-200");
+      } else if (tipo === "Gasolina") {
+        btnG.classList.add("bg-slate-900", "text-white", "border-slate-900");
+        btnG.classList.remove("bg-white", "text-slate-700", "border-slate-200");
+      }
+    }
+
+    async function guardarCombustible(e) {
+      e.preventDefault();
+      const vehiculo = document.getElementById("comb-vehiculo").value;
+      const combustible = document.getElementById("comb-tipo").value;
+      if (!vehiculo || !combustible) {
+        alert("Selecciona un vehículo y el tipo de combustible.");
+        return;
+      }
+
+      const btn = document.getElementById("btn-guardar-combustible");
+      btn.disabled = true;
+      btn.textContent = "Guardando...";
+
+      const payload = {
+        token: tokenActual,
+        hoja: "GASOLINA",
+        action: "add",
+        cantidad: document.getElementById("comb-cantidad").value,
+        concepto: vehiculo,
+        empresa: combustible,
+        ano: document.getElementById("comb-ano").value,
+        mes: document.getElementById("comb-mes").value,
+        dia: document.getElementById("comb-dia-semana").value,
+        fechaPago: document.getElementById("comb-fecha").value,
+        pagado: "SI"
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.status !== "ok") throw new Error(json.message || "Error al guardar");
+        cerrarModalCombustible();
+        await cargarDatos(tokenActual, true, "GASOLINA");
+      } catch (err) {
+        alert("No se pudo guardar: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Guardar";
+      }
+    }
+
+    function abrirModalVehiculos() {
+      cancelarEdicionVehiculo();
+      renderizarListaGestionVehiculos();
+      document.getElementById("modal-vehiculos").classList.remove("hidden");
+    }
+
+    function cerrarModalVehiculos() {
+      document.getElementById("modal-vehiculos").classList.add("hidden");
+      renderizarBotonesVehiculos();
+    }
+
+    function renderizarListaGestionVehiculos() {
+      const lista = obtenerVehiculos();
+      const cont = document.getElementById("lista-gestion-vehiculos");
+      cont.innerHTML = lista.map((v, i) => `
+        <div class="p-3 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="font-bold text-slate-900 truncate">${v.nombre} <span class="font-mono text-slate-500">| ${v.matricula}</span></div>
+            <div class="text-[10px] text-slate-400 font-semibold">${v.combustible}</div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button type="button" onclick="editarVehiculo(${i})" class="p-1.5 text-slate-500 hover:text-indigo-600"><i class="fa-regular fa-pen-to-square"></i></button>
+            <button type="button" onclick="eliminarVehiculo(${i})" class="p-1.5 text-slate-400 hover:text-rose-600"><i class="fa-regular fa-trash-can"></i></button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function guardarVehiculo(e) {
+      e.preventDefault();
+      const lista = obtenerVehiculos();
+      const idx = document.getElementById("veh-edit-idx").value;
+      const nuevo = {
+        nombre: document.getElementById("veh-nombre").value.trim().toUpperCase(),
+        matricula: document.getElementById("veh-matricula").value.trim().toUpperCase(),
+        combustible: document.getElementById("veh-combustible").value
+      };
+      if (idx !== "") {
+        lista[parseInt(idx, 10)] = nuevo;
+      } else {
+        lista.push(nuevo);
+      }
+      localStorage.setItem("mis_gastos_vehiculos", JSON.stringify(lista));
+      cancelarEdicionVehiculo();
+      renderizarListaGestionVehiculos();
+      renderizarBotonesVehiculos();
+    }
+
+    function editarVehiculo(idx) {
+      const v = obtenerVehiculos()[idx];
+      document.getElementById("veh-edit-idx").value = idx;
+      document.getElementById("veh-nombre").value = v.nombre;
+      document.getElementById("veh-matricula").value = v.matricula;
+      document.getElementById("veh-combustible").value = v.combustible;
+      document.getElementById("btn-guardar-vehiculo").textContent = "Actualizar";
+      document.getElementById("btn-cancelar-vehiculo").classList.remove("hidden");
+    }
+
+    function cancelarEdicionVehiculo() {
+      document.getElementById("veh-edit-idx").value = "";
+      document.getElementById("veh-nombre").value = "";
+      document.getElementById("veh-matricula").value = "";
+      document.getElementById("veh-combustible").value = "Diésel";
+      document.getElementById("btn-guardar-vehiculo").textContent = "Añadir";
+      document.getElementById("btn-cancelar-vehiculo").classList.add("hidden");
+    }
+
+    function eliminarVehiculo(idx) {
+      if (!confirm("¿Eliminar este vehículo?")) return;
+      const lista = obtenerVehiculos();
+      lista.splice(idx, 1);
+      localStorage.setItem("mis_gastos_vehiculos", JSON.stringify(lista));
+      renderizarListaGestionVehiculos();
+      renderizarBotonesVehiculos();
     }
   </script>
 </body>
