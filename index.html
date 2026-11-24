@@ -381,6 +381,62 @@
                 <p class="text-xs text-slate-500 leading-relaxed">Consulta gastos recurrentes o puntuales (luz, agua, internet, suscripciones, etc.) con histórico por años, periodicidad y recibos pagados.</p>
               </div>
             </div>
+
+            <!-- Calculadora Combustible -->
+            <div onclick="abrirModalCalcCombustible()" class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-slate-300 transition cursor-pointer group flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 group-hover:bg-amber-600 group-hover:text-white transition">
+                <i class="fa-solid fa-gas-pump"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900 group-hover:text-amber-600 transition">Calculadora de Combustible</h3>
+                  <i class="fa-solid fa-arrow-right text-xs text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">Calcula los litros consumidos y el coste total de cualquier trayecto o viaje según la distancia, consumo y precio/litro.</p>
+              </div>
+            </div>
+
+            <!-- Calculadora Carga Eléctrica -->
+            <div onclick="abrirModalCalcElectrico()" class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-slate-300 transition cursor-pointer group flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition">
+                <i class="fa-solid fa-bolt"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition">Carga Vehículo Eléctrico / Híbrido</h3>
+                  <i class="fa-solid fa-arrow-right text-xs text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">Calcula el coste de recarga por batería (kWh) o por trayecto y consumo (kWh/100km) según el precio del kWh.</p>
+              </div>
+            </div>
+
+            <!-- Calculadora Préstamos -->
+            <div onclick="abrirModalCalcPrestamo()" class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-slate-300 transition cursor-pointer group flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 group-hover:bg-rose-600 group-hover:text-white transition">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900 group-hover:text-rose-600 transition">Calculadora Préstamo Consumo</h3>
+                  <i class="fa-solid fa-arrow-right text-xs text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">Simula cuota mensual, intereses totales e importe final de préstamos personales, reformas o coches con sistema francés.</p>
+              </div>
+            </div>
+
+            <!-- Calculadora Hipoteca -->
+            <div onclick="abrirModalCalcHipoteca()" class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-slate-300 transition cursor-pointer group flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-violet-50 border border-violet-100 text-violet-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 group-hover:bg-violet-600 group-hover:text-white transition">
+                <i class="fa-solid fa-house-chimney"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900 group-hover:text-violet-600 transition">Calculadora de Hipotecas</h3>
+                  <i class="fa-solid fa-arrow-right text-xs text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">Simula tu hipoteca de vivienda calculando cuota mensual, anual, intereses acumulados, amortización y estimación de gastos (ITP, notaría).</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -901,6 +957,322 @@
         <!-- Área de Resultados -->
         <div id="resultado-consulta-sin-cuotas" class="hidden space-y-4">
           <!-- Rellenado dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODALES DE LAS 4 CALCULADORAS ==================== -->
+
+  <!-- 1. MODAL CALCULADORA COMBUSTIBLE -->
+  <div id="modal-calc-combustible" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm shadow-2xs border border-amber-100">
+            <i class="fa-solid fa-gas-pump"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Calculadora de Combustible</h3>
+            <p class="text-[11px] text-slate-500">Gasto de combustible y coste por viaje</p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalCalcCombustible()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Distancia (km)</label>
+            <input type="number" step="0.1" id="calc-comb-distancia" oninput="calcularGastoCombustible()" placeholder="Ej. 450" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Consumo (L/100km)</label>
+            <input type="number" step="0.1" id="calc-comb-consumo" oninput="calcularGastoCombustible()" placeholder="Ej. 6.2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Precio por litro (€)</label>
+            <input type="number" step="0.001" id="calc-comb-precio" oninput="calcularGastoCombustible()" placeholder="Ej. 1.55" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:bg-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <div class="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl text-center">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700">Litros consumidos</span>
+            <p id="res-comb-litros" class="text-xl sm:text-2xl font-black text-amber-900 mt-1">0,00 L</p>
+          </div>
+          <div class="p-4 bg-slate-900 text-white rounded-2xl text-center">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Coste total del viaje</span>
+            <p id="res-comb-total" class="text-xl sm:text-2xl font-black text-white mt-1">0,00 €</p>
+          </div>
+        </div>
+        <p id="res-comb-km" class="text-center text-[11px] text-slate-400 font-medium">Coste aproximado: 0,00 € / km</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MODAL CALCULADORA CARGA ELÉCTRICA -->
+  <div id="modal-calc-electrico" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm shadow-2xs border border-emerald-100">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Calculadora de Carga Eléctrica</h3>
+            <p class="text-[11px] text-slate-500">Vehículos 100% eléctricos e híbridos enchufables (PHEV)</p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalCalcElectrico()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto">
+        <!-- Modo de cálculo -->
+        <div class="flex rounded-xl bg-slate-100 p-1">
+          <button type="button" onclick="cambiarModoElectrico('bateria')" id="btn-modo-bateria" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-2xs transition">Por Batería (kWh)</button>
+          <button type="button" onclick="cambiarModoElectrico('viaje')" id="btn-modo-viaje" class="flex-1 py-1.5 text-xs font-semibold text-slate-500 transition">Por Viaje (km)</button>
+        </div>
+
+        <!-- Campos modo batería -->
+        <div id="bloque-elec-bateria" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Capacidad batería (kWh)</label>
+            <input type="number" step="0.1" id="calc-elec-capacidad" oninput="calcularGastoElectrico()" placeholder="Ej. 14.4 o 60" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">% a recargar</label>
+            <input type="number" step="1" min="1" max="100" id="calc-elec-porcentaje" value="100" oninput="calcularGastoElectrico()" placeholder="Ej. 100" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Autonomía (km, opc.)</label>
+            <input type="number" step="1" id="calc-elec-autonomia" oninput="calcularGastoElectrico()" placeholder="Ej. 50 o 400" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+          </div>
+        </div>
+
+        <!-- Campos modo viaje -->
+        <div id="bloque-elec-viaje" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Distancia del viaje (km)</label>
+            <input type="number" step="0.1" id="calc-elec-distancia" oninput="calcularGastoElectrico()" placeholder="Ej. 120" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Consumo medio (kWh/100km)</label>
+            <input type="number" step="0.1" id="calc-elec-consumo" oninput="calcularGastoElectrico()" placeholder="Ej. 16.5" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+          </div>
+        </div>
+
+        <!-- Precio kWh común -->
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">Precio de la electricidad (€/kWh)</label>
+          <input type="number" step="0.001" id="calc-elec-precio" oninput="calcularGastoElectrico()" placeholder="Ej. 0.14 (doméstico) o 0.45 (cargador público)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <div class="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl text-center">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Energía necesaria</span>
+            <p id="res-elec-kwh" class="text-xl sm:text-2xl font-black text-emerald-900 mt-1">0,00 kWh</p>
+          </div>
+          <div class="p-4 bg-slate-900 text-white rounded-2xl text-center">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Coste de la recarga</span>
+            <p id="res-elec-total" class="text-xl sm:text-2xl font-black text-white mt-1">0,00 €</p>
+          </div>
+        </div>
+        <p id="res-elec-km" class="text-center text-[11px] text-slate-400 font-medium">Coste aproximado: 0,00 € / km</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MODAL CALCULADORA PRÉSTAMO DE CONSUMO -->
+  <div id="modal-calc-prestamo" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-sm shadow-2xs border border-rose-100">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Calculadora de Préstamo Personal</h3>
+            <p class="text-[11px] text-slate-500">Cálculo de cuotas mensuales y total amortizado</p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalCalcPrestamo()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1.5">Importe solicitado (€)</label>
+            <input type="number" step="100" id="calc-prest-importe" oninput="calcularGastoPrestamo()" placeholder="Ej. 17000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500 focus:bg-white">
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-[11px] font-bold text-slate-600">Plazo</label>
+              <!-- Switch Toggle Estilo iPhone (Verde / Gris) -->
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] text-slate-400 font-medium">Meses</span>
+                <label class="relative inline-flex items-center cursor-pointer select-none">
+                  <input type="checkbox" id="toggle-plazo-ios" onchange="toggleUnidadPlazoIOS(this.checked)" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 transition-colors duration-300 ease-in-out after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:shadow-sm after:transition-all after:duration-300 peer-checked:after:translate-x-4"></div>
+                </label>
+                <span class="text-[10px] text-slate-600 font-bold">Años</span>
+              </div>
+            </div>
+            <input type="number" step="1" id="calc-prest-plazo" oninput="calcularGastoPrestamo()" placeholder="Ej. 96" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500 focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1.5">Interés TIN anual (%)</label>
+            <input type="number" step="0.01" id="calc-prest-interes" oninput="calcularGastoPrestamo()" placeholder="Ej. 4.49" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500 focus:bg-white">
+          </div>
+        </div>
+
+        <!-- Tarjeta Cuotas: Mensual y Anual -->
+        <div class="p-5 bg-slate-900 text-white rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-rose-400">Cuota mensual estimada</span>
+            <p id="res-prest-cuota" class="text-3xl font-black text-white mt-0.5">0,00 €</p>
+          </div>
+          <div class="sm:border-l sm:border-slate-800 sm:pl-4 flex-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Cuota anual estimada</span>
+            <p id="res-prest-cuota-anual" class="text-2xl font-black text-white mt-0.5">0,00 €</p>
+            <span id="res-prest-conversion-plazo" class="text-[10px] text-slate-400 block font-medium mt-0.5">0 meses / 0 años</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total intereses</span>
+            <p id="res-prest-intereses" class="text-base font-bold text-rose-600 mt-1">0,00 €</p>
+          </div>
+          <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total a devolver</span>
+            <p id="res-prest-total" class="text-base font-bold text-slate-900 mt-1">0,00 €</p>
+          </div>
+        </div>
+
+        <!-- Cronología: Fecha Inicio (Actual) y Fecha Fin -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+          <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-emerald-600 text-xs shrink-0 shadow-2xs">
+              <i class="fa-regular fa-calendar-check"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Fecha de inicio (1ª cuota)</span>
+              <span id="res-prest-fecha-inicio" class="text-xs font-bold text-slate-800 truncate block">—</span>
+            </div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-rose-600 text-xs shrink-0 shadow-2xs">
+              <i class="fa-regular fa-calendar-xmark"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Fecha de finalización</span>
+              <span id="res-prest-fecha-fin" class="text-xs font-bold text-slate-800 truncate block">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. MODAL CALCULADORA DE HIPOTECA -->
+  <div id="modal-calc-hipoteca" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-sm shadow-2xs border border-violet-100">
+            <i class="fa-solid fa-house-chimney"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Calculadora de Hipoteca</h3>
+            <p class="text-[11px] text-slate-500">Simulación completa de compra y préstamo inmobiliario</p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalCalcHipoteca()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Precio de la vivienda (€)</label>
+            <input type="number" step="1000" id="calc-hipo-precio" oninput="calcularGastoHipoteca()" placeholder="Ej. 180000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Ahorros aportados / Entrada (€)</label>
+            <input type="number" step="1000" id="calc-hipo-entrada" oninput="calcularGastoHipoteca()" placeholder="Ej. 36000 (20%)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Plazo de amortización (años)</label>
+            <input type="number" step="1" id="calc-hipo-anos" value="30" oninput="calcularGastoHipoteca()" placeholder="Ej. 25 o 30" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Tipo de interés anual (%)</label>
+            <input type="number" step="0.01" id="calc-hipo-interes" placeholder="Ej. 2.85" oninput="calcularGastoHipoteca()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
+          </div>
+        </div>
+
+        <!-- Tarjeta Cuotas Hipoteca: Mensual, Anual y Capital -->
+        <div class="p-5 bg-slate-900 text-white rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-violet-400">Cuota mensual estimada</span>
+            <p id="res-hipo-cuota" class="text-3xl font-black text-white mt-0.5">0,00 €</p>
+          </div>
+          <div class="sm:border-l sm:border-slate-800 sm:pl-4 flex-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Cuota anual estimada</span>
+            <p id="res-hipo-cuota-anual" class="text-2xl font-black text-white mt-0.5">0,00 €</p>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Capital:</span>
+              <span id="res-hipo-capital" class="text-[11px] font-bold text-slate-200">0,00 €</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total intereses</span>
+            <p id="res-hipo-intereses" class="text-xs font-bold text-rose-600 mt-1">0,00 €</p>
+          </div>
+          <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Coste de la hipoteca</span>
+            <p id="res-hipo-total" class="text-xs font-bold text-slate-900 mt-1">0,00 €</p>
+          </div>
+          <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl col-span-2 sm:col-span-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Gastos aprox. (10%)</span>
+            <p id="res-hipo-gastos" class="text-xs font-bold text-amber-600 mt-1">0,00 €</p>
+          </div>
+        </div>
+
+        <!-- Cronología: Fecha Inicio (Actual) y Fecha Fin -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+          <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-emerald-600 text-xs shrink-0 shadow-2xs">
+              <i class="fa-regular fa-calendar-check"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Fecha de inicio (1ª cuota)</span>
+              <span id="res-hipo-fecha-inicio" class="text-xs font-bold text-slate-800 truncate block">—</span>
+            </div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-violet-600 text-xs shrink-0 shadow-2xs">
+              <i class="fa-regular fa-calendar-xmark"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Fecha de finalización</span>
+              <span id="res-hipo-fecha-fin" class="text-xs font-bold text-slate-800 truncate block">—</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2929,6 +3301,248 @@
 
       area.innerHTML = html;
       area.classList.remove("hidden");
+    }
+
+    /* ==================== FUNCIONES 4 CALCULADORAS ADICIONALES ==================== */
+    const formatearMonedaCalc = (val) => (val || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // 1. Combustible
+    function abrirModalCalcCombustible() {
+      document.getElementById("modal-calc-combustible").classList.remove("hidden");
+      document.body.classList.add("overflow-hidden");
+    }
+    function cerrarModalCalcCombustible() {
+      document.getElementById("modal-calc-combustible").classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+    }
+    function calcularGastoCombustible() {
+      const dist = parseFloat(document.getElementById("calc-comb-distancia").value) || 0;
+      const cons = parseFloat(document.getElementById("calc-comb-consumo").value) || 0;
+      const prec = parseFloat(document.getElementById("calc-comb-precio").value) || 0;
+
+      const litros = (dist * cons) / 100;
+      const total = litros * prec;
+      const costeKm = dist > 0 ? (total / dist) : 0;
+
+      document.getElementById("res-comb-litros").textContent = formatearMonedaCalc(litros) + " L";
+      document.getElementById("res-comb-total").textContent = formatearMonedaCalc(total) + " €";
+      document.getElementById("res-comb-km").textContent = `Coste aproximado: ${formatearMonedaCalc(costeKm)} € / km`;
+    }
+
+    // 2. Carga Eléctrica
+    let modoElectricoActual = "bateria";
+    function abrirModalCalcElectrico() {
+      document.getElementById("modal-calc-electrico").classList.remove("hidden");
+      document.body.classList.add("overflow-hidden");
+    }
+    function cerrarModalCalcElectrico() {
+      document.getElementById("modal-calc-electrico").classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+    }
+    function cambiarModoElectrico(modo) {
+      modoElectricoActual = modo;
+      const btnBat = document.getElementById("btn-modo-bateria");
+      const btnVia = document.getElementById("btn-modo-viaje");
+      const blqBat = document.getElementById("bloque-elec-bateria");
+      const blqVia = document.getElementById("bloque-elec-viaje");
+
+      if (modo === "bateria") {
+        btnBat.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-2xs transition";
+        btnVia.className = "flex-1 py-1.5 text-xs font-semibold text-slate-500 transition";
+        blqBat.classList.remove("hidden");
+        blqVia.classList.add("hidden");
+      } else {
+        btnVia.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-2xs transition";
+        btnBat.className = "flex-1 py-1.5 text-xs font-semibold text-slate-500 transition";
+        blqVia.classList.remove("hidden");
+        blqBat.classList.add("hidden");
+      }
+      calcularGastoElectrico();
+    }
+    function calcularGastoElectrico() {
+      const precioKwh = parseFloat(document.getElementById("calc-elec-precio").value) || 0;
+      let kwh = 0;
+      let costeKm = 0;
+
+      if (modoElectricoActual === "bateria") {
+        const cap = parseFloat(document.getElementById("calc-elec-capacidad").value) || 0;
+        const pct = parseFloat(document.getElementById("calc-elec-porcentaje").value) || 0;
+        const auto = parseFloat(document.getElementById("calc-elec-autonomia").value) || 0;
+        kwh = cap * (pct / 100);
+        const total = kwh * precioKwh;
+        if (auto > 0) {
+          const autoReal = auto * (pct / 100);
+          costeKm = autoReal > 0 ? (total / autoReal) : 0;
+        }
+        document.getElementById("res-elec-total").textContent = formatearMonedaCalc(total) + " €";
+      } else {
+        const dist = parseFloat(document.getElementById("calc-elec-distancia").value) || 0;
+        const cons = parseFloat(document.getElementById("calc-elec-consumo").value) || 0;
+        kwh = (dist * cons) / 100;
+        const total = kwh * precioKwh;
+        costeKm = dist > 0 ? (total / dist) : ((cons / 100) * precioKwh);
+        document.getElementById("res-elec-total").textContent = formatearMonedaCalc(total) + " €";
+      }
+
+      document.getElementById("res-elec-kwh").textContent = formatearMonedaCalc(kwh) + " kWh";
+      document.getElementById("res-elec-km").textContent = `Coste aproximado: ${formatearMonedaCalc(costeKm)} € / km`;
+    }
+
+    // 3. Préstamo
+    let unidadPlazoPrestamoActual = "meses";
+
+    function abrirModalCalcPrestamo() {
+      document.getElementById("modal-calc-prestamo").classList.remove("hidden");
+      document.body.classList.add("overflow-hidden");
+      calcularGastoPrestamo();
+    }
+    function cerrarModalCalcPrestamo() {
+      document.getElementById("modal-calc-prestamo").classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+    }
+    function toggleUnidadPlazoIOS(esAnos) {
+      const nuevaUnidad = esAnos ? "anos" : "meses";
+      if (unidadPlazoPrestamoActual === nuevaUnidad) return;
+
+      const inputPlazo = document.getElementById("calc-prest-plazo");
+      const val = parseFloat(inputPlazo.value) || 0;
+
+      if (esAnos) {
+        if (val > 0) inputPlazo.value = parseFloat((val / 12).toFixed(2));
+        inputPlazo.placeholder = "Ej. 8";
+      } else {
+        if (val > 0) inputPlazo.value = Math.round(val * 12);
+        inputPlazo.placeholder = "Ej. 96";
+      }
+
+      unidadPlazoPrestamoActual = nuevaUnidad;
+      calcularGastoPrestamo();
+    }
+    function calcularGastoPrestamo() {
+      const imp = parseFloat(document.getElementById("calc-prest-importe").value) || 0;
+      const plazoRaw = parseFloat(document.getElementById("calc-prest-plazo").value) || 0;
+      const tin = parseFloat(document.getElementById("calc-prest-interes").value) || 0;
+
+      let totalMeses = 0;
+      let totalAnos = 0;
+
+      if (unidadPlazoPrestamoActual === "anos") {
+        totalAnos = plazoRaw;
+        totalMeses = Math.round(plazoRaw * 12);
+      } else {
+        totalMeses = Math.round(plazoRaw);
+        totalAnos = totalMeses / 12;
+      }
+
+      const strAnos = totalAnos > 0 ? (totalAnos % 1 === 0 ? totalAnos : totalAnos.toFixed(1)) : 0;
+      document.getElementById("res-prest-conversion-plazo").textContent = `${totalMeses} meses · ${strAnos} años`;
+
+      // Fechas de inicio (actual) y finalización según los meses totales
+      const fechaHoy = new Date();
+      const dd = fechaHoy.getDate();
+      const mmIdx = fechaHoy.getMonth();
+      const nombreMesIni = MESES_LISTA[mmIdx].toLowerCase();
+      const anoIni = fechaHoy.getFullYear();
+      document.getElementById("res-prest-fecha-inicio").textContent = `${dd} de ${nombreMesIni} de ${anoIni}`;
+
+      const elFin = document.getElementById("res-prest-fecha-fin");
+      if (totalMeses > 0) {
+        const fechaFinObj = new Date(anoIni, mmIdx + totalMeses, dd);
+        const nombreMesFin = MESES_LISTA[fechaFinObj.getMonth()].toLowerCase();
+        elFin.textContent = `${fechaFinObj.getDate()} de ${nombreMesFin} de ${fechaFinObj.getFullYear()}`;
+      } else {
+        elFin.textContent = "—";
+      }
+
+      if (imp <= 0 || totalMeses <= 0) {
+        document.getElementById("res-prest-cuota").textContent = "0,00 €";
+        document.getElementById("res-prest-cuota-anual").textContent = "0,00 €";
+        document.getElementById("res-prest-intereses").textContent = "0,00 €";
+        document.getElementById("res-prest-total").textContent = "0,00 €";
+        return;
+      }
+
+      let cuotaMensual = 0;
+      if (tin <= 0) {
+        cuotaMensual = imp / totalMeses;
+      } else {
+        const r = (tin / 100) / 12;
+        cuotaMensual = imp * (r * Math.pow(1 + r, totalMeses)) / (Math.pow(1 + r, totalMeses) - 1);
+      }
+
+      const cuotaAnual = cuotaMensual * 12;
+      const totalDevolver = cuotaMensual * totalMeses;
+      const totalIntereses = totalDevolver - imp;
+
+      document.getElementById("res-prest-cuota").textContent = formatearMonedaCalc(cuotaMensual) + " €";
+      document.getElementById("res-prest-cuota-anual").textContent = formatearMonedaCalc(cuotaAnual) + " €";
+      document.getElementById("res-prest-intereses").textContent = formatearMonedaCalc(totalIntereses) + " €";
+      document.getElementById("res-prest-total").textContent = formatearMonedaCalc(totalDevolver) + " €";
+    }
+
+    // 4. Hipoteca
+    function abrirModalCalcHipoteca() {
+      document.getElementById("modal-calc-hipoteca").classList.remove("hidden");
+      document.body.classList.add("overflow-hidden");
+      calcularGastoHipoteca();
+    }
+    function cerrarModalCalcHipoteca() {
+      document.getElementById("modal-calc-hipoteca").classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+    }
+    function calcularGastoHipoteca() {
+      const precio = parseFloat(document.getElementById("calc-hipo-precio").value) || 0;
+      const entrada = parseFloat(document.getElementById("calc-hipo-entrada").value) || 0;
+      const anos = parseFloat(document.getElementById("calc-hipo-anos").value) || 0;
+      const tin = parseFloat(document.getElementById("calc-hipo-interes").value) || 0;
+
+      const capital = Math.max(0, precio - entrada);
+      const meses = anos * 12;
+
+      document.getElementById("res-hipo-capital").textContent = formatearMonedaCalc(capital) + " €";
+      document.getElementById("res-hipo-gastos").textContent = formatearMonedaCalc(precio * 0.10) + " €";
+
+      // Fechas de inicio (actual) y finalización según los años introducidos
+      const fechaHoy = new Date();
+      const dd = fechaHoy.getDate();
+      const mmIdx = fechaHoy.getMonth();
+      const nombreMesIni = MESES_LISTA[mmIdx].toLowerCase();
+      const anoIni = fechaHoy.getFullYear();
+      document.getElementById("res-hipo-fecha-inicio").textContent = `${dd} de ${nombreMesIni} de ${anoIni}`;
+
+      const elFin = document.getElementById("res-hipo-fecha-fin");
+      if (anos > 0) {
+        const fechaFinObj = new Date(anoIni, mmIdx + Math.round(anos * 12), dd);
+        const nombreMesFin = MESES_LISTA[fechaFinObj.getMonth()].toLowerCase();
+        elFin.textContent = `${fechaFinObj.getDate()} de ${nombreMesFin} de ${fechaFinObj.getFullYear()}`;
+      } else {
+        elFin.textContent = "—";
+      }
+
+      if (capital <= 0 || meses <= 0) {
+        document.getElementById("res-hipo-cuota").textContent = "0,00 €";
+        document.getElementById("res-hipo-cuota-anual").textContent = "0,00 €";
+        document.getElementById("res-hipo-intereses").textContent = "0,00 €";
+        document.getElementById("res-hipo-total").textContent = "0,00 €";
+        return;
+      }
+
+      let cuota = 0;
+      if (tin <= 0) {
+        cuota = capital / meses;
+      } else {
+        const r = (tin / 100) / 12;
+        cuota = capital * (r * Math.pow(1 + r, meses)) / (Math.pow(1 + r, meses) - 1);
+      }
+
+      const cuotaAnualHipo = cuota * 12;
+      const totalHipotecado = cuota * meses;
+      const totalIntereses = totalHipotecado - capital;
+
+      document.getElementById("res-hipo-cuota").textContent = formatearMonedaCalc(cuota) + " €";
+      document.getElementById("res-hipo-cuota-anual").textContent = formatearMonedaCalc(cuotaAnualHipo) + " €";
+      document.getElementById("res-hipo-intereses").textContent = formatearMonedaCalc(totalIntereses) + " €";
+      document.getElementById("res-hipo-total").textContent = formatearMonedaCalc(totalHipotecado) + " €";
     }
 
     /* ==================== LÓGICA CALCULADORA IOS ==================== */
