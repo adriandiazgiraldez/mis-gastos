@@ -488,8 +488,8 @@
       </div>
 
       <form onsubmit="guardarGasto(event)" class="p-5 sm:p-6 space-y-3.5 text-xs overflow-y-auto flex-1">
-        <!-- Fila 1: Concepto y Empresa -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- Fila 1: Concepto, Categoría y Empresa -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div class="relative">
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Concepto *</label>
             <input type="text" id="form-concepto" required autocomplete="off"
@@ -497,6 +497,14 @@
               placeholder="Buscar o escribir concepto..."
               class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
             <div id="dropdown-conceptos" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-slate-100"></div>
+          </div>
+          <div class="relative">
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Categoría (opcional)</label>
+            <input type="text" id="form-categoria" autocomplete="off"
+              onfocus="mostrarDropdownCategorias()" oninput="filtrarDropdownCategorias()"
+              placeholder="Buscar o escribir categoría..."
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+            <div id="dropdown-categorias" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-slate-100"></div>
           </div>
           <div class="relative">
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Empresa (opcional, para agrupar)</label>
@@ -841,6 +849,30 @@
                 </div>
               </div>
               <div id="lista-opciones-filtro-concepto" class="max-h-48 overflow-y-auto divide-y divide-slate-100"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Categoría Dropdown con Buscador Escribible -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Categoría</label>
+          <div class="relative w-full text-left" id="contenedor-filtro-categoria">
+            <input type="hidden" id="filtro-categoria" value="">
+            <button type="button" onclick="toggleDropdownFiltroCategoria(event)" id="btn-filtro-categoria" class="w-full flex items-center justify-between gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 transition">
+              <div class="flex items-center gap-2 truncate">
+                <span id="filtro-categoria-icono" class="shrink-0"><i class="fa-solid fa-tag text-slate-400 text-xs"></i></span>
+                <span id="filtro-categoria-texto" class="truncate">Todas las categorías</span>
+              </div>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+            </button>
+            <div id="dropdown-menu-filtro-categoria" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col">
+              <div class="p-2 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10" onclick="event.stopPropagation()">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-[11px] text-slate-400"></i>
+                  <input type="text" id="input-buscar-filtro-categoria" oninput="filtrarListaDropdownCategorias(this.value)" placeholder="Escribir categoría..." class="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400 transition" autocomplete="off">
+                </div>
+              </div>
+              <div id="lista-opciones-filtro-categoria" class="max-h-48 overflow-y-auto divide-y divide-slate-100"></div>
             </div>
           </div>
         </div>
@@ -3955,6 +3987,7 @@
       const selectConcepto = document.getElementById("filtro-concepto");
 
       renderizarOpcionesFiltroConceptos();
+      renderizarOpcionesFiltroCategorias();
 
       if (idxAno === -1 || !selectAno) return;
 
@@ -4115,11 +4148,82 @@
       filtrarTabla();
     }
 
+    let listaCategoriasUnicasCache = [];
+
+    function renderizarOpcionesFiltroCategorias(filtroTexto = "") {
+      const idxCat = headersGlobales.findIndex(h => h.toLowerCase().includes("categoria") || h.toLowerCase().includes("categoría"));
+      const contenedorLista = document.getElementById("lista-opciones-filtro-categoria");
+      if (idxCat === -1 || !contenedorLista) return;
+
+      const predefinidas = ["Bancos", "Seguros", "Electricidad", "Impuestos", "Agua", "Gas", "Telefonía e Internet", "Viviendas", "Educación", "Suscripciones", "Compras-Comercios", "Registros Online", "Cuotas Asociaciones", "Salud", "Combustible", "Viajes", "Sindicatos", "Gimnasios", "Fiestas", "Mantenimientos", "Regalos", "Vehículos",];
+      const enHoja = filasGlobales.map(f => (f[idxCat] || "").toString().trim()).filter(Boolean);
+      listaCategoriasUnicasCache = [...new Set([...predefinidas, ...enHoja])].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+
+      const q = quitarAcentos(filtroTexto);
+      const filtradas = q ? listaCategoriasUnicasCache.filter(c => quitarAcentos(c).includes(q)) : listaCategoriasUnicasCache;
+
+      let html = "";
+      if (!q) {
+        html += `<button type="button" onclick="seleccionarFiltroCategoria('', 'Todas las categorías', '<i class=\\'fa-solid fa-tag text-slate-400 text-xs\\'></i>')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition font-semibold">
+          <i class="fa-solid fa-tag text-slate-400 text-xs shrink-0"></i>
+          <span>Todas las categorías</span>
+        </button>`;
+      }
+
+      if (filtradas.length === 0) {
+        html += `<div class="p-3 text-center text-xs text-slate-400">No se encontraron categorías</div>`;
+      } else {
+        filtradas.forEach(c => {
+          const cEscapado = c.replace(/'/g, "\\'");
+          html += `<button type="button" onclick="seleccionarFiltroCategoria('${cEscapado}', '${cEscapado}', '<i class=\\'fa-solid fa-tag text-slate-400 text-xs\\'></i>')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition">
+            <i class="fa-solid fa-tag text-slate-400 text-xs shrink-0"></i>
+            <span class="truncate">${c}</span>
+          </button>`;
+        });
+      }
+
+      contenedorLista.innerHTML = html;
+    }
+
+    function filtrarListaDropdownCategorias(val) {
+      renderizarOpcionesFiltroCategorias(val);
+    }
+
+    function toggleDropdownFiltroCategoria(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById("dropdown-menu-filtro-categoria");
+      if (!menu) return;
+      const estaOculto = menu.classList.contains("hidden");
+      menu.classList.toggle("hidden");
+
+      if (estaOculto) {
+        const inputBuscar = document.getElementById("input-buscar-filtro-categoria");
+        if (inputBuscar) {
+          inputBuscar.value = "";
+          renderizarOpcionesFiltroCategorias("");
+          setTimeout(() => inputBuscar.focus(), 50);
+        }
+      }
+    }
+
+    function seleccionarFiltroCategoria(valor, texto, iconoHtml) {
+      document.getElementById("filtro-categoria").value = valor;
+      document.getElementById("filtro-categoria-texto").textContent = texto;
+      document.getElementById("filtro-categoria-icono").innerHTML = iconoHtml;
+      document.getElementById("dropdown-menu-filtro-categoria").classList.add("hidden");
+      filtrarTabla();
+    }
+
     document.addEventListener("click", (e) => {
       const cont = document.getElementById("contenedor-filtro-concepto");
       const menu = document.getElementById("dropdown-menu-filtro-concepto");
       if (cont && menu && !cont.contains(e.target)) {
         menu.classList.add("hidden");
+      }
+      const contCat = document.getElementById("contenedor-filtro-categoria");
+      const menuCat = document.getElementById("dropdown-menu-filtro-categoria");
+      if (contCat && menuCat && !contCat.contains(e.target)) {
+        menuCat.classList.add("hidden");
       }
     });
 
@@ -4161,6 +4265,8 @@
       document.getElementById("panel-calendario").classList.add("hidden");
       const dropConcepto = document.getElementById("dropdown-menu-filtro-concepto");
       if (dropConcepto) dropConcepto.classList.add("hidden");
+      const dropCat = document.getElementById("dropdown-menu-filtro-categoria");
+      if (dropCat) dropCat.classList.add("hidden");
       document.body.classList.remove("overflow-hidden");
     }
 
@@ -4169,6 +4275,7 @@
       const buscadorModal = document.getElementById("buscador-modal-filtros");
       if (buscadorModal) buscadorModal.value = "";
       seleccionarFiltroConcepto("", "Todos los conceptos", '<i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>');
+      seleccionarFiltroCategoria("", "Todas las categorías", '<i class="fa-solid fa-tag text-slate-400 text-xs"></i>');
 
       const ahora = new Date();
       document.getElementById("filtro-ano").value = ahora.getFullYear().toString();
@@ -4195,9 +4302,10 @@
     function filtrarTabla() {
       const q = quitarAcentos(document.getElementById("buscador-gastos").value);
       const conceptoSel = document.getElementById("filtro-concepto")?.value || "";
+      const categoriaSel = document.getElementById("filtro-categoria")?.value || "";
       const ano = document.getElementById("filtro-ano").value;
       const mes = document.getElementById("filtro-mes").value;
-      const hayFiltros = q || conceptoSel || ano || mes || diaSeleccionado !== null;
+      const hayFiltros = q || conceptoSel || categoriaSel || ano || mes || diaSeleccionado !== null;
 
       document.getElementById("btn-limpiar-filtros").classList.toggle("hidden", !hayFiltros);
 
@@ -4213,6 +4321,7 @@
       }
 
       const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxCategoria = headersGlobales.findIndex(h => h.toLowerCase().includes("categoria") || h.toLowerCase().includes("categoría"));
       const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
       const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
       const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
@@ -4227,6 +4336,7 @@
           if (!textoFila.includes(q)) return false;
         }
         if (conceptoSel && idxConcepto !== -1 && (f[idxConcepto] || "").toString().trim() !== conceptoSel) return false;
+        if (categoriaSel && idxCategoria !== -1 && (f[idxCategoria] || "").toString().trim() !== categoriaSel) return false;
         if (!q) {
           if (ano && idxAno !== -1 && (f[idxAno] || "").toString().trim() !== ano) return false;
           if (mes && idxMes !== -1 && (f[idxMes] || "").toString().trim().toUpperCase() !== mes) return false;
@@ -5151,6 +5261,7 @@
       };
 
       const concepto = getCol("concepto");
+      const categoria = getCol("categoria") || getCol("categoría");
       const empresa = getCol("empresa");
       const cantRaw = getCol("cantidad");
       const cantFmt = cantRaw ? (cantRaw.includes("€") ? cantRaw : `${cantRaw} €`) : "0,00 €";
@@ -5220,6 +5331,7 @@
       const campos = [
         { label: "Día previsto", val: dia },
         { label: "Mes / Año", val: (mes && ano) ? `${mes} ${ano}` : (mes || ano) },
+        { label: "Categoría", val: categoria },
         { label: "Periodicidad", val: periodicidad },
         { label: "Nº Cuota", val: cuota },
         { label: "Fecha de pago", val: fechaPago }
@@ -5313,6 +5425,8 @@
       const btn = document.getElementById("btn-confirmar-pago-modal");
 
       texto.innerHTML = `¿Desea pagar este recibo hoy <strong class="text-slate-900">${diaNom} ${diaNum} de ${mesNom} de ${anoNum}</strong>?`;
+      btn.disabled = false;
+      btn.textContent = "Sí, pagar";
       btn.onclick = () => ejecutarPagoRapido();
 
       modal.classList.remove("hidden");
@@ -5359,6 +5473,7 @@
         action: "edit",
         id: id,
         concepto: getVal("concepto"),
+        categoria: getVal("categoria") || getVal("categoría"),
         empresa: getVal("empresa"),
         pagado: "SI",
         fechaPago: fechaHoyFormato,
@@ -5388,6 +5503,7 @@
         await cargarDatos(tokenActual, true);
       } catch (err) {
         alert("No se pudo marcar como pagado: " + err.message);
+      } finally {
         btn.disabled = false;
         btn.textContent = "Sí, pagar";
       }
@@ -5469,6 +5585,7 @@
       document.getElementById("modal-gasto-titulo").textContent = "Modificar Gasto";
       document.getElementById("form-id").value = id;
       document.getElementById("form-concepto").value = getVal("concepto");
+      document.getElementById("form-categoria").value = getVal("categoria") || getVal("categoría");
       document.getElementById("form-empresa").value = getVal("empresa");
       document.getElementById("form-dia").value = getVal("día") || getVal("dia") || 1;
       document.getElementById("form-cantidad").value = getVal("cantidad").replace(/[€\s]/g, "").replace(",", ".");
@@ -5747,6 +5864,42 @@
       document.getElementById("dropdown-empresas").classList.add("hidden");
     }
 
+    function mostrarDropdownCategorias() {
+      filtrarDropdownCategorias();
+      document.getElementById("dropdown-categorias").classList.remove("hidden");
+    }
+
+    function filtrarDropdownCategorias() {
+      const idxCat = headersGlobales.findIndex(h => h.toLowerCase().includes("categoria") || h.toLowerCase().includes("categoría"));
+      const dropdown = document.getElementById("dropdown-categorias");
+      if (!dropdown) return;
+
+      const predefinidas = ["Bancos", "Seguros", "Electricidad", "Impuestos", "Agua", "Gas", "Telefonía e Internet", "Viviendas", "Educación", "Suscripciones", "Compras-Comercios", "Registros Online", "Cuotas Asociaciones", "Salud", "Combustible", "Viajes", "Sindicatos", "Gimnasios", "Fiestas", "Mantenimientos", "Regalos", "Vehículos"];
+      const enHoja = idxCat !== -1 ? filasGlobales.map(f => (f[idxCat] || "").toString().trim()).filter(Boolean) : [];
+      const todas = [...new Set([...predefinidas, ...enHoja])].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+
+      const filtro = (document.getElementById("form-categoria").value || "").toLowerCase().trim();
+      const filtradas = filtro ? todas.filter(c => c.toLowerCase().includes(filtro)) : todas;
+
+      if (filtradas.length === 0) {
+        dropdown.innerHTML = `<div class="px-3.5 py-2.5 text-xs text-slate-400">Nueva categoría: "${document.getElementById("form-categoria").value}"</div>`;
+        return;
+      }
+
+      dropdown.innerHTML = filtradas.map(c => {
+        const seguro = c.replace(/'/g, "\\'");
+        return `<button type="button" onclick="seleccionarCategoriaDropdown('${seguro}')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition">
+          <i class="fa-solid fa-tag text-slate-400 text-xs shrink-0"></i>
+          <span class="truncate">${c}</span>
+        </button>`;
+      }).join("");
+    }
+
+    function seleccionarCategoriaDropdown(valor) {
+      document.getElementById("form-categoria").value = valor;
+      document.getElementById("dropdown-categorias").classList.add("hidden");
+    }
+
     document.addEventListener("click", (e) => {
       const input = document.getElementById("form-concepto");
       const drop = document.getElementById("dropdown-conceptos");
@@ -5757,6 +5910,11 @@
       const dropEmp = document.getElementById("dropdown-empresas");
       if (inputEmp && dropEmp && !inputEmp.contains(e.target) && !dropEmp.contains(e.target)) {
         dropEmp.classList.add("hidden");
+      }
+      const inputCat = document.getElementById("form-categoria");
+      const dropCat = document.getElementById("dropdown-categorias");
+      if (inputCat && dropCat && !inputCat.contains(e.target) && !dropCat.contains(e.target)) {
+        dropCat.classList.add("hidden");
       }
     });
 
@@ -5849,6 +6007,7 @@
       document.getElementById("modal-gasto-titulo").textContent = "Añadir Gasto";
       document.getElementById("form-id").value = "";
       document.getElementById("form-concepto").value = "";
+      document.getElementById("form-categoria").value = "";
       document.getElementById("form-empresa").value = "";
       const ahora = new Date();
       document.getElementById("form-mes").value = document.getElementById("filtro-mes")?.value || MESES_LISTA[ahora.getMonth()];
@@ -5876,6 +6035,8 @@
     }
     function cerrarModalGasto() {
       document.getElementById("dropdown-conceptos").classList.add("hidden");
+      const dropCat = document.getElementById("dropdown-categorias");
+      if (dropCat) dropCat.classList.add("hidden");
       document.getElementById("modal-gasto").classList.add("hidden");
       document.body.classList.remove("overflow-hidden");
     }
@@ -5997,6 +6158,7 @@
             filasLote.push({
               favicon: valorFavicon,
               concepto: conceptoGuardar,
+              categoria: document.getElementById("form-categoria").value.trim(),
               empresa: document.getElementById("form-empresa").value.trim(),
               pagado: k === 0 ? document.getElementById("form-pagado").value : "NO",
               fechaPago: k === 0 ? document.getElementById("form-fecha-pago").value : "",
@@ -6025,6 +6187,7 @@
         action: formId ? "edit" : (filasLote.length > 0 ? "add_batch" : "add"),
         id: formId,
         concepto: conceptoGuardar,
+        categoria: document.getElementById("form-categoria").value.trim(),
         empresa: document.getElementById("form-empresa").value.trim(),
         pagado: document.getElementById("form-pagado").value,
         fechaPago: document.getElementById("form-fecha-pago").value,
