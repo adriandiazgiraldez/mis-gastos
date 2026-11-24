@@ -1652,7 +1652,7 @@
     </div>
   </div>
 <!-- ==================== MODAL AÑADIR COMBUSTIBLE ==================== -->
-  <div id="modal-combustible" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+  <div id="modal-combustible" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4 overscroll-none touch-none">
     <div class="bg-white border border-slate-200 w-full max-w-lg max-h-[92dvh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
       <!-- Cabecera con Matrícula -->
       <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/70">
@@ -1671,7 +1671,7 @@
         </button>
       </div>
 
-      <form onsubmit="guardarCombustible(event)" class="p-5 space-y-4 text-xs overflow-y-auto flex-1">
+      <form onsubmit="guardarCombustible(event)" class="p-5 space-y-4 text-xs overflow-y-auto flex-1 overscroll-contain touch-pan-y">
         <input type="hidden" id="comb-ano">
         <input type="hidden" id="comb-mes">
 
@@ -7135,14 +7135,16 @@
       seleccionarTipoCombustible("");
       renderizarBotonesVehiculos();
 
-      document.body.classList.add("overflow-hidden");
+      document.documentElement.classList.add("overflow-hidden");
+      document.body.classList.add("overflow-hidden", "fixed", "inset-x-0");
       document.getElementById("modal-combustible").classList.remove("hidden");
       setTimeout(() => document.getElementById("comb-cantidad").focus(), 100);
     }
 
     function cerrarModalCombustible() {
       document.getElementById("modal-combustible").classList.add("hidden");
-      document.body.classList.remove("overflow-hidden");
+      document.documentElement.classList.remove("overflow-hidden");
+      document.body.classList.remove("overflow-hidden", "fixed", "inset-x-0");
     }
 
     function actualizarFechaCombustible() {
