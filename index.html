@@ -159,6 +159,13 @@
             </div>
             <span class="sidebar-label truncate">Ingresos</span>
           </button>
+
+          <button onclick="cambiarSeccion('consultas', 'Consultas', this)" title="Consultas" class="nav-btn w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <div class="shrink-0 w-5 flex items-center justify-center">
+              <i class="fa-solid fa-magnifying-glass-chart text-sm"></i>
+            </div>
+            <span class="sidebar-label truncate">Consultas</span>
+          </button>
         </nav>
       </div>
 
@@ -339,6 +346,25 @@
             <div class="overflow-hidden border border-slate-100 rounded-xl">
               <div id="ranking-top-conceptos" class="divide-y divide-slate-100">
                 <!-- Se rellena dinámicamente con el ranking de los 10 mayores gastos -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VISTA: CONSULTAS -->
+        <section id="vista-consultas" class="oculto space-y-6">
+          <!-- Tarjeta de Acceso a "Conceptos con Cuotas" -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div onclick="abrirModalConsultaCuotas()" class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-slate-300 transition cursor-pointer group flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition">
+                <i class="fa-solid fa-layer-group"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition">Conceptos con Cuotas</h3>
+                  <i class="fa-solid fa-arrow-right text-xs text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">Consulta préstamos, hipotecas o compras financiadas con desglose de cuotas pendientes, pagadas y fechas de finalización.</p>
               </div>
             </div>
           </div>
@@ -754,6 +780,62 @@
       </div>
     </div>
   </div>
+  <!-- ==================== MODAL CONSULTA CONCEPTOS CON CUOTAS ==================== -->
+  <div id="modal-consulta-cuotas" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-2xl max-h-[92dvh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <!-- Cabecera -->
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm shadow-2xs border border-indigo-100">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Consulta de Conceptos con Cuotas</h3>
+            <p class="text-[11px] text-slate-500">Préstamos, hipotecas y pagos aplazados</p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalConsultaCuotas()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <!-- Cuerpo / Formulario + Resultados -->
+      <div class="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
+        <!-- Formulario selector de concepto y filtro por año -->
+        <div class="space-y-2">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div class="relative flex-1">
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Concepto a Consultar</label>
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-xs text-slate-400"></i>
+                <select id="select-consulta-concepto" onchange="actualizarAnosDisponiblesConsulta()" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-indigo-500 focus:bg-white transition cursor-pointer">
+                  <!-- Se llena dinámicamente con conceptos que tengan cuotas -->
+                </select>
+              </div>
+            </div>
+            <div class="w-full sm:w-44">
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Fraccionar por Año</label>
+              <select id="select-consulta-ano" onchange="ejecutarConsultaCuotas()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-indigo-500 focus:bg-white transition cursor-pointer">
+                <option value="todos" selected>Todos los años</option>
+              </select>
+            </div>
+            <div class="sm:self-end">
+              <button type="button" onclick="ejecutarConsultaCuotas()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-2 text-xs font-semibold transition active:scale-95 shadow-xs">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Buscar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Área de Resultados emergente de información -->
+        <div id="resultado-consulta-cuotas" class="hidden space-y-4">
+          <!-- Rellenado dinámicamente por JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== MODAL CALCULADORA ESTILO IOS ==================== -->
   <div id="modal-calculadora" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] hidden flex items-center justify-center sm:p-4">
     <div class="w-full h-full sm:h-auto sm:max-w-[340px] bg-black text-white sm:rounded-[42px] sm:border sm:border-neutral-800 shadow-2xl flex flex-col justify-end p-5 pb-8 sm:p-6 select-none relative overflow-hidden">
@@ -1955,6 +2037,440 @@
       htmlFinal += renderSeccionBBVA(pagados, true);
 
       contenedor.innerHTML = htmlFinal;
+    }
+
+    /* ==================== LÓGICA CONSULTAS: CONCEPTOS CON CUOTAS ==================== */
+    function abrirModalConsultaCuotas() {
+      const modal = document.getElementById("modal-consulta-cuotas");
+      const select = document.getElementById("select-consulta-concepto");
+      const areaResultado = document.getElementById("resultado-consulta-cuotas");
+      if (!modal || !select) return;
+
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
+
+      // Filtrar conceptos que tengan cuotas registradas
+      const conceptosConCuotas = new Set();
+      filasGlobales.forEach(f => {
+        const c = idxConcepto !== -1 ? (f[idxConcepto] || "").toString().trim() : "";
+        const cuota = idxCuota !== -1 ? (f[idxCuota] || "").toString().trim() : "";
+        if (c && cuota) {
+          conceptosConCuotas.add(c);
+        }
+      });
+
+      const lista = [...conceptosConCuotas].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+
+      if (lista.length === 0) {
+        select.innerHTML = `<option value="">No hay conceptos con cuotas registrados</option>`;
+      } else {
+        select.innerHTML = lista.map(c => `<option value="${c.replace(/"/g, '&quot;')}">${c}</option>`).join("");
+      }
+
+      actualizarAnosDisponiblesConsulta();
+
+      if (areaResultado) areaResultado.classList.add("hidden");
+      document.body.classList.add("overflow-hidden");
+      modal.classList.remove("hidden");
+    }
+
+    function actualizarAnosDisponiblesConsulta() {
+      const selectConcepto = document.getElementById("select-consulta-concepto");
+      const selectAno = document.getElementById("select-consulta-ano");
+      if (!selectConcepto || !selectAno) return;
+
+      const concepto = (selectConcepto.value || "").trim().toUpperCase();
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+
+      const anosSet = new Set();
+      if (idxConcepto !== -1 && idxAno !== -1 && concepto) {
+        filasGlobales.forEach(f => {
+          if ((f[idxConcepto] || "").toString().trim().toUpperCase() === concepto) {
+            const a = (f[idxAno] || "").toString().trim();
+            if (a) anosSet.add(a);
+          }
+        });
+      }
+
+      const anos = [...anosSet].sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+      let html = `<option value="todos" selected>Todos los años</option>`;
+      anos.forEach(a => {
+        html += `<option value="${a}">Año ${a}</option>`;
+      });
+
+      selectAno.innerHTML = html;
+    }
+
+    function cerrarModalConsultaCuotas() {
+      const modal = document.getElementById("modal-consulta-cuotas");
+      if (modal) modal.classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+    }
+
+    function ejecutarConsultaCuotas() {
+      const select = document.getElementById("select-consulta-concepto");
+      const selectAno = document.getElementById("select-consulta-ano");
+      const area = document.getElementById("resultado-consulta-cuotas");
+      if (!select || !area) return;
+
+      const conceptoBuscado = select.value.trim();
+      const anoFiltro = selectAno ? selectAno.value : "todos";
+      if (!conceptoBuscado) return;
+
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
+      const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+      const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
+      const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
+      const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+      const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
+      const idxPeriodicidad = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
+
+      const todasFilasConcepto = filasGlobales.filter(f => (f[idxConcepto] || "").toString().trim().toUpperCase() === conceptoBuscado.toUpperCase());
+      if (todasFilasConcepto.length === 0) {
+        area.innerHTML = `<div class="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">No se encontraron datos para este concepto.</div>`;
+        area.classList.remove("hidden");
+        return;
+      }
+
+      const parseCant = (f) => {
+        if (idxCant === -1) return 0;
+        const raw = (f[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
+        return parseFloat(raw) || 0;
+      };
+
+      // Orden cronológico general
+      const ordenarCronologico = (a, b) => {
+        const anoA = idxAno !== -1 ? parseInt(a[idxAno], 10) || 0 : 0;
+        const anoB = idxAno !== -1 ? parseInt(b[idxAno], 10) || 0 : 0;
+        if (anoA !== anoB) return anoA - anoB;
+        const mesA = idxMes !== -1 ? MESES_LISTA.indexOf((a[idxMes] || "").toString().trim().toUpperCase()) : 0;
+        const mesB = idxMes !== -1 ? MESES_LISTA.indexOf((b[idxMes] || "").toString().trim().toUpperCase()) : 0;
+        if (mesA !== mesB) return mesA - mesB;
+        const diaA = idxDia !== -1 ? parseInt(a[idxDia], 10) || 0 : 0;
+        const diaB = idxDia !== -1 ? parseInt(b[idxDia], 10) || 0 : 0;
+        return diaA - diaB;
+      };
+
+      todasFilasConcepto.sort(ordenarCronologico);
+
+      // Estadísticas globales del préstamo completo
+      let globalCuotasPagadas = 0;
+      let globalTotalPagado = 0;
+      let globalCuotasPendientesHoja = 0;
+      let globalTotalPendienteHoja = 0;
+      let maxDenominador = 0;
+      let maxNumerador = 0;
+      let empresaDetectada = "";
+      let periodicidadDetectada = "";
+      let cuotaImportePromedio = 0;
+      let sumaImportes = 0;
+      let cuentaImportes = 0;
+
+      todasFilasConcepto.forEach(f => {
+        const esPagado = idxPagado !== -1 && (f[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+        const cVal = parseCant(f);
+
+        if (cVal > 0) {
+          cuotaImportePromedio = cVal;
+          sumaImportes += cVal;
+          cuentaImportes++;
+        }
+
+        if (esPagado) {
+          globalCuotasPagadas++;
+          globalTotalPagado += cVal;
+        } else {
+          globalCuotasPendientesHoja++;
+          globalTotalPendienteHoja += cVal;
+        }
+
+        if (!empresaDetectada && idxEmpresa !== -1) {
+          empresaDetectada = (f[idxEmpresa] || "").toString().trim();
+        }
+        if (!periodicidadDetectada && idxPeriodicidad !== -1) {
+          periodicidadDetectada = (f[idxPeriodicidad] || "").toString().trim();
+        }
+
+        if (idxCuota !== -1) {
+          const strCuota = (f[idxCuota] || "").toString().trim();
+          const match = strCuota.match(/^(\d+)(?:\/(\d+))?$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNumerador) maxNumerador = num;
+            if (match[2]) {
+              const den = parseInt(match[2], 10);
+              if (den > maxDenominador) maxDenominador = den;
+            }
+          }
+        }
+      });
+
+      // Tomar la cuota más reciente y vigente (la última cuota registrada con importe válido)
+      let ultimaCuotaConImporte = 0;
+      for (let i = todasFilasConcepto.length - 1; i >= 0; i--) {
+        const c = parseCant(todasFilasConcepto[i]);
+        if (c > 0) {
+          ultimaCuotaConImporte = c;
+          break;
+        }
+      }
+      cuotaImportePromedio = ultimaCuotaConImporte || (cuentaImportes > 0 ? sumaImportes / cuentaImportes : 0);
+
+      // El total de cuotas nunca puede ser menor que el total de cuotas reales ya registradas en la hoja
+      const globalCuotasTotales = Math.max(todasFilasConcepto.length, maxDenominador, maxNumerador);
+      const globalCuotasRestantes = Math.max(0, globalCuotasTotales - globalCuotasPagadas);
+      const globalFuturasNoHoja = Math.max(0, globalCuotasRestantes - globalCuotasPendientesHoja);
+      const globalTotalRestante = globalTotalPendienteHoja + (globalFuturasNoHoja * cuotaImportePromedio);
+      const globalTotalFinanciado = globalTotalPagado + globalTotalRestante;
+
+      // Fechas globales: 1ª cuota real registrada
+      const primeraFila = todasFilasConcepto[0];
+      const diaIni = idxDia !== -1 ? (parseInt(primeraFila[idxDia], 10) || 1) : 1;
+      const mesIniTexto = idxMes !== -1 ? (primeraFila[idxMes] || "").toString().trim().toUpperCase() : "";
+      const mesIniIdx = MESES_LISTA.indexOf(mesIniTexto) !== -1 ? MESES_LISTA.indexOf(mesIniTexto) : 0;
+      const anoIni = idxAno !== -1 ? (parseInt(primeraFila[idxAno], 10) || new Date().getFullYear()) : new Date().getFullYear();
+      const fechaInicio = `${diaIni} de ${MESES_LISTA[mesIniIdx].toLowerCase()} de ${anoIni}`;
+
+      // Última cuota real registrada en la base de datos
+      const ultimaFilaRegistrada = todasFilasConcepto[todasFilasConcepto.length - 1];
+      const diaUltRegistrado = idxDia !== -1 ? (parseInt(ultimaFilaRegistrada[idxDia], 10) || 1) : 1;
+      const mesUltTexto = idxMes !== -1 ? (ultimaFilaRegistrada[idxMes] || "").toString().trim().toUpperCase() : "";
+      const mesUltIdx = MESES_LISTA.indexOf(mesUltTexto) !== -1 ? MESES_LISTA.indexOf(mesUltTexto) : mesIniIdx;
+      const anoUltRegistrado = idxAno !== -1 ? (parseInt(ultimaFilaRegistrada[idxAno], 10) || anoIni) : anoIni;
+
+      let fechaFin = "";
+
+      // Si quedan cuotas futuras pendientes que aún no están en la hoja (ej. hipotecas a muchos años vista)
+      if (globalFuturasNoHoja > 0) {
+        const pasoMeses = {
+          "Mensual": 1, "Bimensual": 2, "Trimestral": 3, "Semestral": 6, "Anual": 12, "Gasto Puntual": 1
+        }[periodicidadDetectada] || 1;
+
+        const totalMesesASumar = (globalCuotasTotales - 1) * pasoMeses;
+        const fechaFinProyectada = new Date(anoIni, mesIniIdx + totalMesesASumar, 1);
+        const mesFinIdx = fechaFinProyectada.getMonth();
+        const anoFin = fechaFinProyectada.getFullYear();
+        const maxDiasEnMesFin = new Date(anoFin, mesFinIdx + 1, 0).getDate();
+        const diaFinCalculado = Math.min(diaIni, maxDiasEnMesFin);
+        fechaFin = `${diaFinCalculado} de ${MESES_LISTA[mesFinIdx].toLowerCase()} de ${anoFin}`;
+      } else {
+        // En cuotas normales o periódicas, la fecha de finalización es la de la última cuota registrada
+        fechaFin = `${diaUltRegistrado} de ${MESES_LISTA[mesUltIdx].toLowerCase()} de ${anoUltRegistrado}`;
+      }
+
+      const fmt = (n) => (n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+      let html = "";
+
+      if (anoFiltro === "todos") {
+        // ================= VISTA GLOBAL (TODOS LOS AÑOS) =================
+        const estaTotalmentePagado = globalCuotasRestantes === 0;
+        const porcentajeProgreso = globalCuotasTotales > 0 ? Math.min(100, Math.round((globalCuotasPagadas / globalCuotasTotales) * 100)) : 0;
+
+        html = `
+          <div class="p-4 sm:p-5 rounded-2xl border ${estaTotalmentePagado ? 'bg-emerald-50/70 border-emerald-200' : 'bg-slate-50 border-slate-200/90'} space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-lg ${estaTotalmentePagado ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'} flex items-center justify-center text-xs shadow-2xs">
+                  <i class="fa-solid ${estaTotalmentePagado ? 'fa-check-double' : 'fa-clock'}"></i>
+                </span>
+                <div>
+                  <h4 class="text-sm font-bold text-slate-900">${conceptoBuscado}</h4>
+                  ${empresaDetectada ? `<p class="text-[11px] text-slate-500 font-medium">${empresaDetectada} · Préstamo Completo</p>` : ''}
+                </div>
+              </div>
+              <span class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${estaTotalmentePagado ? 'bg-emerald-200/80 text-emerald-900' : 'bg-amber-100 text-amber-900'}">
+                ${estaTotalmentePagado ? 'PAGADO COMPLETO' : 'CUOTAS VIGENTES'}
+              </span>
+            </div>
+
+            <div class="space-y-1.5 pt-1">
+              <div class="flex items-center justify-between text-xs font-semibold">
+                <span class="text-slate-600">Progreso total de amortización</span>
+                <span class="text-slate-900 font-bold">${globalCuotasPagadas} de ${globalCuotasTotales} cuotas (${porcentajeProgreso}%)</span>
+              </div>
+              <div class="w-full h-2.5 bg-slate-200/80 rounded-full overflow-hidden">
+                <div class="h-full ${estaTotalmentePagado ? 'bg-emerald-500' : 'bg-indigo-600'} rounded-full transition-all duration-500" style="width: ${porcentajeProgreso}%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600">Restante por pagar</span>
+              <p class="text-base sm:text-lg font-bold text-rose-600 mt-1">${fmt(globalTotalRestante)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${globalCuotasRestantes} cuotas restantes</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Total pagado</span>
+              <p class="text-base sm:text-lg font-bold text-emerald-600 mt-1">${fmt(globalTotalPagado)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${globalCuotasPagadas} cuotas abonadas</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total financiado</span>
+              <p class="text-base sm:text-lg font-bold text-slate-900 mt-1">${fmt(globalTotalFinanciado)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${globalCuotasTotales} cuotas totales</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Cuota habitual</span>
+              <p class="text-base sm:text-lg font-bold text-indigo-600 mt-1">${fmt(cuotaImportePromedio)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${periodicidadDetectada || 'Mensual'}</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3.5 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 text-sm shrink-0">
+                <i class="fa-regular fa-calendar-check text-emerald-600"></i>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Fecha de inicio / 1ª cuota</span>
+                <span class="text-xs font-bold text-slate-800">${fechaInicio}</span>
+              </div>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3.5 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 text-sm shrink-0">
+                <i class="fa-regular fa-calendar-xmark ${estaTotalmentePagado ? 'text-emerald-600' : 'text-indigo-600'}"></i>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Fecha de finalización</span>
+                <span class="text-xs font-bold text-slate-800">${fechaFin}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        // ================= VISTA FRACCIONADA POR AÑO ESPECÍFICO =================
+        const filasDelAno = todasFilasConcepto.filter(f => (f[idxAno] || "").toString().trim() === anoFiltro);
+
+        let anoCuotasPagadas = 0;
+        let anoTotalPagado = 0;
+        let anoCuotasPendientes = 0;
+        let anoTotalPendiente = 0;
+
+        filasDelAno.forEach(f => {
+          const esPagado = idxPagado !== -1 && (f[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+          const cVal = parseCant(f);
+          if (esPagado) {
+            anoCuotasPagadas++;
+            anoTotalPagado += cVal;
+          } else {
+            anoCuotasPendientes++;
+            anoTotalPendiente += cVal;
+          }
+        });
+
+        const anoCuotasTotales = filasDelAno.length;
+        const anoTotalAno = anoTotalPagado + anoTotalPendiente;
+        const anoCompletoPagado = anoCuotasTotales > 0 && anoCuotasPendientes === 0;
+        const porcentajeAno = anoCuotasTotales > 0 ? Math.round((anoCuotasPagadas / anoCuotasTotales) * 100) : 0;
+
+        // Cuota representativa del año seleccionado (la última cuota con importe de ese año)
+        let cuotaAnoSeleccionado = cuotaImportePromedio;
+        for (let i = filasDelAno.length - 1; i >= 0; i--) {
+          const c = parseCant(filasDelAno[i]);
+          if (c > 0) {
+            cuotaAnoSeleccionado = c;
+            break;
+          }
+        }
+
+        html = `
+          <div class="p-4 sm:p-5 rounded-2xl border ${anoCompletoPagado ? 'bg-emerald-50/70 border-emerald-200' : 'bg-slate-50 border-slate-200/90'} space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-lg ${anoCompletoPagado ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'} flex items-center justify-center text-xs shadow-2xs font-bold">
+                  ${anoFiltro.slice(-2)}
+                </span>
+                <div>
+                  <h4 class="text-sm font-bold text-slate-900">${conceptoBuscado} · Ejercicio ${anoFiltro}</h4>
+                  ${empresaDetectada ? `<p class="text-[11px] text-slate-500 font-medium">${empresaDetectada}</p>` : ''}
+                </div>
+              </div>
+              <span class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${anoCompletoPagado ? 'bg-emerald-200/80 text-emerald-900' : 'bg-indigo-100 text-indigo-900'}">
+                ${anoCompletoPagado ? 'AÑO COMPLETADO' : 'EN CURSO EN ' + anoFiltro}
+              </span>
+            </div>
+
+            <div class="space-y-1.5 pt-1">
+              <div class="flex items-center justify-between text-xs font-semibold">
+                <span class="text-slate-600">Amortizado en ${anoFiltro}</span>
+                <span class="text-slate-900 font-bold">${anoCuotasPagadas} de ${anoCuotasTotales} cuotas del año (${porcentajeAno}%)</span>
+              </div>
+              <div class="w-full h-2.5 bg-slate-200/80 rounded-full overflow-hidden">
+                <div class="h-full ${anoCompletoPagado ? 'bg-emerald-500' : 'bg-indigo-600'} rounded-full transition-all duration-500" style="width: ${porcentajeAno}%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600">Pendiente en ${anoFiltro}</span>
+              <p class="text-base sm:text-lg font-bold text-rose-600 mt-1">${fmt(anoTotalPendiente)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${anoCuotasPendientes} cuotas restantes</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Pagado en ${anoFiltro}</span>
+              <p class="text-base sm:text-lg font-bold text-emerald-600 mt-1">${fmt(anoTotalPagado)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${anoCuotasPagadas} cuotas abonadas</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total en ${anoFiltro}</span>
+              <p class="text-base sm:text-lg font-bold text-slate-900 mt-1">${fmt(anoTotalAno)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${anoCuotasTotales} cuotas en este año</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Importe Cuota</span>
+              <p class="text-base sm:text-lg font-bold text-indigo-600 mt-1">${fmt(cuotaAnoSeleccionado)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${periodicidadDetectada || 'Mensual'}</span>
+            </div>
+          </div>
+
+          <!-- Desglose mensual de este año -->
+          <div class="space-y-2 pt-1">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-list-check text-indigo-500"></i> Desglose mensual de ${anoFiltro}
+            </h5>
+            <div class="bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 overflow-hidden shadow-2xs">
+        `;
+
+        filasDelAno.forEach(fila => {
+          const mes = idxMes !== -1 ? (fila[idxMes] || "").toString().trim() : "";
+          const dia = idxDia !== -1 ? (fila[idxDia] || "").toString().trim() : "";
+          const cuotaStr = idxCuota !== -1 ? (fila[idxCuota] || "").toString().trim() : "";
+          const pagado = idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+          const importe = parseCant(fila);
+
+          html += `
+            <div class="px-4 py-2.5 flex items-center justify-between text-xs hover:bg-slate-50 transition">
+              <div class="flex items-center gap-3">
+                <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] ${pagado ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'} font-bold">
+                  <i class="fa-solid ${pagado ? 'fa-check' : 'fa-clock'}"></i>
+                </span>
+                <div>
+                  <span class="font-bold text-slate-800">${mes}</span>
+                  <span class="text-[11px] text-slate-400 ml-1.5">Día ${dia}</span>
+                </div>
+                ${cuotaStr ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-bold px-1.5 py-0.5 rounded-md">Cuota ${cuotaStr}</span>` : ''}
+              </div>
+              <div class="text-right">
+                <span class="font-bold ${pagado ? 'text-emerald-600' : 'text-rose-600'}">${fmt(importe)}</span>
+              </div>
+            </div>
+          `;
+        });
+
+        html += `
+            </div>
+          </div>
+        `;
+      }
+
+      area.innerHTML = html;
+      area.classList.remove("hidden");
     }
 
     /* ==================== LÓGICA CALCULADORA IOS ==================== */
@@ -3289,6 +3805,8 @@
 
       const vistaAnualEl = document.getElementById("vista-gastos-anuales");
       if (vistaAnualEl) vistaAnualEl.classList.add("oculto");
+      const vistaConsultasEl = document.getElementById("vista-consultas");
+      if (vistaConsultasEl) vistaConsultasEl.classList.add("oculto");
 
       if (id === "gastos-mensuales") {
         document.getElementById("vista-gastos-mensuales").classList.remove("oculto");
@@ -3303,6 +3821,10 @@
         filtrarTabla();
       } else if (id === "anuales") {
         activarVistaGastosAnuales();
+      } else if (id === "consultas") {
+        document.getElementById("vista-gastos-mensuales").classList.add("oculto");
+        document.getElementById("vista-en-construccion").classList.add("oculto");
+        if (vistaConsultasEl) vistaConsultasEl.classList.remove("oculto");
       } else {
         document.getElementById("vista-gastos-mensuales").classList.add("oculto");
         document.getElementById("vista-en-construccion").classList.remove("oculto");
