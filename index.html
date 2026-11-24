@@ -367,6 +367,20 @@
                 <p class="text-xs text-slate-500 leading-relaxed">Consulta préstamos, hipotecas o compras financiadas con desglose de cuotas pendientes, pagadas y fechas de finalización.</p>
               </div>
             </div>
+
+            <!-- Tarjeta Conceptos sin Cuotas -->
+            <div onclick="abrirModalConsultaSinCuotas()" class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-slate-300 transition cursor-pointer group flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 group-hover:bg-sky-600 group-hover:text-white transition">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900 group-hover:text-sky-600 transition">Conceptos sin Cuotas</h3>
+                  <i class="fa-solid fa-arrow-right text-xs text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">Consulta gastos recurrentes o puntuales (luz, agua, internet, suscripciones, etc.) con histórico por años, periodicidad y recibos pagados.</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -831,6 +845,62 @@
         <!-- Área de Resultados emergente de información -->
         <div id="resultado-consulta-cuotas" class="hidden space-y-4">
           <!-- Rellenado dinámicamente por JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL CONSULTA CONCEPTOS SIN CUOTAS ==================== -->
+  <div id="modal-consulta-sin-cuotas" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 w-full max-w-2xl max-h-[92dvh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <!-- Cabecera -->
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-sm shadow-2xs border border-sky-100">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Consulta de Conceptos sin Cuotas</h3>
+            <p class="text-[11px] text-slate-500">Suministros, recibos fijos, suscripciones y gastos habituales</p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalConsultaSinCuotas()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <!-- Cuerpo / Formulario + Resultados -->
+      <div class="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
+        <!-- Formulario selector de concepto y filtro por año -->
+        <div class="space-y-2">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div class="relative flex-1">
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Concepto a Consultar</label>
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-xs text-slate-400"></i>
+                <select id="select-consulta-sin-concepto" onchange="actualizarAnosDisponiblesConsultaSin()" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white transition cursor-pointer">
+                  <!-- Se llena dinámicamente con conceptos sin cuotas -->
+                </select>
+              </div>
+            </div>
+            <div class="w-full sm:w-44">
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Fraccionar por Año</label>
+              <select id="select-consulta-sin-ano" onchange="ejecutarConsultaSinCuotas()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white transition cursor-pointer">
+                <option value="todos" selected>Todos los años</option>
+              </select>
+            </div>
+            <div class="sm:self-end">
+              <button type="button" onclick="ejecutarConsultaSinCuotas()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl px-4 py-2 text-xs font-semibold transition active:scale-95 shadow-xs">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Buscar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Área de Resultados -->
+        <div id="resultado-consulta-sin-cuotas" class="hidden space-y-4">
+          <!-- Rellenado dinámicamente -->
         </div>
       </div>
     </div>
@@ -2455,6 +2525,394 @@
                   <span class="text-[11px] text-slate-400 ml-1.5">Día ${dia}</span>
                 </div>
                 ${cuotaStr ? `<span class="bg-sky-50 text-sky-700 border border-sky-200/70 text-[10px] font-bold px-1.5 py-0.5 rounded-md">Cuota ${cuotaStr}</span>` : ''}
+              </div>
+              <div class="text-right">
+                <span class="font-bold ${pagado ? 'text-emerald-600' : 'text-rose-600'}">${fmt(importe)}</span>
+              </div>
+            </div>
+          `;
+        });
+
+        html += `
+            </div>
+          </div>
+        `;
+      }
+
+      area.innerHTML = html;
+      area.classList.remove("hidden");
+    }
+
+    /* ==================== LÓGICA CONSULTAS: CONCEPTOS SIN CUOTAS ==================== */
+    function abrirModalConsultaSinCuotas() {
+      const modal = document.getElementById("modal-consulta-sin-cuotas");
+      const select = document.getElementById("select-consulta-sin-concepto");
+      const areaResultado = document.getElementById("resultado-consulta-sin-cuotas");
+      if (!modal || !select) return;
+
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
+
+      // Recopilar conceptos que no tengan cuotas registradas
+      const conceptosSinCuotas = new Set();
+      filasGlobales.forEach(f => {
+        const c = idxConcepto !== -1 ? (f[idxConcepto] || "").toString().trim() : "";
+        const cuota = idxCuota !== -1 ? (f[idxCuota] || "").toString().trim() : "";
+        if (c && !cuota) {
+          conceptosSinCuotas.add(c);
+        }
+      });
+
+      const lista = [...conceptosSinCuotas].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+
+      if (lista.length === 0) {
+        select.innerHTML = `<option value="">No hay conceptos sin cuotas registrados</option>`;
+      } else {
+        select.innerHTML = lista.map(c => `<option value="${c.replace(/"/g, '&quot;')}">${c}</option>`).join("");
+      }
+
+      actualizarAnosDisponiblesConsultaSin();
+
+      if (areaResultado) areaResultado.classList.add("hidden");
+      document.body.classList.add("overflow-hidden");
+      modal.classList.remove("hidden");
+    }
+
+    function actualizarAnosDisponiblesConsultaSin() {
+      const selectConcepto = document.getElementById("select-consulta-sin-concepto");
+      const selectAno = document.getElementById("select-consulta-sin-ano");
+      if (!selectConcepto || !selectAno) return;
+
+      const concepto = (selectConcepto.value || "").trim().toUpperCase();
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+
+      const anosSet = new Set();
+      if (idxConcepto !== -1 && idxAno !== -1 && concepto) {
+        filasGlobales.forEach(f => {
+          if ((f[idxConcepto] || "").toString().trim().toUpperCase() === concepto) {
+            const a = (f[idxAno] || "").toString().trim();
+            if (a) anosSet.add(a);
+          }
+        });
+      }
+
+      const anos = [...anosSet].sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+      let html = `<option value="todos" selected>Todos los años</option>`;
+      anos.forEach(a => {
+        html += `<option value="${a}">Año ${a}</option>`;
+      });
+
+      selectAno.innerHTML = html;
+    }
+
+    function cerrarModalConsultaSinCuotas() {
+      const modal = document.getElementById("modal-consulta-sin-cuotas");
+      if (modal) modal.classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+    }
+
+    function ejecutarConsultaSinCuotas() {
+      const select = document.getElementById("select-consulta-sin-concepto");
+      const selectAno = document.getElementById("select-consulta-sin-ano");
+      const area = document.getElementById("resultado-consulta-sin-cuotas");
+      if (!select || !area) return;
+
+      const conceptoBuscado = select.value.trim();
+      const anoFiltro = selectAno ? selectAno.value : "todos";
+      if (!conceptoBuscado) return;
+
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
+      const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+      const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
+      const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
+      const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+      const idxPeriodicidad = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
+
+      const todasFilas = filasGlobales.filter(f => (f[idxConcepto] || "").toString().trim().toUpperCase() === conceptoBuscado.toUpperCase());
+      if (todasFilas.length === 0) {
+        area.innerHTML = `<div class="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">No se encontraron datos para este concepto.</div>`;
+        area.classList.remove("hidden");
+        return;
+      }
+
+      const parseCant = (f) => {
+        if (idxCant === -1) return 0;
+        const raw = (f[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
+        return parseFloat(raw) || 0;
+      };
+
+      const ordenarCronologico = (a, b) => {
+        const anoA = idxAno !== -1 ? parseInt(a[idxAno], 10) || 0 : 0;
+        const anoB = idxAno !== -1 ? parseInt(b[idxAno], 10) || 0 : 0;
+        if (anoA !== anoB) return anoA - anoB;
+        const mesA = idxMes !== -1 ? MESES_LISTA.indexOf((a[idxMes] || "").toString().trim().toUpperCase()) : 0;
+        const mesB = idxMes !== -1 ? MESES_LISTA.indexOf((b[idxMes] || "").toString().trim().toUpperCase()) : 0;
+        if (mesA !== mesB) return mesA - mesB;
+        const diaA = idxDia !== -1 ? parseInt(a[idxDia], 10) || 0 : 0;
+        const diaB = idxDia !== -1 ? parseInt(b[idxDia], 10) || 0 : 0;
+        return diaA - diaB;
+      };
+
+      todasFilas.sort(ordenarCronologico);
+
+      let empresaDetectada = "";
+      let periodicidadDetectada = "";
+      let sumaImportes = 0;
+      let cuentaImportes = 0;
+      let ultimaCuotaImporte = 0;
+
+      todasFilas.forEach(f => {
+        const cVal = parseCant(f);
+        if (cVal > 0) {
+          ultimaCuotaImporte = cVal;
+          sumaImportes += cVal;
+          cuentaImportes++;
+        }
+        if (!empresaDetectada && idxEmpresa !== -1) {
+          empresaDetectada = (f[idxEmpresa] || "").toString().trim();
+        }
+        if (!periodicidadDetectada && idxPeriodicidad !== -1) {
+          const per = (f[idxPeriodicidad] || "").toString().trim();
+          if (per) periodicidadDetectada = per;
+        }
+      });
+
+      const mediaImporte = cuentaImportes > 0 ? (sumaImportes / cuentaImportes) : 0;
+      const fmt = (n) => (n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+      // Fechas de primer y último recibo registrado
+      const primeraFila = todasFilas[0];
+      const diaIni = idxDia !== -1 ? (parseInt(primeraFila[idxDia], 10) || 1) : 1;
+      const mesIniTexto = idxMes !== -1 ? (primeraFila[idxMes] || "").toString().trim().toUpperCase() : "";
+      const anoIni = idxAno !== -1 ? (primeraFila[idxAno] || "").toString().trim() : "";
+      const fechaPrimerRecibo = `${diaIni} de ${mesIniTexto.toLowerCase()} de ${anoIni}`;
+
+      const ultimaFila = todasFilas[todasFilas.length - 1];
+      const diaFin = idxDia !== -1 ? (parseInt(ultimaFila[idxDia], 10) || 1) : 1;
+      const mesFinTexto = idxMes !== -1 ? (ultimaFila[idxMes] || "").toString().trim().toUpperCase() : "";
+      const anoFin = idxAno !== -1 ? (ultimaFila[idxAno] || "").toString().trim() : "";
+      const fechaUltimoRecibo = `${diaFin} de ${mesFinTexto.toLowerCase()} de ${anoFin}`;
+
+      let html = "";
+
+      if (anoFiltro === "todos") {
+        // ================= VISTA GLOBAL (TODOS LOS AÑOS) =================
+        let totalPagadoGlobal = 0;
+        let totalPendienteGlobal = 0;
+        let recibosPagadosGlobal = 0;
+        let recibosPendientesGlobal = 0;
+        const desglosePorAno = {};
+
+        todasFilas.forEach(f => {
+          const ano = (f[idxAno] || "").toString().trim() || "Otros";
+          const esPagado = idxPagado !== -1 && (f[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+          const cVal = parseCant(f);
+
+          if (!desglosePorAno[ano]) {
+            desglosePorAno[ano] = { pagado: 0, pendiente: 0, total: 0, numPagados: 0, numTotal: 0 };
+          }
+
+          desglosePorAno[ano].total += cVal;
+          desglosePorAno[ano].numTotal++;
+
+          if (esPagado) {
+            totalPagadoGlobal += cVal;
+            recibosPagadosGlobal++;
+            desglosePorAno[ano].pagado += cVal;
+            desglosePorAno[ano].numPagados++;
+          } else {
+            totalPendienteGlobal += cVal;
+            recibosPendientesGlobal++;
+            desglosePorAno[ano].pendiente += cVal;
+          }
+        });
+
+        const totalAcumulado = totalPagadoGlobal + totalPendienteGlobal;
+        const anosOrdenados = Object.keys(desglosePorAno).sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+
+        html = `
+          <!-- Cabecera Concepto -->
+          <div class="p-4 sm:p-5 rounded-2xl bg-sky-50/70 border border-sky-200/90 space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center text-xs shadow-2xs">
+                  <i class="fa-solid fa-receipt"></i>
+                </span>
+                <div>
+                  <h4 class="text-sm font-bold text-slate-900">${conceptoBuscado}</h4>
+                  ${empresaDetectada ? `<p class="text-[11px] text-slate-500 font-medium">${empresaDetectada} · Histórico Completo</p>` : ''}
+                </div>
+              </div>
+              <span class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-sky-100 text-sky-900">
+                ${periodicidadDetectada || 'Mensual / Recurrente'}
+              </span>
+            </div>
+          </div>
+
+          <!-- Tarjetas KPI -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Total Pagado</span>
+              <p class="text-base sm:text-lg font-bold text-emerald-600 mt-1">${fmt(totalPagadoGlobal)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${recibosPagadosGlobal} recibos abonados</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600">Pendiente</span>
+              <p class="text-base sm:text-lg font-bold text-rose-600 mt-1">${fmt(totalPendienteGlobal)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${recibosPendientesGlobal} recibos por pagar</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Acumulado</span>
+              <p class="text-base sm:text-lg font-bold text-slate-900 mt-1">${fmt(totalAcumulado)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${todasFilas.length} recibos en total</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-sky-600">Último Importe</span>
+              <p class="text-base sm:text-lg font-bold text-sky-600 mt-1">${fmt(ultimaCuotaImporte)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">Media: ${fmt(mediaImporte)}</span>
+            </div>
+          </div>
+
+          <!-- Cronología primer y último recibo -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3.5 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 text-sm shrink-0">
+                <i class="fa-regular fa-calendar-check text-emerald-600"></i>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Primer recibo registrado</span>
+                <span class="text-xs font-bold text-slate-800">${fechaPrimerRecibo}</span>
+              </div>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3.5 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 text-sm shrink-0">
+                <i class="fa-regular fa-calendar-days text-sky-600"></i>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Último recibo registrado</span>
+                <span class="text-xs font-bold text-slate-800">${fechaUltimoRecibo}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resumen de cantidades por Años -->
+          <div class="space-y-2 pt-1">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-column text-sky-500"></i> Total gastado por años
+            </h5>
+            <div class="bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 overflow-hidden shadow-2xs">
+              ${anosOrdenados.map(a => {
+                const info = desglosePorAno[a];
+                return `
+                  <div class="px-4 py-2.5 flex items-center justify-between text-xs hover:bg-slate-50 transition">
+                    <div class="flex items-center gap-2.5">
+                      <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[11px]">${a}</span>
+                      <span class="text-[11px] text-slate-500">${info.numPagados} de ${info.numTotal} pagados</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      ${info.pendiente > 0 ? `<span class="text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">${fmt(info.pendiente)} pend.</span>` : ''}
+                      <span class="font-bold text-slate-900">${fmt(info.total)}</span>
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `;
+      } else {
+        // ================= VISTA FRACCIONADA POR AÑO ESPECÍFICO =================
+        const filasDelAno = todasFilas.filter(f => (f[idxAno] || "").toString().trim() === anoFiltro);
+
+        let anoTotalPagado = 0;
+        let anoTotalPendiente = 0;
+        let anoRecibosPagados = 0;
+        let anoRecibosPendientes = 0;
+
+        filasDelAno.forEach(f => {
+          const esPagado = idxPagado !== -1 && (f[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+          const cVal = parseCant(f);
+          if (esPagado) {
+            anoTotalPagado += cVal;
+            anoRecibosPagados++;
+          } else {
+            anoTotalPendiente += cVal;
+            anoRecibosPendientes++;
+          }
+        });
+
+        const anoTotal = anoTotalPagado + anoTotalPendiente;
+        const anoCompletado = anoRecibosPendientes === 0;
+
+        html = `
+          <!-- Cabecera Año -->
+          <div class="p-4 sm:p-5 rounded-2xl bg-sky-50/70 border border-sky-200/90 space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center text-xs font-bold shadow-2xs">
+                  ${anoFiltro.slice(-2)}
+                </span>
+                <div>
+                  <h4 class="text-sm font-bold text-slate-900">${conceptoBuscado} · Ejercicio ${anoFiltro}</h4>
+                  ${empresaDetectada ? `<p class="text-[11px] text-slate-500 font-medium">${empresaDetectada}</p>` : ''}
+                </div>
+              </div>
+              <span class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${anoCompletado ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                ${anoCompletado ? 'TODO PAGADO' : 'RECIBOS PENDIENTES'}
+              </span>
+            </div>
+          </div>
+
+          <!-- Tarjetas KPI del año -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Pagado en ${anoFiltro}</span>
+              <p class="text-base sm:text-lg font-bold text-emerald-600 mt-1">${fmt(anoTotalPagado)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${anoRecibosPagados} recibos abonados</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600">Pendiente en ${anoFiltro}</span>
+              <p class="text-base sm:text-lg font-bold text-rose-600 mt-1">${fmt(anoTotalPendiente)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${anoRecibosPendientes} por pagar</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total en ${anoFiltro}</span>
+              <p class="text-base sm:text-lg font-bold text-slate-900 mt-1">${fmt(anoTotal)}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${filasDelAno.length} recibos en el año</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-sky-600">Periodicidad</span>
+              <p class="text-base sm:text-lg font-bold text-sky-600 mt-1">${periodicidadDetectada || 'Mensual'}</p>
+              <span class="text-[10px] text-slate-400 font-medium">${filasDelAno.length} recibos/año</span>
+            </div>
+          </div>
+
+          <!-- Desglose mensual de este año -->
+          <div class="space-y-2 pt-1">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-list-check text-sky-500"></i> Desglose mensual de ${anoFiltro}
+            </h5>
+            <div class="bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 overflow-hidden shadow-2xs">
+        `;
+
+        filasDelAno.forEach(fila => {
+          const mes = idxMes !== -1 ? (fila[idxMes] || "").toString().trim() : "";
+          const dia = idxDia !== -1 ? (fila[idxDia] || "").toString().trim() : "";
+          const pagado = idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+          const importe = parseCant(fila);
+
+          html += `
+            <div class="px-4 py-2.5 flex items-center justify-between text-xs hover:bg-slate-50 transition">
+              <div class="flex items-center gap-3">
+                <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] ${pagado ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'} font-bold">
+                  <i class="fa-solid ${pagado ? 'fa-check' : 'fa-clock'}"></i>
+                </span>
+                <div>
+                  <span class="font-bold text-slate-800">${mes}</span>
+                  <span class="text-[11px] text-slate-400 ml-1.5">Día ${dia}</span>
+                </div>
               </div>
               <div class="text-right">
                 <span class="font-bold ${pagado ? 'text-emerald-600' : 'text-rose-600'}">${fmt(importe)}</span>
