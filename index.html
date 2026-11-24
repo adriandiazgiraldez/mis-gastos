@@ -5042,6 +5042,7 @@
       const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
       const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
       const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+      const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
 
       if (idxConcepto === -1 || idxCant === -1) {
         contenedor.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">Datos insuficientes para generar el ranking.</div>`;
@@ -5058,9 +5059,12 @@
         });
       }
 
-      // Agrupación acumulada de todos los años y meses por concepto
+      // Agrupación acumulada de todos los años y meses por concepto (solo pagados)
       const mapaTotalesConcepto = {};
       filasGlobales.forEach(f => {
+        const esPagado = idxPagado === -1 || (f[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+        if (!esPagado) return;
+
         const nombreConcepto = (f[idxConcepto] || "").toString().trim();
         if (!nombreConcepto) return;
 
