@@ -739,22 +739,26 @@
 
   <!-- ==================== MODAL CONFIRMAR ELIMINACIÓN ==================== -->
   <div id="modal-confirmar-eliminar" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-[60] hidden flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-200 w-full max-w-sm rounded-3xl shadow-xl p-6 text-center space-y-4">
-      <div class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-lg">
+    <div class="bg-white border border-slate-200 w-full max-w-md rounded-3xl shadow-xl p-6 text-center space-y-4">
+      <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center mx-auto text-xl shadow-2xs">
         <i class="fa-regular fa-trash-can"></i>
       </div>
       <div>
-        <h3 class="text-sm font-bold text-slate-900">¿Eliminar este concepto?</h3>
-        <p class="text-xs text-slate-500 mt-1">Esta acción no se puede deshacer y se borrará de la base de datos.</p>
+        <h3 class="text-sm font-bold text-slate-900">¿Eliminar este gasto?</h3>
+        <p id="texto-subtitulo-eliminar" class="text-xs text-slate-500 mt-1 leading-relaxed">Esta acción no se puede deshacer y se borrará de la base de datos.</p>
       </div>
-      <div id="contenedor-botones-eliminar" class="flex flex-col gap-2 pt-2">
-        <button type="button" id="btn-confirmar-eliminar-todas" class="hidden w-full py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition shadow-xs">
-          Eliminar todas las cuotas
+      <div id="contenedor-botones-eliminar" class="flex flex-col gap-2.5 pt-1">
+        <!-- Botón para eliminar todo el lote completo -->
+        <button type="button" id="btn-confirmar-eliminar-todas" class="hidden w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition shadow-xs active:scale-95 leading-snug text-center">
+          <!-- Texto dinámico generado por JavaScript -->
         </button>
-        <div class="flex items-center gap-2">
-          <button type="button" onclick="cerrarConfirmarEliminar()" class="flex-1 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancelar</button>
-          <button type="button" id="btn-confirmar-eliminar" class="flex-1 py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 transition">Solo esta cuota</button>
-        </div>
+        <!-- Botón para eliminar únicamente esta cuota individual -->
+        <button type="button" id="btn-confirmar-eliminar" class="w-full py-2.5 px-3 rounded-xl text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/60 transition active:scale-95">
+          Eliminar solo este concepto
+        </button>
+        <button type="button" onclick="cerrarConfirmarEliminar()" class="w-full py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition active:scale-95">
+          Cancelar
+        </button>
       </div>
     </div>
   </div>
@@ -5500,44 +5504,77 @@
       const modal = document.getElementById("modal-confirmar-eliminar");
       const btnConfirmar = document.getElementById("btn-confirmar-eliminar");
       const btnConfirmarTodas = document.getElementById("btn-confirmar-eliminar-todas");
+      const subtituloEl = document.getElementById("texto-subtitulo-eliminar");
 
       const idxId = headersGlobales.findIndex(h => h.trim().toUpperCase() === "ID");
       const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
       const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
       const idxCuota = headersGlobales.findIndex(h => h.toLowerCase().includes("cuota"));
       const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+      const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
+      const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
+      const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
 
       const filaActual = filasGlobales.find(f => (f[idxId] || "").toString() === id.toString());
       const conceptoActual = (filaActual && idxConcepto !== -1) ? (filaActual[idxConcepto] || "").toString().trim().toUpperCase() : "";
       const empresaActual = (filaActual && idxEmpresa !== -1) ? (filaActual[idxEmpresa] || "").toString().trim().toUpperCase() : "";
-      const cuotaActual = (filaActual && idxCuota !== -1) ? (filaActual[idxCuota] || "").toString().trim() : "";
       const cantActual = (filaActual && idxCant !== -1) ? (filaActual[idxCant] || "").toString().trim() : "";
 
-      // Buscar si existen otras cuotas hermanas de este mismo gasto
-      let idsRelacionados = [id.toString()];
-      const tieneCuotas = cuotaActual && cuotaActual.includes("/");
+      // Localizar todas las filas que pertenezcan a la misma serie de este concepto
+      const filasRelacionadas = [];
+      const idsRelacionados = [];
 
-      if (tieneCuotas && conceptoActual) {
+      if (conceptoActual) {
         filasGlobales.forEach(f => {
           const cFila = idxConcepto !== -1 ? (f[idxConcepto] || "").toString().trim().toUpperCase() : "";
           const empFila = idxEmpresa !== -1 ? (f[idxEmpresa] || "").toString().trim().toUpperCase() : "";
           const cantFila = idxCant !== -1 ? (f[idxCant] || "").toString().trim() : "";
           const idFila = idxId !== -1 ? (f[idxId] || "").toString() : "";
 
+          // Si coincide concepto, empresa e importe
           if (idFila && cFila === conceptoActual && empFila === empresaActual && cantFila === cantActual) {
             if (!idsRelacionados.includes(idFila)) {
               idsRelacionados.push(idFila);
+              filasRelacionadas.push(f);
             }
           }
         });
+      } else {
+        idsRelacionados.push(id.toString());
+      }
+
+      // Orden cronológico para averiguar cuál es la última cuota y su fecha de vencimiento
+      const ordenarCronologico = (a, b) => {
+        const anoA = idxAno !== -1 ? parseInt(a[idxAno], 10) || 0 : 0;
+        const anoB = idxAno !== -1 ? parseInt(b[idxAno], 10) || 0 : 0;
+        if (anoA !== anoB) return anoA - anoB;
+        const mesA = idxMes !== -1 ? MESES_LISTA.indexOf((a[idxMes] || "").toString().trim().toUpperCase()) : 0;
+        const mesB = idxMes !== -1 ? MESES_LISTA.indexOf((b[idxMes] || "").toString().trim().toUpperCase()) : 0;
+        if (mesA !== mesB) return mesA - mesB;
+        const diaA = idxDia !== -1 ? parseInt(a[idxDia], 10) || 0 : 0;
+        const diaB = idxDia !== -1 ? parseInt(b[idxDia], 10) || 0 : 0;
+        return diaA - diaB;
+      };
+
+      filasRelacionadas.sort(ordenarCronologico);
+
+      let textoFechaFin = "";
+      if (filasRelacionadas.length > 0) {
+        const ultimaFila = filasRelacionadas[filasRelacionadas.length - 1];
+        const diaFin = idxDia !== -1 ? (ultimaFila[idxDia] || "").toString().trim() : "";
+        const mesFin = idxMes !== -1 ? (ultimaFila[idxMes] || "").toString().trim().toLowerCase() : "";
+        const anoFin = idxAno !== -1 ? (ultimaFila[idxAno] || "").toString().trim() : "";
+        if (mesFin && anoFin) {
+          textoFechaFin = `${diaFin ? diaFin + " de " : ""}${mesFin} de ${anoFin}`;
+        }
       }
 
       const ejecutarBorrado = async (idsABorrar, botonPresionado) => {
         botonPresionado.disabled = true;
         btnConfirmar.disabled = true;
         if (btnConfirmarTodas) btnConfirmarTodas.disabled = true;
-        const textoOriginal = botonPresionado.textContent;
-        botonPresionado.textContent = "Eliminando...";
+        const textoOriginal = botonPresionado.innerHTML;
+        botonPresionado.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Eliminando...`;
 
         try {
           const res = await fetch(API_URL, {
@@ -5562,18 +5599,26 @@
         } finally {
           btnConfirmar.disabled = false;
           if (btnConfirmarTodas) btnConfirmarTodas.disabled = false;
-          botonPresionado.textContent = textoOriginal;
+          botonPresionado.innerHTML = textoOriginal;
         }
       };
 
+      // Si hay más de 1 mensualidad/cuota detectada, mostramos ambas alternativas
       if (idsRelacionados.length > 1) {
-        btnConfirmar.textContent = "Solo esta cuota";
-        btnConfirmarTodas.textContent = `Eliminar las ${idsRelacionados.length} cuotas`;
+        btnConfirmar.textContent = "Eliminar solo este concepto";
+        const txtFin = textoFechaFin ? ` con fecha de finalización: ${textoFechaFin}` : "";
+        btnConfirmarTodas.innerHTML = `Eliminar todas las ${idsRelacionados.length} mensualidades/cuotas relacionadas con este concepto${txtFin}`;
         btnConfirmarTodas.classList.remove("hidden");
         btnConfirmarTodas.onclick = () => ejecutarBorrado(idsRelacionados, btnConfirmarTodas);
+        if (subtituloEl) {
+          subtituloEl.textContent = `Este gasto tiene ${idsRelacionados.length} cuotas programadas. Elige si deseas borrar solo este registro o toda la serie.`;
+        }
       } else {
         btnConfirmar.textContent = "Sí, eliminar";
         btnConfirmarTodas.classList.add("hidden");
+        if (subtituloEl) {
+          subtituloEl.textContent = "Esta acción no se puede deshacer y se borrará de la base de datos.";
+        }
       }
 
       btnConfirmar.onclick = () => ejecutarBorrado([id.toString()], btnConfirmar);
@@ -5939,9 +5984,9 @@
               periodicidad: periodicidad === "Gasto Puntual" ? "Mensual" : periodicidad,
               cuota: strCuota,
               notas: document.getElementById("form-notas").value.trim(),
-              pdfBase64: k === 0 ? pdfBase64 : null,
-              imgBase64: k === 0 ? imgBase64 : null,
-              imgMime: (k === 0 && fileImg) ? fileImg.type : ""
+              pdfBase64: pdfBase64,
+              imgBase64: imgBase64,
+              imgMime: fileImg ? fileImg.type : ""
             });
           }
         }
