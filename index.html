@@ -566,34 +566,66 @@
           </div>
         </div>
 
-        <!-- Fila 3.5: Opciones de Repetición Futura (oculto en modificación o gasto puntual) -->
-        <div id="bloque-opciones-recurrencia" class="hidden p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5">
+        <!-- Fila 3.5: Finalización y Repetición Futura -->
+        <div id="bloque-opciones-recurrencia" class="hidden p-3.5 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-              <i class="fa-solid fa-arrows-rotate text-indigo-500"></i> Repetición automática futura
+              <i class="fa-solid fa-arrows-rotate text-indigo-500"></i> Finalización del Gasto
             </span>
-            <span class="text-[10px] text-slate-400 font-medium">Crea los registros futuros de este concepto</span>
+            <span class="text-[10px] text-slate-400 font-medium">Programación de cuotas periódicas</span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end">
+
+          <!-- Selector conmutador estilo cápsula -->
+          <div class="grid grid-cols-2 gap-2 bg-slate-200/70 p-1 rounded-xl text-center">
+            <label class="cursor-pointer">
+              <input type="radio" name="finalizacion-tipo-modo" id="radio-sin-fin" value="sin_fin" checked onchange="cambiarModoFinalizacion(this.value)" class="sr-only peer">
+              <div class="py-1.5 px-2 rounded-lg text-xs font-semibold text-slate-600 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-2xs transition">
+                <i class="fa-solid fa-infinity mr-1"></i>Sin fin (continuo)
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="finalizacion-tipo-modo" id="radio-con-fin" value="con_fin" onchange="cambiarModoFinalizacion(this.value)" class="sr-only peer">
+              <div class="py-1.5 px-2 rounded-lg text-xs font-semibold text-slate-600 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-2xs transition">
+                <i class="fa-regular fa-calendar-check mr-1"></i>Tiene fin / Rango
+              </div>
+            </label>
+          </div>
+
+          <!-- Sub-opción 1: Sin fin (elige años a proyectar en el futuro) -->
+          <div id="sub-bloque-sin-fin" class="flex items-center justify-between gap-3 text-xs bg-white border border-slate-200 rounded-xl p-2.5">
+            <div class="min-w-0">
+              <span class="font-bold text-slate-800 block text-[11px]">Proyección continua en el calendario:</span>
+              <span class="text-[10px] text-slate-400 block font-medium">Genera los registros automáticamente hacia el futuro</span>
+            </div>
+            <select id="form-rec-horizonte" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-indigo-600 focus:outline-none">
+              <option value="1">1 año vista</option>
+              <option value="2">2 años vista</option>
+              <option value="3">3 años vista</option>
+              <option value="5" selected>5 años vista</option>
+              <option value="10">10 años vista</option>
+            </select>
+          </div>
+
+          <!-- Sub-opción 2: Rango definido (Por cuotas o Por fecha final) -->
+          <div id="sub-bloque-con-fin" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end">
             <div>
-              <label class="block text-[10px] font-semibold text-slate-500 mb-1">Tipo de finalización</label>
+              <label class="block text-[10px] font-semibold text-slate-500 mb-1">Criterio de finalización</label>
               <select id="form-tipo-fin-recurrencia" onchange="cambiarTipoFinRecurrencia()" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400">
-                <option value="indeterminado">Indeterminado (1 año vista)</option>
+                <option value="fecha" selected>Por fecha / mes fin</option>
                 <option value="cuotas">Por total de cuotas</option>
-                <option value="fecha">Por fecha fin</option>
               </select>
             </div>
             <div id="campo-rec-cuotas" class="hidden">
               <label class="block text-[10px] font-semibold text-slate-500 mb-1">Total de cuotas</label>
               <input type="number" id="form-total-cuotas" min="2" max="360" placeholder="Ej. 12, 24, 60..." class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400">
             </div>
-            <div id="campo-rec-fecha" class="hidden grid grid-cols-2 gap-1.5">
+            <div id="campo-rec-fecha" class="grid grid-cols-2 gap-1.5">
               <div>
                 <label class="block text-[10px] font-semibold text-slate-500 mb-1">Mes fin</label>
                 <select id="form-rec-mes-fin" class="w-full bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-[11px] focus:outline-none">
                   <option>ENERO</option><option>FEBRERO</option><option>MARZO</option><option>ABRIL</option>
                   <option>MAYO</option><option>JUNIO</option><option>JULIO</option><option>AGOSTO</option>
-                  <option>SEPTIEMBRE</option><option>OCTUBRE</option><option>NOVIEMBRE</option><option>DICIEMBRE</option>
+                  <option>SEPTIEMBRE</option><option>OCTUBRE</option><option>NOVIEMBRE</option><option selected>DICIEMBRE</option>
                 </select>
               </div>
               <div>
@@ -5730,12 +5762,25 @@
       }
     }
 
+    function cambiarModoFinalizacion(modo) {
+      const blqSin = document.getElementById("sub-bloque-sin-fin");
+      const blqCon = document.getElementById("sub-bloque-con-fin");
+      if (modo === "sin_fin") {
+        if (blqSin) blqSin.classList.remove("hidden");
+        if (blqCon) blqCon.classList.add("hidden");
+      } else {
+        if (blqSin) blqSin.classList.add("hidden");
+        if (blqCon) blqCon.classList.remove("hidden");
+        cambiarTipoFinRecurrencia();
+      }
+    }
+
     function cambiarTipoFinRecurrencia() {
-      const tipo = document.getElementById("form-tipo-fin-recurrencia").value;
+      const tipo = document.getElementById("form-tipo-fin-recurrencia")?.value || "fecha";
       const cCuotas = document.getElementById("campo-rec-cuotas");
       const cFecha = document.getElementById("campo-rec-fecha");
-      cCuotas.classList.toggle("hidden", tipo !== "cuotas");
-      cFecha.classList.toggle("hidden", tipo !== "fecha");
+      if (cCuotas) cCuotas.classList.toggle("hidden", tipo !== "cuotas");
+      if (cFecha) cFecha.classList.toggle("hidden", tipo !== "fecha");
     }
 
     function abrirModalGasto() {
@@ -5755,6 +5800,11 @@
       document.getElementById("texto-archivo-pdf").textContent = "Adjuntar PDF";
       document.getElementById("texto-archivo-img").textContent = "Hacer foto o elegir";
       document.getElementById("bloque-opciones-recurrencia").classList.add("hidden");
+      const radioSinFin = document.getElementById("radio-sin-fin");
+      if (radioSinFin) {
+        radioSinFin.checked = true;
+        cambiarModoFinalizacion("sin_fin");
+      }
       seleccionarEtiquetaColor("");
       cambiarTogglePagado(false);
       actualizarCamposRecurrencia();
@@ -5834,25 +5884,31 @@
         }
 
         let totalIteraciones = 1;
-        const tipoFin = document.getElementById("form-tipo-fin-recurrencia")?.value;
+        const modoFin = document.querySelector('input[name="finalizacion-tipo-modo"]:checked')?.value || "sin_fin";
+        const tipoFin = document.getElementById("form-tipo-fin-recurrencia")?.value || "fecha";
         const totalCuotasInput = parseInt(document.getElementById("form-total-cuotas")?.value, 10);
 
         if (cuotaTotalDenominador && cuotaTotalDenominador >= cuotaNumActual) {
           totalIteraciones = cuotaTotalDenominador - cuotaNumActual + 1;
-        } else if (tipoFin === "cuotas" && totalCuotasInput && totalCuotasInput >= cuotaNumActual) {
-          cuotaTotalDenominador = totalCuotasInput;
-          totalIteraciones = totalCuotasInput - cuotaNumActual + 1;
         } else if (periodicidad !== "Gasto Puntual") {
-          if (tipoFin === "indeterminado" || !tipoFin) {
-            totalIteraciones = Math.floor(12 / pasoMeses);
-          } else if (tipoFin === "fecha") {
-            const mesFinTexto = document.getElementById("form-rec-mes-fin").value;
-            const anoFinNum = parseInt(document.getElementById("form-rec-ano-fin").value, 10);
-            const idxMesIni = MESES_LISTA.indexOf(mesInicialTexto);
-            const idxMesFin = MESES_LISTA.indexOf(mesFinTexto);
-            const diffMeses = ((anoFinNum - anoInicialNum) * 12) + (idxMesFin - idxMesIni);
-            if (diffMeses >= 0) {
-              totalIteraciones = Math.floor(diffMeses / pasoMeses) + 1;
+          if (modoFin === "sin_fin") {
+            // Sin finalización: se proyecta según el horizonte de años seleccionado (1, 2, 3, 5 o 10 años)
+            const anosProyeccion = parseInt(document.getElementById("form-rec-horizonte")?.value, 10) || 5;
+            totalIteraciones = Math.floor((anosProyeccion * 12) / pasoMeses);
+          } else {
+            // Con finalización definida
+            if (tipoFin === "cuotas" && totalCuotasInput && totalCuotasInput >= cuotaNumActual) {
+              cuotaTotalDenominador = totalCuotasInput;
+              totalIteraciones = totalCuotasInput - cuotaNumActual + 1;
+            } else if (tipoFin === "fecha") {
+              const mesFinTexto = document.getElementById("form-rec-mes-fin").value;
+              const anoFinNum = parseInt(document.getElementById("form-rec-ano-fin").value, 10);
+              const idxMesIni = MESES_LISTA.indexOf(mesInicialTexto);
+              const idxMesFin = MESES_LISTA.indexOf(mesFinTexto);
+              const diffMeses = ((anoFinNum - anoInicialNum) * 12) + (idxMesFin - idxMesIni);
+              if (diffMeses >= 0) {
+                totalIteraciones = Math.floor(diffMeses / pasoMeses) + 1;
+              }
             }
           }
         }
