@@ -560,7 +560,7 @@
               <option value="Anual">Anual (cada año)</option>
             </select>
           </div>
-          <div>
+          <div id="contenedor-form-cuota">
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Nº Cuota inicial</label>
             <input type="text" id="form-cuota" placeholder="Ej. 1 o 1/12" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
@@ -636,49 +636,49 @@
           </div>
         </div>
 
-        <!-- Fila 4: Icono / Web y Notas en 2 columnas -->
+        <!-- Fila 4: Web Favicon a la izquierda y PDF + Captura a la derecha -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
-          <div class="space-y-1.5">
-            <label class="block text-[11px] font-semibold text-slate-500">Icono / Web</label>
-            <select id="form-icono" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
-              <option value="">Automático (según concepto)</option>
-              <option value="fa-solid fa-car">🚗 Coche / Cochera</option>
-              <option value="fa-solid fa-house">🏠 Casa / Comunidad</option>
-              <option value="fa-solid fa-bolt">⚡ Luz / Electricidad</option>
-              <option value="fa-solid fa-droplet">💧 Agua</option>
-              <option value="fa-solid fa-fire">🔥 Gas</option>
-              <option value="fa-solid fa-wifi">📶 Internet / Teléfono</option>
-              <option value="fa-solid fa-shield-halved">🛡️ Seguro</option>
-              <option value="fa-solid fa-landmark">🏛️ Banco / Préstamo / Impuesto</option>
-              <option value="fa-solid fa-cart-shopping">🛒 Compras / Supermercado</option>
-              <option value="fa-solid fa-heart-pulse">❤️ Salud / Médico</option>
-              <option value="fa-solid fa-wrench">🔧 Mantenimiento / Taller</option>
-            </select>
-            <input type="text" id="form-url-icono" placeholder="O web (ej. endesa.com)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
-          </div>
           <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Notas</label>
-            <textarea id="form-notas" rows="3" placeholder="Observaciones opcionales..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white resize-none"></textarea>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Web Favicon (opcional)</label>
+            <div class="relative">
+              <i class="fa-solid fa-globe absolute left-3 top-2.5 text-xs text-slate-400"></i>
+              <input type="text" id="form-url-icono" placeholder="ej. endesa.com, apple.com..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1">Si se deja vacío, se detectará automáticamente por el nombre.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500 mb-1">PDF</label>
+              <label class="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-slate-400 rounded-xl py-2 px-2.5 cursor-pointer bg-slate-50/60 transition group">
+                <i class="fa-regular fa-file-pdf text-rose-500 text-sm group-hover:scale-110 transition-transform"></i>
+                <span id="texto-archivo-pdf" class="text-[11px] text-slate-600 truncate font-medium">Adjuntar PDF</span>
+                <input type="file" id="form-file-pdf" accept="application/pdf" onchange="mostrarNombreArchivo('form-file-pdf', 'texto-archivo-pdf', 'PDF adjuntado')" class="hidden">
+              </label>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500 mb-1">Captura</label>
+              <label class="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-slate-400 rounded-xl py-2 px-2.5 cursor-pointer bg-slate-50/60 transition group">
+                <i class="fa-solid fa-camera text-sky-500 text-sm group-hover:scale-110 transition-transform"></i>
+                <span id="texto-archivo-img" class="text-[11px] text-slate-600 truncate font-medium">Hacer foto</span>
+                <input type="file" id="form-file-img" accept="image/*" onchange="mostrarNombreArchivo('form-file-img', 'texto-archivo-img', 'Imagen adjuntada')" class="hidden">
+              </label>
+            </div>
           </div>
         </div>
 
-        <!-- Fila 5: Adjuntar PDF y Captura -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">PDF</label>
-            <label class="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-slate-400 rounded-xl py-2 px-3 cursor-pointer bg-slate-50/60 transition group">
-              <i class="fa-regular fa-file-pdf text-rose-500 text-sm group-hover:scale-110 transition-transform"></i>
-              <span id="texto-archivo-pdf" class="text-[11px] text-slate-600 truncate font-medium">Adjuntar PDF</span>
-              <input type="file" id="form-file-pdf" accept="application/pdf" onchange="mostrarNombreArchivo('form-file-pdf', 'texto-archivo-pdf', 'PDF adjuntado')" class="hidden">
-            </label>
+        <!-- Fila 5: Notas a pantalla completa con tirador para expandir manualmente -->
+        <div class="pt-1">
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-[11px] font-semibold text-slate-500">Notas</label>
+            <span class="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+            </span>
           </div>
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Captura</label>
-            <label class="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-slate-400 rounded-xl py-2 px-3 cursor-pointer bg-slate-50/60 transition group">
-              <i class="fa-solid fa-camera text-sky-500 text-sm group-hover:scale-110 transition-transform"></i>
-              <span id="texto-archivo-img" class="text-[11px] text-slate-600 truncate font-medium">Hacer foto o elegir</span>
-              <input type="file" id="form-file-img" accept="image/*" onchange="mostrarNombreArchivo('form-file-img', 'texto-archivo-img', 'Imagen adjuntada')" class="hidden">
-            </label>
+          <div class="relative">
+            <textarea id="form-notas" rows="3" placeholder="Observaciones opcionales..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 pr-6 text-xs focus:outline-none focus:border-slate-400 focus:bg-white resize-y min-h-[64px] max-h-56"></textarea>
+            <!-- Indicador visual de esquina expandible -->
+            <div class="pointer-events-none absolute right-2 bottom-2 text-slate-400/80">
+              <i class="fa-solid fa-grip-lines text-[10px] rotate-[-45deg]"></i>
+            </div>
           </div>
         </div>
 
@@ -5479,12 +5479,13 @@
       document.getElementById("form-notas").value = getVal("notas");
       const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
       const guardado = getVal("favicon") || iconosGuardados[getVal("concepto").toUpperCase()] || "";
-      document.getElementById("form-icono").value = guardado.startsWith("url:") ? "" : guardado;
       document.getElementById("form-url-icono").value = guardado.startsWith("url:") ? guardado.slice(4) : "";
 
       const estaPagado = getVal("pagado").toUpperCase() === "SI";
       cambiarTogglePagado(estaPagado);
       document.getElementById("bloque-opciones-recurrencia").classList.add("hidden");
+      const contCuotaEdit = document.getElementById("contenedor-form-cuota");
+      if (contCuotaEdit) contCuotaEdit.classList.remove("hidden");
       const valColorOriginal = (getVal("etiqueta") || getVal("color") || "").toLowerCase().trim();
       const mapaTraduccion = {
         "yellow": "amarillo",
@@ -5704,7 +5705,11 @@
       document.getElementById("form-concepto").value = valor;
       document.getElementById("dropdown-conceptos").classList.add("hidden");
       const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
-      document.getElementById("form-icono").value = iconosGuardados[valor.toUpperCase()] || "";
+      const favGuardado = iconosGuardados[valor.toUpperCase()] || "";
+      const inputUrl = document.getElementById("form-url-icono");
+      if (inputUrl) {
+        inputUrl.value = favGuardado.startsWith("url:") ? favGuardado.slice(4) : "";
+      }
     }
 
     function mostrarDropdownEmpresas() {
@@ -5799,6 +5804,18 @@
       const per = document.getElementById("form-periodicidad").value;
       const esEdicion = !!document.getElementById("form-id").value;
       const bloque = document.getElementById("bloque-opciones-recurrencia");
+      const contCuota = document.getElementById("contenedor-form-cuota");
+
+      // Si es diferente a "Gasto Puntual", ocultar Nº Cuota inicial para no confundir
+      if (contCuota) {
+        if (per !== "Gasto Puntual") {
+          contCuota.classList.add("hidden");
+          if (!esEdicion) document.getElementById("form-cuota").value = "";
+        } else {
+          contCuota.classList.remove("hidden");
+        }
+      }
+
       if (esEdicion || per === "Gasto Puntual") {
         bloque.classList.add("hidden");
       } else {
@@ -5838,7 +5855,8 @@
       document.getElementById("form-ano").value = document.getElementById("filtro-ano")?.value || ahora.getFullYear().toString();
       document.getElementById("form-periodicidad").value = "Gasto Puntual";
       document.getElementById("form-cuota").value = "";
-      document.getElementById("form-icono").value = "";
+      const contCuotaInit = document.getElementById("contenedor-form-cuota");
+      if (contCuotaInit) contCuotaInit.classList.remove("hidden");
       document.getElementById("form-url-icono").value = "";
       document.getElementById("form-file-pdf").value = "";
       document.getElementById("form-file-img").value = "";
@@ -5869,16 +5887,12 @@
 
       const conceptoGuardar = document.getElementById("form-concepto").value.trim();
       const urlRaw = (document.getElementById("form-url-icono").value || "").trim();
-      const iconoElegido = document.getElementById("form-icono").value;
       const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
 
       let valorFavicon = "";
       if (urlRaw) {
         const dominioLimpio = urlRaw.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0];
         valorFavicon = "url:" + dominioLimpio;
-        iconosGuardados[conceptoGuardar.toUpperCase()] = valorFavicon;
-      } else if (iconoElegido) {
-        valorFavicon = iconoElegido;
         iconosGuardados[conceptoGuardar.toUpperCase()] = valorFavicon;
       } else {
         delete iconosGuardados[conceptoGuardar.toUpperCase()];
