@@ -475,7 +475,115 @@
           </div>
         </section>
 
-        <!-- VISTA DINÁMICA PARA OTRAS PESTAÑAS (COMBUSTIBLE, MANTENIMIENTOS, SEGUROS, ETC.) -->
+        <!-- VISTA DASHBOARD: COMBUSTIBLE -->
+        <section id="vista-combustible" class="oculto space-y-6">
+          <!-- Tarjetas KPI Resumen -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total Histórico</span>
+              <p id="stat-comb-historico" class="text-2xl font-bold text-slate-900 mt-1">0,00 €</p>
+              <span id="sub-comb-repostajes" class="text-[10px] text-slate-400">0 repostajes</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-amber-600">Total Año</span>
+                <select id="filtro-ano-combustible" onchange="cambiarAnoCombustible(this.value)" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-xs font-bold text-amber-700 focus:outline-none"></select>
+              </div>
+              <p id="stat-comb-ano" class="text-2xl font-bold text-amber-600 mt-1">0,00 €</p>
+              <span id="sub-comb-ano-repostajes" class="text-[10px] text-slate-400">0 repostajes en el año</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">Media Mensual</span>
+              <p id="stat-comb-media-mes" class="text-2xl font-bold text-emerald-600 mt-1">0,00 €</p>
+              <span class="text-[10px] text-slate-400">Promedio del año seleccionado</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">Media por Repostaje</span>
+              <p id="stat-comb-media-rep" class="text-2xl font-bold text-indigo-600 mt-1">0,00 €</p>
+              <span class="text-[10px] text-slate-400">Importe medio por ticket</span>
+            </div>
+          </div>
+
+          <!-- Gráficas de Evolución: Años y Meses -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <i class="fa-solid fa-chart-column text-amber-500"></i> Evolución por Años
+                </h3>
+                <span class="text-[10px] text-slate-400 font-medium">Clic en una barra para filtrar</span>
+              </div>
+              <div class="h-60 relative">
+                <canvas id="grafico-comb-anos"></canvas>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <i class="fa-solid fa-chart-line text-sky-500"></i> Evolución Mensual <span id="label-comb-ano" class="text-amber-600 font-bold ml-1"></span>
+                </h3>
+                <span class="text-[10px] text-slate-400 font-medium">Gasto mes a mes</span>
+              </div>
+              <div class="h-60 relative">
+                <canvas id="grafico-comb-meses"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desglose por Vehículo y por Tipo de Combustible -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Por Vehículo -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <i class="fa-solid fa-car-side text-indigo-500"></i> Gasto por Vehículo <span id="label-comb-veh-ano" class="text-slate-400 font-semibold"></span>
+                </h3>
+              </div>
+              <div class="h-44 relative">
+                <canvas id="grafico-comb-vehiculos"></canvas>
+              </div>
+              <div id="resumen-comb-vehiculos" class="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden"></div>
+            </div>
+
+            <!-- Por Combustible -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <i class="fa-solid fa-gas-pump text-emerald-500"></i> Gasto por Combustible <span id="label-comb-tipo-ano" class="text-slate-400 font-semibold"></span>
+                </h3>
+              </div>
+              <div class="h-44 relative">
+                <canvas id="grafico-comb-tipos"></canvas>
+              </div>
+              <div id="resumen-comb-tipos" class="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden"></div>
+            </div>
+          </div>
+
+          <!-- Desplegable opcional para ver los últimos repostajes -->
+          <div class="bg-white border border-slate-200/80 rounded-2xl shadow-2xs overflow-hidden">
+            <button type="button" onclick="toggleHistorialCombustible()" class="w-full p-4 flex items-center justify-between bg-slate-50/70 hover:bg-slate-100/70 transition text-left">
+              <div class="flex items-center gap-2.5">
+                <i id="chevron-historial-comb" class="fa-solid fa-chevron-right text-xs text-slate-500 transition-transform"></i>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Historial de Repostajes</span>
+              </div>
+              <span id="contador-comb-historial" class="text-xs text-slate-400 font-medium">0 registros</span>
+            </button>
+            <div id="bloque-historial-comb" class="hidden border-t border-slate-100">
+              <div class="p-3.5 border-b border-slate-100">
+                <div class="relative max-w-md">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-xs text-slate-400"></i>
+                  <input type="text" id="buscador-comb-historial" oninput="filtrarHistorialCombustible()" placeholder="Buscar vehículo, combustible, mes..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 focus:bg-white transition">
+                </div>
+              </div>
+              <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <table id="tabla-comb-historial" class="w-full text-left text-xs text-slate-700"></table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VISTA DINÁMICA PARA OTRAS PESTAÑAS (MANTENIMIENTOS, SEGUROS, ETC.) -->
         <section id="vista-en-construccion" class="oculto space-y-4">
           <div class="bg-white border border-slate-200/80 rounded-2xl shadow-2xs overflow-hidden">
             <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-3">
@@ -2200,7 +2308,11 @@
         } else {
           headersSeccionActual = json.headers || [];
           filasSeccionActual = json.rows || [];
-          filtrarTablaDinamica();
+          if (seccionActualId === "combustible") {
+            renderizarDashboardCombustible();
+          } else {
+            filtrarTablaDinamica();
+          }
         }
 
       } catch (err) {
@@ -5338,6 +5450,8 @@
       if (vistaConsultasEl) vistaConsultasEl.classList.add("oculto");
       const vistaAplazadosEl = document.getElementById("vista-gastos-aplazados");
       if (vistaAplazadosEl) vistaAplazadosEl.classList.add("oculto");
+      const vistaCombEl = document.getElementById("vista-combustible");
+      if (vistaCombEl) vistaCombEl.classList.add("oculto");
 
       if (id === "gastos-mensuales") {
         document.getElementById("vista-gastos-mensuales").classList.remove("oculto");
@@ -5361,6 +5475,11 @@
         document.getElementById("vista-en-construccion").classList.add("oculto");
         if (vistaAplazadosEl) vistaAplazadosEl.classList.remove("oculto");
         filtrarGastosAplazados();
+      } else if (id === "combustible") {
+        document.getElementById("vista-gastos-mensuales").classList.add("oculto");
+        document.getElementById("vista-en-construccion").classList.add("oculto");
+        if (vistaCombEl) vistaCombEl.classList.remove("oculto");
+        cargarDatos(tokenActual, false, nombreHojaSheet);
       } else {
         document.getElementById("vista-gastos-mensuales").classList.add("oculto");
         document.getElementById("vista-en-construccion").classList.remove("oculto");
@@ -7187,6 +7306,302 @@
       localStorage.setItem("mis_gastos_vehiculos", JSON.stringify(lista));
       renderizarListaGestionVehiculos();
       renderizarBotonesVehiculos();
+    }
+
+    /* ==================== DASHBOARD COMBUSTIBLE ==================== */
+    let anoCombustibleSel = null;
+    let chartCombAnos = null;
+    let chartCombMeses = null;
+    let chartCombVehiculos = null;
+    let chartCombTipos = null;
+
+    function cambiarAnoCombustible(nuevoAno) {
+      anoCombustibleSel = nuevoAno;
+      renderizarDashboardCombustible();
+    }
+
+    function toggleHistorialCombustible() {
+      const bloque = document.getElementById("bloque-historial-comb");
+      const chevron = document.getElementById("chevron-historial-comb");
+      if (!bloque) return;
+      bloque.classList.toggle("hidden");
+      if (chevron) chevron.classList.toggle("rotate-90");
+    }
+
+    function renderizarDashboardCombustible() {
+      const idxVeh = headersSeccionActual.findIndex(h => h.toLowerCase().includes("veh") || h.toLowerCase().includes("concepto"));
+      const idxComb = headersSeccionActual.findIndex(h => h.toLowerCase().includes("combustible") || h.toLowerCase().includes("empresa"));
+      const idxCant = headersSeccionActual.findIndex(h => h.toLowerCase().includes("cantidad"));
+      const idxMes = headersSeccionActual.findIndex(h => h.toLowerCase().includes("mes"));
+      const idxAno = headersSeccionActual.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+
+      if (idxCant === -1 || idxAno === -1) return;
+
+      const parseCant = (f) => {
+        const raw = (f[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
+        return parseFloat(raw) || 0;
+      };
+
+      const anosDisponibles = [...new Set(filasSeccionActual.map(f => (f[idxAno] || "").toString().trim()).filter(Boolean))]
+        .sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+
+      const ahoraAno = new Date().getFullYear().toString();
+      if (!anoCombustibleSel || !anosDisponibles.includes(anoCombustibleSel)) {
+        anoCombustibleSel = anosDisponibles.includes(ahoraAno) ? ahoraAno : (anosDisponibles[0] || ahoraAno);
+      }
+
+      const selAno = document.getElementById("filtro-ano-combustible");
+      if (selAno) {
+        selAno.innerHTML = anosDisponibles.map(a => `<option value="${a}" ${a === anoCombustibleSel ? "selected" : ""}>${a}</option>`).join("");
+      }
+
+      let totalHistorico = 0;
+      let totalAno = 0;
+      let repAno = 0;
+      const sumaPorAno = {};
+      const sumaPorMes = {};
+      const sumaPorVehiculo = {};
+      const countPorVehiculo = {};
+      const sumaPorTipo = {};
+      const countPorTipo = {};
+
+      anosDisponibles.forEach(a => sumaPorAno[a] = 0);
+      MESES_LISTA.forEach(m => sumaPorMes[m] = 0);
+
+      filasSeccionActual.forEach(f => {
+        const c = parseCant(f);
+        const a = (f[idxAno] || "").toString().trim();
+        const m = idxMes !== -1 ? (f[idxMes] || "").toString().trim().toUpperCase() : "";
+        const v = idxVeh !== -1 ? (f[idxVeh] || "Otros").toString().trim() : "Otros";
+        const t = idxComb !== -1 ? (f[idxComb] || "Otros").toString().trim() : "Otros";
+
+        totalHistorico += c;
+        if (sumaPorAno[a] !== undefined) sumaPorAno[a] += c;
+
+        if (a === anoCombustibleSel) {
+          totalAno += c;
+          repAno++;
+          if (sumaPorMes[m] !== undefined) sumaPorMes[m] += c;
+
+          sumaPorVehiculo[v] = (sumaPorVehiculo[v] || 0) + c;
+          countPorVehiculo[v] = (countPorVehiculo[v] || 0) + 1;
+
+          sumaPorTipo[t] = (sumaPorTipo[t] || 0) + c;
+          countPorTipo[t] = (countPorTipo[t] || 0) + 1;
+        }
+      });
+
+      const mesesConGasto = MESES_LISTA.filter(m => sumaPorMes[m] > 0).length || 1;
+      const mediaMes = totalAno / mesesConGasto;
+      const mediaRep = repAno > 0 ? (totalAno / repAno) : 0;
+      const fmt = (n) => (n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+      document.getElementById("stat-comb-historico").textContent = fmt(totalHistorico);
+      document.getElementById("sub-comb-repostajes").textContent = `${filasSeccionActual.length} repostajes totales`;
+      document.getElementById("stat-comb-ano").textContent = fmt(totalAno);
+      document.getElementById("sub-comb-ano-repostajes").textContent = `${repAno} repostajes en ${anoCombustibleSel}`;
+      document.getElementById("stat-comb-media-mes").textContent = fmt(mediaMes);
+      document.getElementById("stat-comb-media-rep").textContent = fmt(mediaRep);
+
+      document.getElementById("label-comb-ano").textContent = `(${anoCombustibleSel})`;
+      document.getElementById("label-comb-veh-ano").textContent = `(${anoCombustibleSel})`;
+      document.getElementById("label-comb-tipo-ano").textContent = `(${anoCombustibleSel})`;
+
+      // Listado resumen por Vehículo
+      const vehOrdenados = Object.keys(sumaPorVehiculo).sort((a, b) => sumaPorVehiculo[b] - sumaPorVehiculo[a]);
+      document.getElementById("resumen-comb-vehiculos").innerHTML = vehOrdenados.length
+        ? vehOrdenados.map(v => {
+            const pct = totalAno > 0 ? Math.round((sumaPorVehiculo[v] / totalAno) * 100) : 0;
+            return `<div class="px-3.5 py-2.5 flex items-center justify-between text-xs hover:bg-slate-50">
+              <div class="min-w-0">
+                <span class="font-bold text-slate-800 block truncate">${v}</span>
+                <span class="text-[10px] text-slate-400">${countPorVehiculo[v]} repostajes · ${pct}%</span>
+              </div>
+              <span class="font-bold text-slate-900 whitespace-nowrap">${fmt(sumaPorVehiculo[v])}</span>
+            </div>`;
+          }).join("")
+        : `<div class="p-4 text-center text-xs text-slate-400">Sin datos en ${anoCombustibleSel}</div>`;
+
+      // Listado resumen por Combustible
+      const tiposOrdenados = Object.keys(sumaPorTipo).sort((a, b) => sumaPorTipo[b] - sumaPorTipo[a]);
+      document.getElementById("resumen-comb-tipos").innerHTML = tiposOrdenados.length
+        ? tiposOrdenados.map(t => {
+            const pct = totalAno > 0 ? Math.round((sumaPorTipo[t] / totalAno) * 100) : 0;
+            return `<div class="px-3.5 py-2.5 flex items-center justify-between text-xs hover:bg-slate-50">
+              <div class="min-w-0">
+                <span class="font-bold text-slate-800 block truncate">${t}</span>
+                <span class="text-[10px] text-slate-400">${countPorTipo[t]} repostajes · ${pct}%</span>
+              </div>
+              <span class="font-bold text-slate-900 whitespace-nowrap">${fmt(sumaPorTipo[t])}</span>
+            </div>`;
+          }).join("")
+        : `<div class="p-4 text-center text-xs text-slate-400">Sin datos en ${anoCombustibleSel}</div>`;
+
+      dibujarGraficosCombustible(anosDisponibles, sumaPorAno, sumaPorMes, vehOrdenados, sumaPorVehiculo, tiposOrdenados, sumaPorTipo);
+      filtrarHistorialCombustible();
+    }
+
+    function dibujarGraficosCombustible(anos, sumaPorAno, sumaPorMes, vehs, sumaVeh, tipos, sumaTipo) {
+      if (typeof Chart === "undefined") return;
+
+      const colorVehiculo = (nombre) => {
+        const n = (nombre || "").toUpperCase();
+        if (n.includes("MERCEDES")) return "#f59e0b"; // Dorado
+        if (n.includes("SEAT") || n.includes("LEON")) return "#64748b"; // Gris
+        if (n.includes("MOTO") || n.includes("KYMCO")) return "#0ea5e9"; // Azul
+        return "#4f46e5";
+      };
+
+      const colorCombustible = (tipo) => {
+        const t = (tipo || "").toLowerCase();
+        if (t.includes("diésel") || t.includes("diesel")) return "#f59e0b"; // Dorado
+        if (t.includes("gasolina")) return "#10b981"; // Verde
+        if (t.includes("eléctrico") || t.includes("electrico")) return "#0ea5e9"; // Azul
+        return "#64748b";
+      };
+
+      // 1. Años
+      const anosCron = [...anos].reverse();
+      const datosAnos = anosCron.map(a => sumaPorAno[a] || 0);
+      const coloresAnos = anosCron.map(a => a === anoCombustibleSel ? "#d97706" : "#cbd5e1");
+
+      const canvasAnos = document.getElementById("grafico-comb-anos");
+      if (canvasAnos) {
+        if (chartCombAnos) {
+          chartCombAnos.data.labels = anosCron;
+          chartCombAnos.data.datasets[0].data = datosAnos;
+          chartCombAnos.data.datasets[0].backgroundColor = coloresAnos;
+          chartCombAnos.update("none");
+        } else {
+          chartCombAnos = new Chart(canvasAnos.getContext("2d"), {
+            type: "bar",
+            data: {
+              labels: anosCron,
+              datasets: [{ data: datosAnos, backgroundColor: coloresAnos, borderRadius: 8, borderSkipped: false }]
+            },
+            options: {
+              animation: false,
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${(c.parsed.y || 0).toFixed(2)} €` } } },
+              scales: { y: { beginAtZero: true, grid: { color: "#f1f5f9" }, ticks: { font: { size: 10 } } }, x: { grid: { display: false }, ticks: { font: { size: 11, weight: "bold" } } } },
+              onClick: (_, el) => { if (el.length) cambiarAnoCombustible(anosCron[el[0].index]); }
+            }
+          });
+        }
+      }
+
+      // 2. Meses
+      const labelsMeses = MESES_LISTA.map(m => m.slice(0, 3));
+      const datosMeses = MESES_LISTA.map(m => sumaPorMes[m] || 0);
+
+      const canvasMeses = document.getElementById("grafico-comb-meses");
+      if (canvasMeses) {
+        if (chartCombMeses) {
+          chartCombMeses.data.labels = labelsMeses;
+          chartCombMeses.data.datasets[0].data = datosMeses;
+          chartCombMeses.update("none");
+        } else {
+          chartCombMeses = new Chart(canvasMeses.getContext("2d"), {
+            type: "line",
+            data: {
+              labels: labelsMeses,
+              datasets: [{
+                data: datosMeses,
+                borderColor: "#0284c7",
+                backgroundColor: "rgba(2, 132, 199, 0.12)",
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4,
+                pointBackgroundColor: "#0284c7"
+              }]
+            },
+            options: {
+              animation: false,
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => MESES_LISTA[i[0].dataIndex], label: c => ` ${(c.parsed.y || 0).toFixed(2)} €` } } },
+              scales: { y: { beginAtZero: true, grid: { color: "#f1f5f9" }, ticks: { font: { size: 10 } } }, x: { grid: { display: false }, ticks: { font: { size: 10, weight: "bold" } } } }
+            }
+          });
+        }
+      }
+
+      // 3. Vehículos (Doughnut)
+      const datosVeh = vehs.map(v => sumaVeh[v]);
+      const coloresVeh = vehs.map(v => colorVehiculo(v));
+
+      const canvasVeh = document.getElementById("grafico-comb-vehiculos");
+      if (canvasVeh) {
+        if (chartCombVehiculos) {
+          chartCombVehiculos.data.labels = vehs;
+          chartCombVehiculos.data.datasets[0].data = datosVeh;
+          chartCombVehiculos.data.datasets[0].backgroundColor = coloresVeh;
+          chartCombVehiculos.update("none");
+        } else {
+          chartCombVehiculos = new Chart(canvasVeh.getContext("2d"), {
+            type: "doughnut",
+            data: {
+              labels: vehs,
+              datasets: [{ data: datosVeh, backgroundColor: coloresVeh, borderWidth: 0 }]
+            },
+            options: {
+              animation: false,
+              responsive: true, maintainAspectRatio: false, cutout: "65%",
+              plugins: { legend: { position: "right", labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: c => ` ${c.label}: ${(c.parsed || 0).toFixed(2)} €` } } }
+            }
+          });
+        }
+      }
+
+      // 4. Tipos de Combustible (Doughnut)
+      const datosTipo = tipos.map(t => sumaTipo[t]);
+      const coloresTipo = tipos.map(t => colorCombustible(t));
+
+      const canvasTipos = document.getElementById("grafico-comb-tipos");
+      if (canvasTipos) {
+        if (chartCombTipos) {
+          chartCombTipos.data.labels = tipos;
+          chartCombTipos.data.datasets[0].data = datosTipo;
+          chartCombTipos.data.datasets[0].backgroundColor = coloresTipo;
+          chartCombTipos.update("none");
+        } else {
+          chartCombTipos = new Chart(canvasTipos.getContext("2d"), {
+            type: "doughnut",
+            data: {
+              labels: tipos,
+              datasets: [{ data: datosTipo, backgroundColor: coloresTipo, borderWidth: 0 }]
+            },
+            options: {
+              animation: false,
+              responsive: true, maintainAspectRatio: false, cutout: "65%",
+              plugins: { legend: { position: "right", labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: c => ` ${c.label}: ${(c.parsed || 0).toFixed(2)} €` } } }
+            }
+          });
+        }
+      }
+    }
+
+    function filtrarHistorialCombustible() {
+      const q = quitarAcentos(document.getElementById("buscador-comb-historial")?.value || "");
+      const filtradas = q ? filasSeccionActual.filter(f => quitarAcentos(f.join(" ")).includes(q)) : filasSeccionActual;
+      const contador = document.getElementById("contador-comb-historial");
+      if (contador) contador.textContent = `${filtradas.length} registros`;
+
+      const tabla = document.getElementById("tabla-comb-historial");
+      if (!tabla) return;
+
+      let html = `<thead class="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-200 sticky top-0"><tr>`;
+      headersSeccionActual.forEach(h => { html += `<th class="py-2.5 px-4 font-semibold whitespace-nowrap">${h}</th>`; });
+      html += `</tr></thead><tbody class="divide-y divide-slate-100">`;
+
+      filtradas.forEach(f => {
+        html += `<tr class="hover:bg-slate-50 transition">`;
+        headersSeccionActual.forEach((_, i) => {
+          html += `<td class="py-2.5 px-4 whitespace-nowrap">${f[i] !== undefined ? f[i] : ""}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody>`;
+      tabla.innerHTML = html;
     }
   </script>
 </body>
