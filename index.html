@@ -166,6 +166,13 @@
             <span class="sidebar-label truncate">Ingresos</span>
           </button>
 
+          <button onclick="cambiarSeccion('aplazados', 'Gastos Aplazados', this, 'MIS GASTOS')" title="Gastos Aplazados" class="nav-btn w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+            <div class="shrink-0 w-5 flex items-center justify-center">
+              <i class="fa-solid fa-handshake text-sm"></i>
+            </div>
+            <span class="sidebar-label truncate">Gastos Aplazados</span>
+          </button>
+
           <button onclick="cambiarSeccion('consultas', 'Consultas', this)" title="Consultas" class="nav-btn w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
             <div class="shrink-0 w-5 flex items-center justify-center">
               <i class="fa-solid fa-magnifying-glass-chart text-sm"></i>
@@ -486,6 +493,40 @@
           </div>
         </section>
 
+        <!-- VISTA: GASTOS APLAZADOS / DEUDAS SIN FECHA -->
+        <section id="vista-gastos-aplazados" class="oculto space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-amber-600">Total Pendiente de Saldar</span>
+              <p id="stat-aplazados-pendiente" class="text-2xl font-bold text-amber-600 mt-1">0,00 €</p>
+              <span class="text-[10px] text-slate-400">Compromisos y deudas familiares activas</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">Total Saldado / Devuelto</span>
+              <p id="stat-aplazados-pagado" class="text-2xl font-bold text-emerald-600 mt-1">0,00 €</p>
+              <span class="text-[10px] text-slate-400">Compromisos ya pagados</span>
+            </div>
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs sm:col-span-2 lg:col-span-1">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total Compromisos</span>
+              <p id="stat-aplazados-total" class="text-2xl font-bold text-slate-900 mt-1">0,00 €</p>
+              <span id="sub-aplazados-conteo" class="text-[10px] text-slate-400">0 registros</span>
+            </div>
+          </div>
+
+          <div class="bg-white sm:border sm:border-slate-200/80 sm:rounded-2xl sm:shadow-2xs overflow-hidden">
+            <div class="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between gap-3">
+              <div class="relative flex-1 max-w-md">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-xs text-slate-400"></i>
+                <input type="text" id="buscador-aplazados" oninput="filtrarGastosAplazados()" placeholder="Buscar en compromisos aplazados..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 focus:bg-white transition">
+              </div>
+              <span id="contador-aplazados" class="text-xs text-slate-400 font-medium whitespace-nowrap">0 registros</span>
+            </div>
+            <div id="contenedor-gastos-aplazados" class="px-1.5 py-2.5 sm:p-5 space-y-3 bg-slate-200/80">
+              <!-- Rellenado dinámicamente -->
+            </div>
+          </div>
+        </section>
+
       </main>
     </div>
   </div>
@@ -575,6 +616,7 @@
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Periodicidad *</label>
             <select id="form-periodicidad" onchange="actualizarCamposRecurrencia()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
               <option value="Gasto Puntual">Gasto Puntual</option>
+              <option value="Sin fecha / Aplazado">Sin fecha / Aplazado</option>
               <option value="Mensual">Mensual (cada mes)</option>
               <option value="Bimensual">Bimensual (cada 2 meses)</option>
               <option value="Trimestral">Trimestral (cada 3 meses)</option>
@@ -1654,6 +1696,10 @@
         const mesFila = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : mesActual;
         const esPagado = idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
 
+        const idxPeriodicidad = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
+        const perFila = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim().toLowerCase() : "";
+        if (perFila.includes("aplazado") || perFila.includes("sin fecha")) return;
+
         if (esPagado || anoFila !== anoActual || mesFila !== mesActual) return;
 
         const diaNum = parseInt(fila[idxDia], 10);
@@ -2062,6 +2108,10 @@
           const mesFila = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
           if (anoFila !== anoSel || mesFila !== mesSel) return;
 
+          const perFila = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim().toLowerCase() : "";
+          const esAplazado = perFila.includes("aplazado") || perFila.includes("sin fecha");
+          if (esAplazado) return; // Se excluye para no alterar el presupuesto mensual
+
           const raw = (fila[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
           const num = parseFloat(raw) || 0;
           const esPagado = idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
@@ -2100,8 +2150,10 @@
         const anoFila = idxAno !== -1 ? (fila[idxAno] || "").toString().trim() : "";
         const mesFila = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
         const esPagado = idxPagado !== -1 && (fila[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+        const perFila = idxPeriodicidad !== -1 ? (fila[idxPeriodicidad] || "").toString().trim().toLowerCase() : "";
+        const esAplazado = perFila.includes("aplazado") || perFila.includes("sin fecha");
 
-        if (anoFila === anoHoyStr && mesFila === mesHoyStr && !esPagado) {
+        if (anoFila === anoHoyStr && mesFila === mesHoyStr && !esPagado && !esAplazado) {
           countPendientesMesActual++;
         }
       });
@@ -4344,7 +4396,13 @@
         document.getElementById("titulo-mes-ano-actual").textContent = `RESULTADOS EN TODOS LOS AÑOS`;
       }
 
+      const idxPeriodicidadFiltro = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
+
       const filtradas = filasGlobales.filter(f => {
+        const perFila = idxPeriodicidadFiltro !== -1 ? (f[idxPeriodicidadFiltro] || "").toString().trim().toLowerCase() : "";
+        const esAplazado = perFila.includes("aplazado") || perFila.includes("sin fecha");
+        if (esAplazado) return false; // Se gestionan exclusivamente en la sección "Gastos Aplazados"
+
         if (q) {
           const textoFila = quitarAcentos(f.join(" "));
           if (!textoFila.includes(q)) return false;
@@ -4461,7 +4519,12 @@
         MESES_LISTA.forEach(m => sumaPorAnoMes[a][m] = 0);
       });
 
+      const idxPerAnual = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
+
       filasGlobales.forEach(f => {
+        const perFila = idxPerAnual !== -1 ? (f[idxPerAnual] || "").toString().trim().toLowerCase() : "";
+        if (perFila.includes("aplazado") || perFila.includes("sin fecha")) return; // No altera el cómputo anual
+
         const a = (f[idxAno] || "").toString().trim();
         const m = idxMes !== -1 ? (f[idxMes] || "").toString().trim().toUpperCase() : "";
         const raw = (f[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
@@ -5140,6 +5203,8 @@
       if (vistaAnualEl) vistaAnualEl.classList.add("oculto");
       const vistaConsultasEl = document.getElementById("vista-consultas");
       if (vistaConsultasEl) vistaConsultasEl.classList.add("oculto");
+      const vistaAplazadosEl = document.getElementById("vista-gastos-aplazados");
+      if (vistaAplazadosEl) vistaAplazadosEl.classList.add("oculto");
 
       if (id === "gastos-mensuales") {
         document.getElementById("vista-gastos-mensuales").classList.remove("oculto");
@@ -5158,6 +5223,11 @@
         document.getElementById("vista-gastos-mensuales").classList.add("oculto");
         document.getElementById("vista-en-construccion").classList.add("oculto");
         if (vistaConsultasEl) vistaConsultasEl.classList.remove("oculto");
+      } else if (id === "aplazados") {
+        document.getElementById("vista-gastos-mensuales").classList.add("oculto");
+        document.getElementById("vista-en-construccion").classList.add("oculto");
+        if (vistaAplazadosEl) vistaAplazadosEl.classList.remove("oculto");
+        filtrarGastosAplazados();
       } else {
         document.getElementById("vista-gastos-mensuales").classList.add("oculto");
         document.getElementById("vista-en-construccion").classList.remove("oculto");
@@ -6266,6 +6336,129 @@
       } finally {
         estadoDiv.classList.add("hidden");
       }
+    }
+
+    /* ==================== VISTA: GASTOS APLAZADOS ==================== */
+    function filtrarGastosAplazados() {
+      const contenedor = document.getElementById("contenedor-gastos-aplazados");
+      const contador = document.getElementById("contador-aplazados");
+      const conteoSub = document.getElementById("sub-aplazados-conteo");
+      if (!contenedor) return;
+
+      const idxPer = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
+      const idxCant = headersGlobales.findIndex(h => h.toLowerCase().includes("cantidad"));
+      const idxPagado = headersGlobales.findIndex(h => h.toLowerCase().includes("pagado"));
+      const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxNotas = headersGlobales.findIndex(h => h.toLowerCase().includes("nota"));
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
+      const idxId = headersGlobales.findIndex(h => h.trim().toUpperCase() === "ID");
+      const idxColor = headersGlobales.findIndex(h => h.toLowerCase().includes("etiqueta") || h.toLowerCase().includes("color"));
+
+      const parseCant = (f) => {
+        if (idxCant === -1) return 0;
+        const raw = (f[idxCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
+        return parseFloat(raw) || 0;
+      };
+
+      const esPagado = (f) => idxPagado !== -1 && (f[idxPagado] || "").toString().trim().toUpperCase() === "SI";
+
+      // Filtrar registros que sean aplazados o sin fecha
+      const aplazados = filasGlobales.filter(f => {
+        const per = idxPer !== -1 ? (f[idxPer] || "").toString().trim().toLowerCase() : "";
+        return per.includes("aplazado") || per.includes("sin fecha");
+      });
+
+      // Cálculo de KPIs
+      let pendTotal = 0;
+      let pagTotal = 0;
+      aplazados.forEach(f => {
+        const c = parseCant(f);
+        if (esPagado(f)) pagTotal += c;
+        else pendTotal += c;
+      });
+
+      const fmt = (n) => (n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+      document.getElementById("stat-aplazados-pendiente").textContent = fmt(pendTotal);
+      document.getElementById("stat-aplazados-pagado").textContent = fmt(pagTotal);
+      document.getElementById("stat-aplazados-total").textContent = fmt(pendTotal + pagTotal);
+      if (conteoSub) conteoSub.textContent = `${aplazados.length} compromisos registrados`;
+
+      // Búsqueda en la vista
+      const q = quitarAcentos(document.getElementById("buscador-aplazados")?.value || "");
+      const filtrados = q ? aplazados.filter(f => quitarAcentos(f.join(" ")).includes(q)) : aplazados;
+      if (contador) contador.textContent = `${filtrados.length} registros`;
+
+      if (filtrados.length === 0) {
+        contenedor.innerHTML = `<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">No hay compromisos aplazados registrados actualmente.</div>`;
+        return;
+      }
+
+      const mapaColoresEtiquetaBorde = {
+        "amarillo": "border-l-4 border-l-amber-400",
+        "naranja": "border-l-4 border-l-orange-500",
+        "rojo": "border-l-4 border-l-rose-500",
+        "verde": "border-l-4 border-l-emerald-500",
+        "azul": "border-l-4 border-l-sky-500",
+        "morado": "border-l-4 border-l-purple-500"
+      };
+
+      const pendientes = filtrados.filter(f => !esPagado(f));
+      const pagados = filtrados.filter(f => esPagado(f));
+
+      const renderLista = (lista, esPag) => {
+        if (lista.length === 0) return "";
+        const titulo = esPag ? "COMPROMISOS SALDADOS" : "COMPROMISOS PENDIENTES";
+        const totalSec = lista.reduce((acc, f) => acc + parseCant(f), 0);
+        const colorTitulo = esPag ? "text-emerald-700 bg-emerald-50 border-emerald-200" : "text-amber-800 bg-amber-50 border-amber-200";
+
+        let htmlBloque = `
+          <div class="bg-white sm:border sm:border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-lg border ${colorTitulo}">
+                <i class="fa-solid ${esPag ? 'fa-check' : 'fa-handshake'} mr-1.5"></i>${titulo}
+              </span>
+              <span class="text-xs font-bold text-slate-900">${fmt(totalSec)}</span>
+            </div>
+            <div class="space-y-2">
+        `;
+
+        lista.forEach(f => {
+          const idFila = idxId !== -1 ? f[idxId] : "";
+          const conceptoVal = idxConcepto !== -1 ? (f[idxConcepto] || "").toString().trim() : "";
+          const empVal = idxEmpresa !== -1 ? (f[idxEmpresa] || "").toString().trim() : "";
+          const notasVal = idxNotas !== -1 ? (f[idxNotas] || "").toString().trim() : "";
+          const cantNum = parseCant(f);
+          const colorFila = idxColor !== -1 ? (f[idxColor] || "").toString().trim().toLowerCase() : "";
+          const claseBorde = mapaColoresEtiquetaBorde[colorFila] || "";
+
+          htmlBloque += `
+            <div onclick="abrirDetalleGasto('${idFila}')" class="bg-slate-50/80 hover:bg-slate-100/70 rounded-2xl p-3.5 border border-slate-200/80 transition cursor-pointer flex items-center justify-between gap-3 ${claseBorde}">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs">
+                  <i class="fa-solid fa-hand-holding-dollar text-sm"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <h4 class="text-xs sm:text-[13px] font-bold text-slate-900 truncate">${conceptoVal}</h4>
+                    <span class="bg-amber-100 text-amber-900 border border-amber-200/80 text-[10px] font-bold px-1.5 py-0.2 rounded-md shrink-0">Sin fecha fija</span>
+                  </div>
+                  ${empVal ? `<p class="text-[11px] text-slate-500 truncate">${empVal}</p>` : ""}
+                  ${notasVal ? `<p class="text-[11px] text-amber-950 font-medium whitespace-normal line-clamp-2 leading-relaxed mt-0.5">${notasVal}</p>` : ""}
+                </div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="text-xs sm:text-sm font-bold ${esPag ? 'text-emerald-700' : 'text-amber-700'}">${fmt(cantNum)}</div>
+                <span class="text-[10px] text-slate-400 font-semibold block mt-0.5">${esPag ? 'Saldado' : 'A pagar'}</span>
+              </div>
+            </div>
+          `;
+        });
+
+        htmlBloque += `</div></div>`;
+        return htmlBloque;
+      };
+
+      contenedor.innerHTML = renderLista(pendientes, false) + renderLista(pagados, true);
     }
   </script>
 </body>
