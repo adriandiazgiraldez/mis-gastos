@@ -510,7 +510,7 @@
               onfocus="mostrarDropdownConceptos()" oninput="filtrarDropdownConceptos()"
               placeholder=""
               class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
-            <div id="dropdown-conceptos" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-slate-100"></div>
+            <div id="dropdown-conceptos" class="hidden absolute left-0 w-full sm:w-[170%] md:w-[200%] max-w-[460px] mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-56 overflow-y-auto z-50 divide-y divide-slate-100"></div>
           </div>
           <div class="relative">
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Categoría (opcional)</label>
@@ -5825,9 +5825,9 @@
 
       dropdown.innerHTML = filtrados.map(c => {
         const seguro = c.replace(/'/g, "\\'");
-        return `<button type="button" onclick="seleccionarConceptoDropdown('${seguro}')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition">
-          ${obtenerHtmlIconoConcepto(c)}
-          <span class="truncate">${c}</span>
+        return `<button type="button" onclick="seleccionarConceptoDropdown('${seguro}')" class="w-full text-left px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-100/80 flex items-center gap-2.5 transition">
+          <div class="shrink-0 flex items-center justify-center">${obtenerHtmlIconoConcepto(c)}</div>
+          <span class="leading-snug break-words whitespace-normal text-[11px] font-medium">${c}</span>
         </button>`;
       }).join("");
     }
