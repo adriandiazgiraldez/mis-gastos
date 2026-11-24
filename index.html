@@ -1542,12 +1542,18 @@
       </div>
 
       <form onsubmit="guardarCombustible(event)" class="p-5 space-y-4 text-xs overflow-y-auto flex-1">
-        <!-- Cantidad (Teclado numérico iPhone) -->
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Cantidad (€) *</label>
-          <div class="relative">
-            <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">€</span>
-            <input type="number" step="0.01" inputmode="decimal" id="comb-cantidad" required placeholder="0,00" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-4 py-2.5 text-base font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white">
+        <input type="hidden" id="comb-ano">
+        <input type="hidden" id="comb-mes">
+
+        <!-- Día de la Semana y Fecha (Arriba) -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Día de la Semana</label>
+            <input type="text" id="comb-dia-semana" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 font-medium">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Fecha *</label>
+            <input type="date" id="comb-fecha" onchange="actualizarFechaCombustible()" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-slate-400">
           </div>
         </div>
 
@@ -1577,31 +1583,20 @@
           </div>
         </div>
 
-        <!-- Año y Mes -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Año *</label>
-            <input type="number" id="comb-ano" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400">
-          </div>
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Mes *</label>
-            <select id="comb-mes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-slate-400">
-              <option>ENERO</option><option>FEBRERO</option><option>MARZO</option><option>ABRIL</option>
-              <option>MAYO</option><option>JUNIO</option><option>JULIO</option><option>AGOSTO</option>
-              <option>SEPTIEMBRE</option><option>OCTUBRE</option><option>NOVIEMBRE</option><option>DICIEMBRE</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Día de la Semana y Fecha -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Día de la Semana</label>
-            <input type="text" id="comb-dia-semana" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 font-medium">
-          </div>
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Fecha *</label>
-            <input type="date" id="comb-fecha" onchange="actualizarFechaCombustible()" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-slate-400">
+        <!-- Cantidad (Abajo con botones redondos + y -) -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Cantidad (€) *</label>
+          <div class="flex items-center gap-2.5">
+            <button type="button" onclick="ajustarCantidadComb(-1)" class="w-12 h-12 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-200 flex items-center justify-center text-lg font-bold shrink-0 transition active:scale-90 shadow-2xs">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <div class="relative flex-1">
+              <span class="absolute left-3.5 top-3 text-base font-bold text-slate-400">€</span>
+              <input type="number" step="0.01" inputmode="decimal" id="comb-cantidad" required placeholder="0,00" class="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-8 pr-4 py-2.5 text-lg font-bold text-center text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white">
+            </div>
+            <button type="button" onclick="ajustarCantidadComb(1)" class="w-12 h-12 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 flex items-center justify-center text-lg font-bold shrink-0 transition active:scale-90 shadow-2xs">
+              <i class="fa-solid fa-plus"></i>
+            </button>
           </div>
         </div>
 
@@ -7008,7 +7003,13 @@
         </button>`;
       }).join("");
     }
-
+    function ajustarCantidadComb(delta) {
+      reproducirBeep();
+      const input = document.getElementById("comb-cantidad");
+      const actual = parseFloat(input.value) || 0;
+      const nuevo = Math.max(0, actual + delta);
+      input.value = nuevo.toFixed(2);
+    }
     function reproducirBeep() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
