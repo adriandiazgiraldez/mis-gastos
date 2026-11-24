@@ -1560,19 +1560,19 @@
             </button>
           </div>
           <input type="hidden" id="comb-vehiculo" required>
-          <div id="comb-lista-vehiculos" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+          <div id="comb-lista-vehiculos" class="grid grid-cols-2 gap-2.5 sm:gap-2"></div>
         </div>
 
         <!-- Combustible -->
         <div>
           <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Combustible *</label>
           <input type="hidden" id="comb-tipo" required>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" onclick="seleccionarTipoCombustible('Diésel')" id="btn-comb-diesel" class="btn-tipo-comb flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold transition">
-              <i class="fa-solid fa-gas-pump text-amber-500"></i> Diésel
+          <div class="grid grid-cols-2 gap-2.5 sm:gap-2">
+            <button type="button" onclick="seleccionarTipoCombustible('Diésel')" id="btn-comb-diesel" class="btn-tipo-comb flex flex-col sm:flex-row items-center justify-center gap-2 py-5 sm:py-2.5 px-3 rounded-2xl sm:rounded-xl border border-amber-200 bg-amber-50 text-amber-900 font-bold sm:font-semibold text-sm sm:text-xs transition active:scale-95">
+              <i class="fa-solid fa-gas-pump text-amber-500 text-xl sm:text-xs"></i> Diésel
             </button>
-            <button type="button" onclick="seleccionarTipoCombustible('Gasolina')" id="btn-comb-gasolina" class="btn-tipo-comb flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold transition">
-              <i class="fa-solid fa-gas-pump text-emerald-500"></i> Gasolina
+            <button type="button" onclick="seleccionarTipoCombustible('Gasolina')" id="btn-comb-gasolina" class="btn-tipo-comb flex flex-col sm:flex-row items-center justify-center gap-2 py-5 sm:py-2.5 px-3 rounded-2xl sm:rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 font-bold sm:font-semibold text-sm sm:text-xs transition active:scale-95">
+              <i class="fa-solid fa-gas-pump text-emerald-500 text-xl sm:text-xs"></i> Gasolina
             </button>
           </div>
         </div>
@@ -6974,12 +6974,30 @@
       cont.innerHTML = vehiculos.map((v, idx) => {
         const etiqueta = `${v.nombre} | ${v.matricula}`;
         const activo = selActual === etiqueta;
+        const nom = v.nombre.toUpperCase();
+        const esMoto = nom.includes("MOTO");
+        const icono = esMoto ? "fa-motorcycle" : "fa-car-side";
+
+        let colorBase = "bg-white text-slate-700 border-slate-200 hover:bg-slate-50";
+        let colorIcono = "text-rose-500";
+        if (nom.includes("MERCEDES")) {
+          colorBase = "bg-amber-100/80 text-amber-950 border-amber-300 hover:bg-amber-100";
+          colorIcono = "text-amber-600";
+        } else if (nom.includes("SEAT")) {
+          colorBase = "bg-slate-200/80 text-slate-900 border-slate-300 hover:bg-slate-200";
+          colorIcono = "text-slate-600";
+        } else if (esMoto) {
+          colorBase = "bg-sky-100/80 text-sky-950 border-sky-300 hover:bg-sky-100";
+          colorIcono = "text-sky-600";
+        }
+
         const clases = activo
-          ? "bg-slate-900 text-white border-slate-900"
-          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50";
-        return `<button type="button" onclick="seleccionarVehiculoComb(${idx})" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border font-semibold text-xs transition ${clases}">
-          <i class="fa-solid fa-car-side ${activo ? 'text-rose-400' : 'text-rose-500'}"></i>
-          <span class="truncate">${etiqueta}</span>
+          ? "bg-slate-900 text-white border-slate-900 ring-2 ring-slate-900 ring-offset-1"
+          : colorBase;
+
+        return `<button type="button" onclick="seleccionarVehiculoComb(${idx})" class="flex flex-col sm:flex-row items-center justify-center gap-2 py-5 sm:py-2.5 px-3 rounded-2xl sm:rounded-xl border font-bold sm:font-semibold text-xs transition active:scale-95 text-center ${clases}">
+          <i class="fa-solid ${icono} text-xl sm:text-xs ${activo ? 'text-white' : colorIcono}"></i>
+          <span class="leading-tight sm:truncate">${v.nombre}<span class="block sm:inline text-[10px] sm:text-xs font-mono opacity-75 sm:opacity-100"><span class="hidden sm:inline"> | </span>${v.matricula}</span></span>
         </button>`;
       }).join("");
     }
@@ -6998,16 +7016,19 @@
       document.getElementById("comb-tipo").value = tipo;
       const btnD = document.getElementById("btn-comb-diesel");
       const btnG = document.getElementById("btn-comb-gasolina");
-      [btnD, btnG].forEach(b => {
-        b.classList.remove("bg-slate-900", "text-white", "border-slate-900");
-        b.classList.add("bg-white", "text-slate-700", "border-slate-200");
-      });
+
+      btnD.classList.remove("bg-slate-900", "text-white", "border-slate-900");
+      btnD.classList.add("bg-amber-50", "text-amber-900", "border-amber-200");
+
+      btnG.classList.remove("bg-slate-900", "text-white", "border-slate-900");
+      btnG.classList.add("bg-emerald-50", "text-emerald-900", "border-emerald-200");
+
       if (tipo === "Diésel") {
         btnD.classList.add("bg-slate-900", "text-white", "border-slate-900");
-        btnD.classList.remove("bg-white", "text-slate-700", "border-slate-200");
+        btnD.classList.remove("bg-amber-50", "text-amber-900", "border-amber-200");
       } else if (tipo === "Gasolina") {
         btnG.classList.add("bg-slate-900", "text-white", "border-slate-900");
-        btnG.classList.remove("bg-white", "text-slate-700", "border-slate-200");
+        btnG.classList.remove("bg-emerald-50", "text-emerald-900", "border-emerald-200");
       }
     }
 
