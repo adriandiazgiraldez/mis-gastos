@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mis Gastos · Finanzas Personales</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,6 +11,12 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    /* Evita el zoom in nativo de Safari iOS al enfocar campos numéricos */
+    @media screen and (max-width: 768px) {
+      input[type="number"], input[inputmode] {
+        font-size: 16px !important;
+      }
+    }
     .oculto { display: none !important; }
     @media print {
       @page {
@@ -986,15 +992,15 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Distancia (km)</label>
-            <input type="number" step="0.1" id="calc-comb-distancia" oninput="calcularGastoCombustible()" placeholder="Ej. 450" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:bg-white">
+            <input type="number" step="0.1" inputmode="decimal" pattern="[0-9]*" id="calc-comb-distancia" oninput="calcularGastoCombustible()" placeholder="Ej. 450" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:bg-white">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Consumo (L/100km)</label>
-            <input type="number" step="0.1" id="calc-comb-consumo" oninput="calcularGastoCombustible()" placeholder="Ej. 6.2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:bg-white">
+            <input type="number" step="0.1" inputmode="decimal" pattern="[0-9]*" id="calc-comb-consumo" oninput="calcularGastoCombustible()" placeholder="Ej. 6.2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:bg-white">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Precio por litro (€)</label>
-            <input type="number" step="0.001" id="calc-comb-precio" oninput="calcularGastoCombustible()" placeholder="Ej. 1.55" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:bg-white">
+            <input type="number" step="0.001" inputmode="decimal" pattern="[0-9]*" id="calc-comb-precio" oninput="calcularGastoCombustible()" placeholder="Ej. 1.55" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:bg-white">
           </div>
         </div>
 
@@ -1042,15 +1048,15 @@
         <div id="bloque-elec-bateria" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Capacidad batería (kWh)</label>
-            <input type="number" step="0.1" id="calc-elec-capacidad" oninput="calcularGastoElectrico()" placeholder="Ej. 14.4 o 60" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+            <input type="number" step="0.1" inputmode="decimal" pattern="[0-9]*" id="calc-elec-capacidad" oninput="calcularGastoElectrico()" placeholder="Ej. 14.4 o 60" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">% a recargar</label>
-            <input type="number" step="1" min="1" max="100" id="calc-elec-porcentaje" value="100" oninput="calcularGastoElectrico()" placeholder="Ej. 100" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+            <input type="number" step="1" min="1" max="100" inputmode="numeric" pattern="[0-9]*" id="calc-elec-porcentaje" value="100" oninput="calcularGastoElectrico()" placeholder="Ej. 100" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Autonomía (km, opc.)</label>
-            <input type="number" step="1" id="calc-elec-autonomia" oninput="calcularGastoElectrico()" placeholder="Ej. 50 o 400" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+            <input type="number" step="1" inputmode="numeric" pattern="[0-9]*" id="calc-elec-autonomia" oninput="calcularGastoElectrico()" placeholder="Ej. 50 o 400" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
           </div>
         </div>
 
@@ -1058,18 +1064,18 @@
         <div id="bloque-elec-viaje" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Distancia del viaje (km)</label>
-            <input type="number" step="0.1" id="calc-elec-distancia" oninput="calcularGastoElectrico()" placeholder="Ej. 120" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+            <input type="number" step="0.1" inputmode="decimal" pattern="[0-9]*" id="calc-elec-distancia" oninput="calcularGastoElectrico()" placeholder="Ej. 120" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Consumo medio (kWh/100km)</label>
-            <input type="number" step="0.1" id="calc-elec-consumo" oninput="calcularGastoElectrico()" placeholder="Ej. 16.5" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+            <input type="number" step="0.1" inputmode="decimal" pattern="[0-9]*" id="calc-elec-consumo" oninput="calcularGastoElectrico()" placeholder="Ej. 16.5" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
           </div>
         </div>
 
         <!-- Precio kWh común -->
         <div>
           <label class="block text-[11px] font-bold text-slate-600 mb-1">Precio de la electricidad (€/kWh)</label>
-          <input type="number" step="0.001" id="calc-elec-precio" oninput="calcularGastoElectrico()" placeholder="Ej. 0.14 (doméstico) o 0.45 (cargador público)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+          <input type="number" step="0.001" inputmode="decimal" pattern="[0-9]*" id="calc-elec-precio" oninput="calcularGastoElectrico()" placeholder="Ej. 0.14 (doméstico) o 0.45 (cargador público)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
         </div>
 
         <div class="grid grid-cols-2 gap-3 pt-2">
@@ -1109,7 +1115,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1.5">Importe solicitado (€)</label>
-            <input type="number" step="100" id="calc-prest-importe" oninput="calcularGastoPrestamo()" placeholder="Ej. 17000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500 focus:bg-white">
+            <input type="number" step="100" inputmode="decimal" pattern="[0-9]*" id="calc-prest-importe" oninput="calcularGastoPrestamo()" placeholder="Ej. 17000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500 focus:bg-white">
           </div>
           <div>
             <div class="flex items-center justify-between mb-1.5">
@@ -1124,11 +1130,11 @@
                 <span class="text-[10px] text-slate-600 font-bold">Años</span>
               </div>
             </div>
-            <input type="number" step="1" id="calc-prest-plazo" oninput="calcularGastoPrestamo()" placeholder="Ej. 96" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500 focus:bg-white">
+            <input type="number" step="1" inputmode="decimal" pattern="[0-9]*" id="calc-prest-plazo" oninput="calcularGastoPrestamo()" placeholder="Ej. 96" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500 focus:bg-white">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1.5">Interés TIN anual (%)</label>
-            <input type="number" step="0.01" id="calc-prest-interes" oninput="calcularGastoPrestamo()" placeholder="Ej. 4.49" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500 focus:bg-white">
+            <input type="number" step="0.01" inputmode="decimal" pattern="[0-9]*" id="calc-prest-interes" oninput="calcularGastoPrestamo()" placeholder="Ej. 4.49" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500 focus:bg-white">
           </div>
         </div>
 
@@ -1203,22 +1209,22 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Precio de la vivienda (€)</label>
-            <input type="number" step="1000" id="calc-hipo-precio" oninput="calcularGastoHipoteca()" placeholder="Ej. 180000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
+            <input type="number" step="1000" inputmode="decimal" pattern="[0-9]*" id="calc-hipo-precio" oninput="calcularGastoHipoteca()" placeholder="Ej. 180000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Ahorros aportados / Entrada (€)</label>
-            <input type="number" step="1000" id="calc-hipo-entrada" oninput="calcularGastoHipoteca()" placeholder="Ej. 36000 (20%)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
+            <input type="number" step="1000" inputmode="decimal" pattern="[0-9]*" id="calc-hipo-entrada" oninput="calcularGastoHipoteca()" placeholder="Ej. 36000 (20%)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Plazo de amortización (años)</label>
-            <input type="number" step="1" id="calc-hipo-anos" value="30" oninput="calcularGastoHipoteca()" placeholder="Ej. 25 o 30" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
+            <input type="number" step="1" inputmode="numeric" pattern="[0-9]*" id="calc-hipo-anos" value="30" oninput="calcularGastoHipoteca()" placeholder="Ej. 25 o 30" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Tipo de interés anual (%)</label>
-            <input type="number" step="0.01" id="calc-hipo-interes" placeholder="Ej. 2.85" oninput="calcularGastoHipoteca()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
+            <input type="number" step="0.01" inputmode="decimal" pattern="[0-9]*" id="calc-hipo-interes" placeholder="Ej. 2.85" oninput="calcularGastoHipoteca()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-violet-500 focus:bg-white">
           </div>
         </div>
 
