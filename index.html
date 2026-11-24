@@ -244,8 +244,16 @@
               <p id="stat-pendiente-mes" class="text-2xl font-bold text-rose-600 mt-1">0,00 €</p>
             </div>
             <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
-              <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total del Mes</span>
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total del Mes</span>
+                <label class="inline-flex items-center gap-1.5 cursor-pointer select-none" title="Sumar gasto de combustible del mes">
+                  <i class="fa-solid fa-gas-pump text-[11px] text-amber-500"></i>
+                  <input type="checkbox" id="toggle-sumar-combustible" onchange="toggleIncluirCombustible(this.checked)" class="sr-only peer">
+                  <div class="relative w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 transition-colors duration-300 ease-in-out after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:shadow-sm after:transition-all after:duration-300 peer-checked:after:translate-x-4"></div>
+                </label>
+              </div>
               <p id="stat-total-mes" class="text-2xl font-bold text-slate-900 mt-1">0,00 €</p>
+              <span id="sub-total-mes-combustible" class="hidden text-[10px] text-amber-600 font-semibold block mt-0.5"></span>
             </div>
           </div>
 
@@ -2280,6 +2288,23 @@
     let hojaActual = "MIS GASTOS";
     let headersSeccionActual = [];
     let filasSeccionActual = [];
+    let headersGasolinaCache = [];
+    let filasGasolinaCache = [];
+
+    async function toggleIncluirCombustible(activado) {
+      if (activado && filasGasolinaCache.length === 0 && tokenActual) {
+        try {
+          const url = `${API_URL}?token=${encodeURIComponent(tokenActual)}&hoja=${encodeURIComponent("GASOLINA")}`;
+          const res = await fetch(url);
+          const json = await res.json();
+          if (json.status === "ok") {
+            headersGasolinaCache = json.headers || [];
+            filasGasolinaCache = json.rows || [];
+          }
+        } catch (e) {}
+      }
+      actualizarResumen();
+    }
 
     async function cargarDatos(token, silencioso = false, nombreHoja = null) {
       const estadoDiv = document.getElementById("estado");
@@ -2394,11 +2419,41 @@
         }
       }
 
+      const incluirComb = document.getElementById("toggle-sumar-combustible")?.checked;
+      const subCombEl = document.getElementById("sub-total-mes-combustible");
+      let totalCombustibleMes = 0;
+
+      if (incluirComb && filasGasolinaCache.length > 0) {
+        const idxCombCant = headersGasolinaCache.findIndex(h => h.toLowerCase().includes("cantidad"));
+        const idxCombAno = headersGasolinaCache.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
+        const idxCombMes = headersGasolinaCache.findIndex(h => h.toLowerCase().includes("mes"));
+
+        if (idxCombCant !== -1) {
+          filasGasolinaCache.forEach(f => {
+            const a = idxCombAno !== -1 ? (f[idxCombAno] || "").toString().trim() : "";
+            const m = idxCombMes !== -1 ? (f[idxCombMes] || "").toString().trim().toUpperCase() : "";
+            if (a === anoSel && m === mesSel) {
+              const raw = (f[idxCombCant] || "0").toString().replace(/[€\s]/g, "").replace(",", ".");
+              totalCombustibleMes += parseFloat(raw) || 0;
+            }
+          });
+        }
+      }
+
       const fmt = (n) => n.toFixed(2).replace(".", ",") + " €";
       document.getElementById("stat-pendiente-dia").textContent = fmt(pendDia);
       document.getElementById("stat-pendiente-proximo").textContent = fmt(pendProximo);
       document.getElementById("stat-pendiente-mes").textContent = fmt(pendMes);
-      document.getElementById("stat-total-mes").textContent = fmt(totalMes);
+      document.getElementById("stat-total-mes").textContent = fmt(totalMes + totalCombustibleMes);
+
+      if (subCombEl) {
+        if (incluirComb) {
+          subCombEl.textContent = `+ ${fmt(totalCombustibleMes)} combustible`;
+          subCombEl.classList.remove("hidden");
+        } else {
+          subCombEl.classList.add("hidden");
+        }
+      }
 
       // Calcular número de conceptos pendientes del mes y año actual en tiempo real para el icono
       const anoHoyStr = ahora.getFullYear().toString();
