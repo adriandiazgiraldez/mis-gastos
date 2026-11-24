@@ -6992,43 +6992,68 @@
         }
 
         const clases = activo
-          ? "bg-slate-900 text-white border-slate-900 ring-2 ring-slate-900 ring-offset-1"
+          ? "bg-indigo-100 text-indigo-950 border-indigo-500 ring-2 ring-indigo-500 ring-offset-1"
           : colorBase;
 
-        return `<button type="button" onclick="seleccionarVehiculoComb(${idx})" class="flex flex-col sm:flex-row items-center justify-center gap-2 py-5 sm:py-2.5 px-3 rounded-2xl sm:rounded-xl border font-bold sm:font-semibold text-xs transition active:scale-95 text-center ${clases}">
-          <i class="fa-solid ${icono} text-xl sm:text-xs ${activo ? 'text-white' : colorIcono}"></i>
-          <span class="leading-tight sm:truncate">${v.nombre}<span class="block sm:inline text-[10px] sm:text-xs font-mono opacity-75 sm:opacity-100"><span class="hidden sm:inline"> | </span>${v.matricula}</span></span>
+        return `<button type="button" onclick="seleccionarVehiculoComb(${idx})" class="flex flex-col items-center justify-center gap-1.5 py-4 sm:py-2.5 px-2.5 rounded-2xl sm:rounded-xl border font-bold text-xs transition active:scale-95 text-center ${clases}">
+          <i class="fa-solid ${icono} text-xl sm:text-sm ${activo ? 'text-indigo-600' : colorIcono}"></i>
+          <span class="leading-tight truncate max-w-full">${v.nombre}</span>
+          <div class="inline-flex items-center border border-slate-800 rounded overflow-hidden bg-white shadow-2xs h-5">
+            <div class="bg-[#003399] text-white px-1 h-full flex flex-col items-center justify-center leading-none">
+              <span class="text-[5px] text-amber-300">★</span>
+              <span class="text-[7px] font-bold">E</span>
+            </div>
+            <span class="px-1.5 text-[10px] font-black tracking-wider text-slate-900 font-mono">${v.matricula}</span>
+          </div>
         </button>`;
       }).join("");
     }
 
+    function reproducirBeep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08);
+      } catch (e) {}
+    }
+
     function seleccionarVehiculoComb(idx) {
+      reproducirBeep();
       const v = obtenerVehiculos()[idx];
       if (!v) return;
       document.getElementById("comb-vehiculo").value = `${v.nombre} | ${v.matricula}`;
       document.getElementById("comb-cabecera-matricula-texto").textContent = v.matricula;
       document.getElementById("comb-cabecera-matricula").classList.remove("hidden");
-      seleccionarTipoCombustible(v.combustible);
+      seleccionarTipoCombustible(v.combustible, true);
       renderizarBotonesVehiculos();
     }
 
-    function seleccionarTipoCombustible(tipo) {
+    function seleccionarTipoCombustible(tipo, silenciar = false) {
+      if (tipo && !silenciar) reproducirBeep();
       document.getElementById("comb-tipo").value = tipo;
       const btnD = document.getElementById("btn-comb-diesel");
       const btnG = document.getElementById("btn-comb-gasolina");
 
-      btnD.classList.remove("bg-slate-900", "text-white", "border-slate-900");
+      btnD.classList.remove("bg-amber-200", "text-amber-950", "border-amber-500", "ring-2", "ring-amber-500", "ring-offset-1");
       btnD.classList.add("bg-amber-50", "text-amber-900", "border-amber-200");
 
-      btnG.classList.remove("bg-slate-900", "text-white", "border-slate-900");
+      btnG.classList.remove("bg-emerald-200", "text-emerald-950", "border-emerald-500", "ring-2", "ring-emerald-500", "ring-offset-1");
       btnG.classList.add("bg-emerald-50", "text-emerald-900", "border-emerald-200");
 
       if (tipo === "Diésel") {
-        btnD.classList.add("bg-slate-900", "text-white", "border-slate-900");
-        btnD.classList.remove("bg-amber-50", "text-amber-900", "border-amber-200");
+        btnD.classList.add("bg-amber-200", "text-amber-950", "border-amber-500", "ring-2", "ring-amber-500", "ring-offset-1");
+        btnD.classList.remove("bg-amber-50", "border-amber-200");
       } else if (tipo === "Gasolina") {
-        btnG.classList.add("bg-slate-900", "text-white", "border-slate-900");
-        btnG.classList.remove("bg-emerald-50", "text-emerald-900", "border-emerald-200");
+        btnG.classList.add("bg-emerald-200", "text-emerald-950", "border-emerald-500", "ring-2", "ring-emerald-500", "ring-offset-1");
+        btnG.classList.remove("bg-emerald-50", "border-emerald-200");
       }
     }
 
