@@ -451,6 +451,20 @@
                 <p class="text-xs text-slate-500 leading-relaxed">Simula tu hipoteca de vivienda calculando cuota mensual, anual, intereses acumulados, amortización y estimación de gastos (ITP, notaría).</p>
               </div>
             </div>
+
+            <!-- Botón Sincronizar / Completar Cuotas Automáticamente -->
+            <div onclick="ejecutarMigracionCuotasDesdeApp(this)" class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-slate-300 transition cursor-pointer group flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-100 text-teal-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 group-hover:bg-teal-600 group-hover:text-white transition">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900 group-hover:text-teal-600 transition">Completar Cuotas Faltantes</h3>
+                  <i class="fa-solid fa-arrow-right text-xs text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">Genera automáticamente todas las cuotas futuras restantes de tus préstamos o hipotecas antiguas hasta completarlas.</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -6224,6 +6238,33 @@
       } finally {
         btn.disabled = false;
         btn.textContent = "Guardar";
+      }
+    }
+
+    async function ejecutarMigracionCuotasDesdeApp(cardElement) {
+      if (!confirm("¿Deseas autocompletar todas las cuotas pendientes de préstamos antiguos en la hoja de cálculo?")) return;
+      const estadoDiv = document.getElementById("estado");
+      estadoDiv.classList.remove("hidden");
+      estadoDiv.textContent = "Generando cuotas restantes en Google Sheets...";
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            token: tokenActual,
+            action: "migrar_cuotas"
+          })
+        });
+        const json = await res.json();
+        if (json.status !== "ok") throw new Error(json.message || "Error al autocompletar cuotas");
+
+        alert("¡Listo! " + (json.resultado || "Cuotas generadas correctamente."));
+        await cargarDatos(tokenActual, true);
+      } catch (err) {
+        alert("Error: " + err.message);
+      } finally {
+        estadoDiv.classList.add("hidden");
       }
     }
   </script>
