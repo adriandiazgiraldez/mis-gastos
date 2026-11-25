@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mis Gastos · Finanzas Personales</title>
+
+  <!-- Favicon estándar para navegadores web (pestañas, marcadores) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/adriandiazgiraldez/mis-gastos/main/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="https://raw.githubusercontent.com/adriandiazgiraldez/mis-gastos/main/img/favicon-512x512.png">
+ 
+  <!-- Icono y ajustes para acceso directo en pantalla de inicio de iOS (iPhone, iPad) -->
+  <link rel="apple-touch-icon" sizes="512x512" href="https://raw.githubusercontent.com/adriandiazgiraldez/mis-gastos/main/img/favicon-512x512.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Mis Gastos">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -64,12 +74,12 @@
   <!-- ==================== PANTALLA DE LOGIN ==================== -->
   <div id="panel-login" class="min-h-screen flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200/80 rounded-3xl p-8 max-w-sm w-full shadow-sm text-center space-y-6">
-      <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center mx-auto text-lg shadow-sm">
-        <i class="fa-solid fa-wallet"></i>
+      <div class="flex justify-center pb-1">
+        <img src="https://raw.githubusercontent.com/adriandiazgiraldez/mis-gastos/main/img/favicon-512x512.png" alt="Mis Gastos" class="w-20 h-20 rounded-[22px] shadow-md border border-slate-100 object-cover transition-transform duration-300 hover:scale-105">
       </div>
       <div>
         <h1 class="text-xl font-bold tracking-tight text-slate-900">Mis Gastos</h1>
-        <p class="text-xs text-slate-500 mt-1">Control financiero personal · Acceso privado</p>
+        <p class="text-xs text-slate-500 mt-1">Control financiero · Acceso privado</p>
       </div>
       <div class="flex justify-center min-h-[44px]">
         <div id="google-btn"></div>
@@ -96,9 +106,7 @@
         <!-- Logo / Cabecera -->
         <div class="h-16 px-4 border-b border-slate-100 flex items-center justify-between">
           <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xs shrink-0" title="Mis Gastos">
-              <i class="fa-solid fa-wallet"></i>
-            </div>
+            <img src="https://raw.githubusercontent.com/adriandiazgiraldez/mis-gastos/main/img/favicon-512x512.png" alt="Mis Gastos" class="w-8 h-8 rounded-xl shrink-0 object-cover" title="Mis Gastos">
             <span class="sidebar-label font-bold text-sm tracking-tight text-slate-900 truncate">Mis Gastos</span>
           </div>
           <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-slate-700 p-1.5">
