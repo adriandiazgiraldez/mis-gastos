@@ -755,7 +755,7 @@
             <select id="form-periodicidad" onchange="actualizarCamposRecurrencia()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
               <option value="Gasto Puntual">Gasto Puntual</option>
               <option value="Sin fecha / Aplazado">Sin fecha / Aplazado</option>
-              <option value="Mensual">Mensual (cada mes)</option>
+              <option value="Mensual" selected>Mensual (cada mes)</option>
               <option value="Bimensual">Bimensual (cada 2 meses)</option>
               <option value="Trimestral">Trimestral (cada 3 meses)</option>
               <option value="Semestral">Semestral (cada 6 meses)</option>
@@ -891,13 +891,21 @@
             <button type="button" onclick="seleccionarEtiquetaColor('')" id="btn-quitar-etiqueta" class="text-[10px] font-medium text-slate-400 hover:text-rose-500 transition hidden">Quitar color</button>
           </div>
           <input type="hidden" id="form-color-etiqueta" value="">
-          <div class="flex items-center gap-2.5">
-            <button type="button" onclick="seleccionarEtiquetaColor('amarillo')" title="Amarillo" data-color="amarillo" class="btn-color-tag w-6 h-6 rounded-full bg-amber-400 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
-            <button type="button" onclick="seleccionarEtiquetaColor('naranja')" title="Naranja" data-color="naranja" class="btn-color-tag w-6 h-6 rounded-full bg-orange-500 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
-            <button type="button" onclick="seleccionarEtiquetaColor('rojo')" title="Rojo" data-color="rojo" class="btn-color-tag w-6 h-6 rounded-full bg-rose-500 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
-            <button type="button" onclick="seleccionarEtiquetaColor('verde')" title="Verde" data-color="verde" class="btn-color-tag w-6 h-6 rounded-full bg-emerald-500 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
-            <button type="button" onclick="seleccionarEtiquetaColor('azul')" title="Azul" data-color="azul" class="btn-color-tag w-6 h-6 rounded-full bg-sky-500 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
-            <button type="button" onclick="seleccionarEtiquetaColor('morado')" title="Morado" data-color="morado" class="btn-color-tag w-6 h-6 rounded-full bg-purple-500 hover:scale-110 transition shadow-2xs border-2 border-transparent"></button>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div onclick="seleccionarEtiquetaColor('amarillo')" class="flex items-start gap-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-amber-50/50 cursor-pointer transition">
+              <button type="button" title="Gasto Recurrente" data-color="amarillo" class="btn-color-tag w-6 h-6 rounded-full bg-amber-400 shrink-0 mt-0.5 transition shadow-2xs border-2 border-transparent"></button>
+              <div class="min-w-0">
+                <span class="block text-xs font-bold text-slate-800">Gasto Recurrente</span>
+                <p class="text-[10px] text-slate-500 leading-snug mt-0.5">Para compras que se repiten cada cierto tiempo o de manera cíclica</p>
+              </div>
+            </div>
+            <div onclick="seleccionarEtiquetaColor('rojo')" class="flex items-start gap-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-rose-50/50 cursor-pointer transition">
+              <button type="button" title="Gasto Puntual" data-color="rojo" class="btn-color-tag w-6 h-6 rounded-full bg-rose-500 shrink-0 mt-0.5 transition shadow-2xs border-2 border-transparent"></button>
+              <div class="min-w-0">
+                <span class="block text-xs font-bold text-slate-800">Gasto Puntual</span>
+                <p class="text-[10px] text-slate-500 leading-snug mt-0.5">Para compras puntuales muy separadas en el tiempo o solo para una compra en concreto</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -5960,6 +5968,14 @@
         notas = notasLimpias;
       }
 
+      const etiquetaColorRaw = (getCol("etiqueta") || getCol("color") || "").toLowerCase().trim();
+      let etiquetaDetalleHtml = "";
+      if (etiquetaColorRaw === "amarillo" || etiquetaColorRaw === "yellow") {
+        etiquetaDetalleHtml = `<span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block shrink-0"></span><span>Gasto Recurrente</span></span>`;
+      } else if (etiquetaColorRaw === "rojo" || etiquetaColorRaw === "red") {
+        etiquetaDetalleHtml = `<span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block shrink-0"></span><span>Gasto Puntual</span></span>`;
+      }
+
       // Cuadrícula compacta de datos existentes (3 columnas)
       const campos = [
         { label: "Día previsto", val: dia },
@@ -5967,14 +5983,15 @@
         { label: "Categoría", val: categoria },
         { label: "Periodicidad", val: periodicidad },
         { label: "Nº Cuota", val: cuota },
-        { label: "Fecha de pago", val: fechaPago }
+        { label: "Fecha de pago", val: fechaPago },
+        { label: "Etiquetas", val: etiquetaDetalleHtml }
       ];
 
       // Añadir otros campos dinámicos que no sean los estándar ni estén vacíos
       headersGlobales.forEach((h, i) => {
         if (i === idxId) return;
         const nombreCol = h.toLowerCase().trim();
-        if (["id", "concepto", "empresa", "cantidad", "pagado", "día", "dia", "mes", "año", "ano", "periodicidad", "cuota", "fecha", "fecha de pago", "nota", "notas", "pdf", "captura", "imagen", "favicon"].some(k => nombreCol.includes(k))) return;
+        if (["id", "concepto", "empresa", "cantidad", "pagado", "día", "dia", "mes", "año", "ano", "periodicidad", "cuota", "fecha", "fecha de pago", "nota", "notas", "pdf", "captura", "imagen", "favicon", "etiqueta", "color"].some(k => nombreCol.includes(k))) return;
         const valExtra = (fila[i] || "").toString().trim();
         if (valExtra && valExtra !== "—") {
           campos.push({ label: h, val: valExtra });
@@ -6581,6 +6598,21 @@
       const texto = document.getElementById("texto-toggle-pagado");
       texto.textContent = valor;
       texto.className = activado ? "text-xs font-bold text-emerald-600" : "text-xs font-bold text-slate-600";
+
+      const inputFechaPago = document.getElementById("form-fecha-pago");
+      if (inputFechaPago) {
+        if (activado) {
+          if (!inputFechaPago.value) {
+            const ahora = new Date();
+            const yyyy = ahora.getFullYear();
+            const mm = String(ahora.getMonth() + 1).padStart(2, "0");
+            const dd = String(ahora.getDate()).padStart(2, "0");
+            inputFechaPago.value = `${yyyy}-${mm}-${dd}`;
+          }
+        } else {
+          inputFechaPago.value = "";
+        }
+      }
     }
 
     function mostrarNombreArchivo(inputId, spanId, textoOk) {
@@ -6660,7 +6692,7 @@
       const ahora = new Date();
       document.getElementById("form-mes").value = document.getElementById("filtro-mes")?.value || MESES_LISTA[ahora.getMonth()];
       document.getElementById("form-ano").value = document.getElementById("filtro-ano")?.value || ahora.getFullYear().toString();
-      document.getElementById("form-periodicidad").value = "Gasto Puntual";
+      document.getElementById("form-periodicidad").value = "Mensual";
       document.getElementById("form-cuota").value = "";
       const contCuotaInit = document.getElementById("contenedor-form-cuota");
       if (contCuotaInit) contCuotaInit.classList.remove("hidden");
