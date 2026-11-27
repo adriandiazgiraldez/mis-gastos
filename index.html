@@ -2605,28 +2605,27 @@
         };
       };
 
-      const obtenerFaviconImgOIcon = (texto) => {
+      const obtenerFaviconImgOIcon = (texto, textoAlternativo = "", filasGrupo = null) => {
         const t = (texto || "").trim().toUpperCase();
+        const tAlt = (textoAlternativo || "").trim().toUpperCase();
         const iconosGuardados = JSON.parse(localStorage.getItem("mis_gastos_iconos") || "{}");
-        if (iconosGuardados[t]) {
-          if (iconosGuardados[t].startsWith("url:")) {
-            const dom = iconosGuardados[t].slice(4);
-            return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=32" alt="" class="w-5 h-5 rounded-full object-cover">`;
+        let fav = obtenerFaviconDeSheet(t) || iconosGuardados[t] || (tAlt ? (obtenerFaviconDeSheet(tAlt) || iconosGuardados[tAlt]) : "") || "";
+
+        if (!fav && Array.isArray(filasGrupo)) {
+          for (const fg of filasGrupo) {
+            const cGrupo = idxConcepto !== -1 ? (fg[idxConcepto] || "").toString().trim().toUpperCase() : "";
+            if (cGrupo) {
+              fav = obtenerFaviconDeSheet(cGrupo) || iconosGuardados[cGrupo] || "";
+              if (fav) break;
+            }
           }
-          return `<i class="${iconosGuardados[t]} text-slate-700 text-xs"></i>`;
         }
-        const mapa = {
-          "BBVA": "bbva.es", "CORTE INGL": "elcorteingles.es", "DIGI": "digimobil.es",
-          "FIATC": "fiatc.es", "AURA": "auraseguros.com", "APTHUELVA": "apthuelva.es",
-          "ENDESA": "endesa.com", "IBERDROLA": "iberdrola.es", "NATURGY": "naturgy.es",
-          "VODAFONE": "vodafone.es", "MOVISTAR": "movistar.es", "ORANGE": "orange.es",
-          "AMAZON": "amazon.es", "NETFLIX": "netflix.com", "SPOTIFY": "spotify.com"
-        };
-        const clave = Object.keys(mapa).find(k => t.includes(k));
-        if (clave) {
-          return `<img src="https://www.google.com/s2/favicons?domain=${mapa[clave]}&sz=32" alt="" class="w-5 h-5 rounded-full object-cover">`;
+
+        if (fav && fav.startsWith("url:")) {
+          const dom = fav.slice(4);
+          return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=64" alt="" class="w-full h-full rounded-full object-cover bg-white">`;
         }
-        // Iníciales estilo BBVA (ej: "PA", "RE", "CH")
+        // Iniciales estilo BBVA (ej: "PA", "RE", "CH")
         const palabras = t.split(" ").filter(Boolean);
         const iniciales = palabras.length > 1 ? (palabras[0][0] + palabras[1][0]) : t.slice(0, 2);
         return `<span class="text-[11px] font-bold text-slate-700 tracking-tight">${iniciales || "··"}</span>`;
@@ -2866,8 +2865,8 @@
               bloque += `
                 <div onclick="abrirDetalleGasto('${idFila}')" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-2xs hover:shadow-md transition cursor-pointer flex items-center justify-between gap-2.5 sm:gap-3 ${claseBorde}">
                   <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
-                    <div class="w-10 h-10 rounded-full ${paletaCirculo} flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs">
-                      ${obtenerFaviconImgOIcon(empVal || conceptoVal)}
+                    <div class="w-10 h-10 rounded-full ${paletaCirculo} flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs overflow-hidden">
+                      ${obtenerFaviconImgOIcon(empVal || conceptoVal, conceptoVal)}
                     </div>
                     <div class="min-w-0 flex-1 space-y-0.5">
                       <div class="flex items-center gap-2">
@@ -2898,8 +2897,8 @@
                 <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
                   <div onclick="toggleGrupoEmpresa('${grupoId}', '${claveGrupo}')" class="p-4 bg-slate-50/70 hover:bg-slate-100/60 transition cursor-pointer flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3.5 min-w-0 flex-1">
-                      <div class="w-10 h-10 rounded-full ${paletaCirculo} flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs">
-                        ${obtenerFaviconImgOIcon(item.empresa)}
+                      <div class="w-10 h-10 rounded-full ${paletaCirculo} flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs overflow-hidden">
+                        ${obtenerFaviconImgOIcon(item.empresa, "", item.filas)}
                       </div>
                       <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-2">
@@ -6386,11 +6385,18 @@
     }
 
     // Modal Añadir Gasto
-    function obtenerFaviconDeSheet(conceptoUpper) {
+    function obtenerFaviconDeSheet(textoUpper) {
       const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
       const idxFav = headersGlobales.findIndex(h => h.toLowerCase().includes("favicon"));
-      if (idxConcepto === -1 || idxFav === -1) return "";
-      const filaConFav = filasGlobales.find(f => (f[idxConcepto] || "").toString().trim().toUpperCase() === conceptoUpper && (f[idxFav] || "").toString().trim() !== "");
+      if (idxFav === -1 || !textoUpper) return "";
+      const filaConFav = filasGlobales.find(f => {
+        const fav = (f[idxFav] || "").toString().trim();
+        if (!fav) return false;
+        const c = idxConcepto !== -1 ? (f[idxConcepto] || "").toString().trim().toUpperCase() : "";
+        const emp = idxEmpresa !== -1 ? (f[idxEmpresa] || "").toString().trim().toUpperCase() : "";
+        return c === textoUpper || emp === textoUpper;
+      });
       return filaConFav ? filaConFav[idxFav].toString().trim() : "";
     }
 
