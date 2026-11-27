@@ -1144,6 +1144,18 @@
           </div>
         </div>
 
+        <!-- Rango de Fechas -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Desde</label>
+            <input type="date" id="filtro-fecha-desde" onchange="filtrarTabla()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-400 focus:bg-white transition">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Hasta</label>
+            <input type="date" id="filtro-fecha-hasta" onchange="filtrarTabla()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-400 focus:bg-white transition">
+          </div>
+        </div>
+
         <!-- Acciones: PDF, Imprimir y Ver Todo Switch -->
         <div class="flex items-center justify-between pt-1 border-t border-slate-100">
           <div class="flex items-center gap-2">
@@ -4781,6 +4793,11 @@
       const toggleTodo = document.getElementById("toggle-ver-todo");
       if (toggleTodo) toggleTodo.checked = false;
 
+      const inputDesde = document.getElementById("filtro-fecha-desde");
+      const inputHasta = document.getElementById("filtro-fecha-hasta");
+      if (inputDesde) inputDesde.value = "";
+      if (inputHasta) inputHasta.value = "";
+
       diaSeleccionado = null;
       document.getElementById("texto-btn-calendario").textContent = "Día";
       document.getElementById("panel-calendario").classList.add("hidden");
@@ -4803,7 +4820,10 @@
       const categoriaSel = document.getElementById("filtro-categoria")?.value || "";
       const ano = document.getElementById("filtro-ano").value;
       const mes = document.getElementById("filtro-mes").value;
-      const hayFiltros = q || conceptoSel || empresaSel || categoriaSel || ano || mes || diaSeleccionado !== null;
+      const fechaDesde = document.getElementById("filtro-fecha-desde")?.value || "";
+      const fechaHasta = document.getElementById("filtro-fecha-hasta")?.value || "";
+      const hayRangoFechas = !!(fechaDesde || fechaHasta);
+      const hayFiltros = q || conceptoSel || empresaSel || categoriaSel || ano || mes || diaSeleccionado !== null || hayRangoFechas;
 
       document.getElementById("btn-limpiar-filtros").classList.toggle("hidden", !hayFiltros);
 
@@ -4824,12 +4844,51 @@
       const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
       const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
       const idxDia = headersGlobales.findIndex(h => h.toLowerCase().includes("día") || h.toLowerCase().includes("dia"));
+      const idxFechaPago = headersGlobales.findIndex(h => {
+        const nom = h.toLowerCase();
+        return nom.includes("fecha") && !nom.includes("limite");
+      });
 
       if (q) {
         document.getElementById("titulo-mes-ano-actual").textContent = `RESULTADOS EN TODOS LOS AÑOS`;
+      } else if (hayRangoFechas) {
+        const fmtF = (iso) => iso ? iso.split("-").reverse().join("/") : "";
+        if (fechaDesde && fechaHasta) {
+          document.getElementById("titulo-mes-ano-actual").textContent = `DEL ${fmtF(fechaDesde)} AL ${fmtF(fechaHasta)}`;
+        } else if (fechaDesde) {
+          document.getElementById("titulo-mes-ano-actual").textContent = `DESDE EL ${fmtF(fechaDesde)}`;
+        } else {
+          document.getElementById("titulo-mes-ano-actual").textContent = `HASTA EL ${fmtF(fechaHasta)}`;
+        }
       }
 
       const idxPeriodicidadFiltro = headersGlobales.findIndex(h => h.toLowerCase().includes("periodicidad"));
+
+      const obtenerFechaIsoFila = (fila) => {
+        const valFechaPago = idxFechaPago !== -1 ? (fila[idxFechaPago] || "").toString().trim() : "";
+        if (valFechaPago) {
+          let partes = valFechaPago.includes("-") ? valFechaPago.split("-") : (valFechaPago.includes("/") ? valFechaPago.split("/") : null);
+          if (partes && partes.length === 3) {
+            let a, m, d;
+            if (partes[0].length === 4) {
+              a = parseInt(partes[0], 10); m = parseInt(partes[1], 10); d = parseInt(partes[2], 10);
+            } else {
+              d = parseInt(partes[0], 10); m = parseInt(partes[1], 10); a = parseInt(partes[2], 10);
+            }
+            if (!isNaN(a) && !isNaN(m) && !isNaN(d)) {
+              return `${a}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+            }
+          }
+        }
+        const diaNum = idxDia !== -1 ? (parseInt(fila[idxDia], 10) || 1) : 1;
+        const mesTexto = idxMes !== -1 ? (fila[idxMes] || "").toString().trim().toUpperCase() : "";
+        const mesIdx = MESES_LISTA.indexOf(mesTexto);
+        const anoNum = idxAno !== -1 ? parseInt(fila[idxAno], 10) : NaN;
+        if (mesIdx !== -1 && !isNaN(anoNum)) {
+          return `${anoNum}-${String(mesIdx + 1).padStart(2, "0")}-${String(diaNum).padStart(2, "0")}`;
+        }
+        return "";
+      };
 
       const filtradas = filasGlobales.filter(f => {
         const perFila = idxPeriodicidadFiltro !== -1 ? (f[idxPeriodicidadFiltro] || "").toString().trim().toLowerCase() : "";
@@ -4843,7 +4902,13 @@
         if (conceptoSel && idxConcepto !== -1 && (f[idxConcepto] || "").toString().trim() !== conceptoSel) return false;
         if (empresaSel && idxEmpresa !== -1 && (f[idxEmpresa] || "").toString().trim() !== empresaSel) return false;
         if (categoriaSel && idxCategoria !== -1 && (f[idxCategoria] || "").toString().trim() !== categoriaSel) return false;
-        if (!q) {
+
+        if (hayRangoFechas) {
+          const fechaFila = obtenerFechaIsoFila(f);
+          if (!fechaFila) return false;
+          if (fechaDesde && fechaFila < fechaDesde) return false;
+          if (fechaHasta && fechaFila > fechaHasta) return false;
+        } else if (!q) {
           if (ano && idxAno !== -1 && (f[idxAno] || "").toString().trim() !== ano) return false;
           if (mes && idxMes !== -1 && (f[idxMes] || "").toString().trim().toUpperCase() !== mes) return false;
           if (diaSeleccionado !== null && idxDia !== -1 && parseInt(f[idxDia], 10) !== diaSeleccionado) return false;
