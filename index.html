@@ -1047,6 +1047,30 @@
           </div>
         </div>
 
+        <!-- Empresa Dropdown con Buscador Escribible -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Empresa</label>
+          <div class="relative w-full text-left" id="contenedor-filtro-empresa">
+            <input type="hidden" id="filtro-empresa" value="">
+            <button type="button" onclick="toggleDropdownFiltroEmpresa(event)" id="btn-filtro-empresa" class="w-full flex items-center justify-between gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 transition">
+              <div class="flex items-center gap-2 truncate">
+                <span id="filtro-empresa-icono" class="shrink-0"><i class="fa-regular fa-building text-slate-400 text-xs"></i></span>
+                <span id="filtro-empresa-texto" class="truncate">Todas las empresas</span>
+              </div>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+            </button>
+            <div id="dropdown-menu-filtro-empresa" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col">
+              <div class="p-2 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10" onclick="event.stopPropagation()">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-[11px] text-slate-400"></i>
+                  <input type="text" id="input-buscar-filtro-empresa" oninput="filtrarListaDropdownEmpresas(this.value)" placeholder="Escribir empresa..." class="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400 transition" autocomplete="off">
+                </div>
+              </div>
+              <div id="lista-opciones-filtro-empresa" class="max-h-48 overflow-y-auto divide-y divide-slate-100"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Categoría Dropdown con Buscador Escribible -->
         <div>
           <label class="block text-[11px] font-semibold text-slate-500 mb-1">Categoría</label>
@@ -4375,6 +4399,7 @@
       const selectConcepto = document.getElementById("filtro-concepto");
 
       renderizarOpcionesFiltroConceptos();
+      renderizarOpcionesFiltroEmpresas();
       renderizarOpcionesFiltroCategorias();
 
       if (idxAno === -1 || !selectAno) return;
@@ -4536,6 +4561,75 @@
       filtrarTabla();
     }
 
+    let listaEmpresasUnicasCache = [];
+
+    function renderizarOpcionesFiltroEmpresas(filtroTexto = "") {
+      const idxEmp = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
+      const contenedorLista = document.getElementById("lista-opciones-filtro-empresa");
+      if (idxEmp === -1 || !contenedorLista) return;
+
+      if (listaEmpresasUnicasCache.length === 0) {
+        listaEmpresasUnicasCache = [...new Set(filasGlobales.map(f => (f[idxEmp] || "").toString().trim()).filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+      }
+
+      const q = quitarAcentos(filtroTexto);
+      const filtradas = q ? listaEmpresasUnicasCache.filter(emp => quitarAcentos(emp).includes(q)) : listaEmpresasUnicasCache;
+
+      let html = "";
+      if (!q) {
+        html += `<button type="button" onclick="seleccionarFiltroEmpresa('', 'Todas las empresas', '<i class=\\'fa-regular fa-building text-slate-400 text-xs\\'></i>')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition font-semibold">
+          <i class="fa-regular fa-building text-slate-400 text-xs shrink-0"></i>
+          <span>Todas las empresas</span>
+        </button>`;
+      }
+
+      if (filtradas.length === 0) {
+        html += `<div class="p-3 text-center text-xs text-slate-400">No se encontraron empresas</div>`;
+      } else {
+        filtradas.forEach(emp => {
+          const iconoHtml = obtenerHtmlIconoConcepto(emp);
+          const empEscapado = emp.replace(/'/g, "\\'");
+          const iconoHtmlEscapado = iconoHtml.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          html += `<button type="button" onclick="seleccionarFiltroEmpresa('${empEscapado}', '${empEscapado}', '${iconoHtmlEscapado}')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition">
+            ${iconoHtml}
+            <span class="truncate">${emp}</span>
+          </button>`;
+        });
+      }
+
+      contenedorLista.innerHTML = html;
+    }
+
+    function filtrarListaDropdownEmpresas(val) {
+      renderizarOpcionesFiltroEmpresas(val);
+    }
+
+    function toggleDropdownFiltroEmpresa(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById("dropdown-menu-filtro-empresa");
+      if (!menu) return;
+      const estaOculto = menu.classList.contains("hidden");
+      menu.classList.toggle("hidden");
+
+      if (estaOculto) {
+        const inputBuscar = document.getElementById("input-buscar-filtro-empresa");
+        if (inputBuscar) {
+          inputBuscar.value = "";
+          renderizarOpcionesFiltroEmpresas("");
+          setTimeout(() => inputBuscar.focus(), 50);
+        }
+      }
+    }
+
+    function seleccionarFiltroEmpresa(valor, texto, iconoHtml) {
+      document.getElementById("filtro-empresa").value = valor;
+      document.getElementById("filtro-empresa-texto").textContent = texto;
+      document.getElementById("filtro-empresa-icono").innerHTML = iconoHtml;
+      document.getElementById("dropdown-menu-filtro-empresa").classList.add("hidden");
+      filtrarTabla();
+    }
+
     let listaCategoriasUnicasCache = [];
 
     function renderizarOpcionesFiltroCategorias(filtroTexto = "") {
@@ -4608,6 +4702,11 @@
       if (cont && menu && !cont.contains(e.target)) {
         menu.classList.add("hidden");
       }
+      const contEmp = document.getElementById("contenedor-filtro-empresa");
+      const menuEmp = document.getElementById("dropdown-menu-filtro-empresa");
+      if (contEmp && menuEmp && !contEmp.contains(e.target)) {
+        menuEmp.classList.add("hidden");
+      }
       const contCat = document.getElementById("contenedor-filtro-categoria");
       const menuCat = document.getElementById("dropdown-menu-filtro-categoria");
       if (contCat && menuCat && !contCat.contains(e.target)) {
@@ -4653,6 +4752,8 @@
       document.getElementById("panel-calendario").classList.add("hidden");
       const dropConcepto = document.getElementById("dropdown-menu-filtro-concepto");
       if (dropConcepto) dropConcepto.classList.add("hidden");
+      const dropEmp = document.getElementById("dropdown-menu-filtro-empresa");
+      if (dropEmp) dropEmp.classList.add("hidden");
       const dropCat = document.getElementById("dropdown-menu-filtro-categoria");
       if (dropCat) dropCat.classList.add("hidden");
       document.body.classList.remove("overflow-hidden");
@@ -4663,6 +4764,7 @@
       const buscadorModal = document.getElementById("buscador-modal-filtros");
       if (buscadorModal) buscadorModal.value = "";
       seleccionarFiltroConcepto("", "Todos los conceptos", '<i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>');
+      seleccionarFiltroEmpresa("", "Todas las empresas", '<i class="fa-regular fa-building text-slate-400 text-xs"></i>');
       seleccionarFiltroCategoria("", "Todas las categorías", '<i class="fa-solid fa-tag text-slate-400 text-xs"></i>');
 
       const ahora = new Date();
@@ -4690,10 +4792,11 @@
     function filtrarTabla() {
       const q = quitarAcentos(document.getElementById("buscador-gastos").value);
       const conceptoSel = document.getElementById("filtro-concepto")?.value || "";
+      const empresaSel = document.getElementById("filtro-empresa")?.value || "";
       const categoriaSel = document.getElementById("filtro-categoria")?.value || "";
       const ano = document.getElementById("filtro-ano").value;
       const mes = document.getElementById("filtro-mes").value;
-      const hayFiltros = q || conceptoSel || categoriaSel || ano || mes || diaSeleccionado !== null;
+      const hayFiltros = q || conceptoSel || empresaSel || categoriaSel || ano || mes || diaSeleccionado !== null;
 
       document.getElementById("btn-limpiar-filtros").classList.toggle("hidden", !hayFiltros);
 
@@ -4709,6 +4812,7 @@
       }
 
       const idxConcepto = headersGlobales.findIndex(h => h.toLowerCase().includes("concepto"));
+      const idxEmpresa = headersGlobales.findIndex(h => h.toLowerCase().includes("empresa"));
       const idxCategoria = headersGlobales.findIndex(h => h.toLowerCase().includes("categoria") || h.toLowerCase().includes("categoría"));
       const idxAno = headersGlobales.findIndex(h => h.toLowerCase().includes("año") || h.toLowerCase().includes("ano"));
       const idxMes = headersGlobales.findIndex(h => h.toLowerCase().includes("mes"));
@@ -4730,6 +4834,7 @@
           if (!textoFila.includes(q)) return false;
         }
         if (conceptoSel && idxConcepto !== -1 && (f[idxConcepto] || "").toString().trim() !== conceptoSel) return false;
+        if (empresaSel && idxEmpresa !== -1 && (f[idxEmpresa] || "").toString().trim() !== empresaSel) return false;
         if (categoriaSel && idxCategoria !== -1 && (f[idxCategoria] || "").toString().trim() !== categoriaSel) return false;
         if (!q) {
           if (ano && idxAno !== -1 && (f[idxAno] || "").toString().trim() !== ano) return false;
