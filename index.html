@@ -1964,10 +1964,20 @@
           </div>
         </div>
 
-        <!-- Notas -->
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Notas</label>
-          <textarea id="ing-notas" rows="2" placeholder="Observaciones o detalles del ingreso..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white resize-y"></textarea>
+        <!-- Notas y PDF -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Notas</label>
+            <textarea id="ing-notas" rows="2" placeholder="Observaciones o detalles del ingreso..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white resize-y"></textarea>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">PDF</label>
+            <label class="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-slate-400 rounded-xl py-3 px-2.5 cursor-pointer bg-slate-50/60 transition group">
+              <i class="fa-regular fa-file-pdf text-rose-500 text-sm group-hover:scale-110 transition-transform"></i>
+              <span id="texto-ing-pdf" class="text-[11px] text-slate-600 truncate font-medium">Adjuntar PDF</span>
+              <input type="file" id="ing-file-pdf" accept="application/pdf" onchange="mostrarNombreArchivo('ing-file-pdf', 'texto-ing-pdf', 'PDF adjuntado')" class="hidden">
+            </label>
+          </div>
         </div>
 
         <!-- Etiqueta de color -->
@@ -8268,6 +8278,13 @@
       const idxUsr = headersSeccionActual.findIndex(h => h.toLowerCase().includes("usuario"));
       const idxFav = headersSeccionActual.findIndex(h => h.toLowerCase().includes("favicon"));
       const idxColor = headersSeccionActual.findIndex(h => h.toLowerCase().includes("etiqueta") || h.toLowerCase().includes("color"));
+      const idxPdf = headersSeccionActual.findIndex(h => h.toLowerCase().includes("pdf"));
+      const renderBtnPdfIng = (filaObj) => {
+        const val = idxPdf !== -1 ? (filaObj[idxPdf] || "").toString().trim() : "";
+        if (!val) return "";
+        const valEsc = val.replace(/'/g, "\\'");
+        return `<button type="button" onclick="event.stopPropagation(); abrirPdfIngreso('${valEsc}')" title="Ver PDF" class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-rose-50 border border-rose-200/80 text-rose-500 hover:bg-rose-100 hover:scale-105 transition shadow-2xs"><i class="fa-solid fa-file-pdf text-sm"></i></button>`;
+      };
       const mapaColoresIng = {
         "verde": "border-l-emerald-500",
         "azul": "border-l-sky-500",
@@ -8387,8 +8404,9 @@
                     <p class="text-[11px] text-blue-800 truncate">${diaSem ? diaSem + ", " : ""}${fecha || (mes + " " + ano)}</p>
                   </div>
                 </div>
-                <div class="text-right shrink-0 pl-2">
+                <div class="text-right shrink-0 pl-2 flex flex-col items-end gap-1">
                   <div class="text-xs sm:text-sm font-bold text-emerald-600">${cantFmt}</div>
+                  ${renderBtnPdfIng(fila)}
                 </div>
               </div>
             `;
@@ -8397,14 +8415,19 @@
             const grupoId = `ing-grp-${usuario.replace(/[^a-zA-Z0-9]/g, "_")}-${contadorSub}`;
             const sumaGrupo = item.filas.reduce((acc, f) => acc + parseCant(f), 0);
             const sumaFmt = "+" + sumaGrupo.toFixed(2).replace(".", ",") + " €";
-            const iniciales = item.empresa.slice(0, 2).toUpperCase();
+            const filaConFav = idxFav !== -1 ? item.filas.find(f => (f[idxFav] || "").toString().trim() !== "") : null;
+            const favGrupo = filaConFav ? filaConFav[idxFav].toString().trim() : "";
+            const filaConColor = idxColor !== -1 ? item.filas.find(f => (f[idxColor] || "").toString().trim() !== "") : null;
+            const colorGrupo = filaConColor ? filaConColor[idxColor].toString().trim().toLowerCase() : "";
+            const bordeGrupo = mapaColoresIng[colorGrupo] || "border-l-emerald-500";
+            const avatarGrupoHtml = obtenerAvatarIngreso(item.empresa, item.empresa, favGrupo);
 
             bloque += `
-              <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden border-l-4 border-l-emerald-500">
+              <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden border-l-4 ${bordeGrupo}">
                 <div onclick="document.querySelectorAll('.fila-hija-${grupoId}').forEach(el => el.classList.toggle('hidden')); document.getElementById('chevron-${grupoId}').classList.toggle('rotate-90')" class="p-3.5 sm:p-4 bg-slate-50/70 hover:bg-slate-100/60 transition cursor-pointer flex items-center justify-between gap-3">
                   <div class="flex items-center gap-3 min-w-0 flex-1">
-                    <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200/60 shadow-2xs font-bold text-xs">
-                      ${iniciales}
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200/60 shadow-2xs font-bold text-xs overflow-hidden">
+                      ${avatarGrupoHtml}
                     </div>
                     <div class="min-w-0 flex-1">
                       <div class="flex items-center gap-2">
@@ -8449,7 +8472,8 @@
                     </div>
                     <p class="text-[11px] text-blue-800 pl-8 truncate">${diaHija ? diaHija + ", " : ""}${fechaHija}</p>
                   </div>
-                  <div class="text-right shrink-0">
+                  <div class="text-right shrink-0 flex items-center gap-2">
+                    ${renderBtnPdfIng(filaHija)}
                     <span class="text-xs font-bold text-emerald-600">${cantHija}</span>
                   </div>
                 </div>
@@ -8517,6 +8541,8 @@
         document.getElementById("ing-fecha").value = `${yyyy}-${mm}-${dd}`;
         document.getElementById("ing-notas").value = "";
         document.getElementById("ing-url-icono").value = "";
+        document.getElementById("ing-file-pdf").value = "";
+        document.getElementById("texto-ing-pdf").textContent = "Adjuntar PDF";
         seleccionarEtiquetaColorIngreso("");
         actualizarFechaIngreso();
       }
@@ -8595,6 +8621,25 @@
       }
     });
 
+    async function abrirPdfIngreso(valor) {
+      if (!valor) return;
+      if (valor.startsWith("http")) {
+        abrirVisorAdjunto(valor, "Documento PDF", "pdf");
+        return;
+      }
+      try {
+        const res = await fetch(`${API_URL}?token=${encodeURIComponent(tokenActual)}&action=get_pdf&ruta=${encodeURIComponent(valor)}`);
+        const json = await res.json();
+        if (json.status === "ok" && json.url) {
+          abrirVisorAdjunto(json.url, "Documento PDF", "pdf");
+        } else {
+          alert(json.message || "No se encontró el PDF en Google Drive.");
+        }
+      } catch (e) {
+        alert("Error al buscar el PDF: " + e.message);
+      }
+    }
+
     async function guardarIngreso(e) {
       e.preventDefault();
       const btn = document.getElementById("btn-guardar-ingreso");
@@ -8609,6 +8654,8 @@
       const urlRawIng = (document.getElementById("ing-url-icono").value || "").trim();
       const favIng = urlRawIng ? "url:" + urlRawIng.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0] : "";
       const colorIng = document.getElementById("ing-color-etiqueta").value;
+      const filePdfIng = document.getElementById("ing-file-pdf").files[0];
+      const pdfBase64Ing = await leerArchivoComoBase64(filePdfIng);
 
       const payload = {
         token: tokenActual,
@@ -8626,7 +8673,8 @@
         notas: document.getElementById("ing-notas").value.trim(),
         favicon: favIng,
         etiqueta: colorIng,
-        color: colorIng
+        color: colorIng,
+        pdfBase64: pdfBase64Ing
       };
 
       try {
