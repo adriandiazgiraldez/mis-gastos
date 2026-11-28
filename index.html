@@ -1921,18 +1921,26 @@
       </div>
 
       <form onsubmit="guardarIngreso(event)" class="p-5 sm:p-6 space-y-3.5 text-xs overflow-y-auto flex-1">
+        <input type="hidden" id="ing-dia-semana">
+        <input type="hidden" id="ing-mes">
+        <input type="hidden" id="ing-ano">
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Tipo de Ingreso *</label>
             <input type="text" id="ing-tipo" required placeholder="Ej. Nómina, Venta, Otro..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
-          <div>
+          <div class="relative">
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Empresa / Origen *</label>
-            <input type="text" id="ing-empresa" required placeholder="Ej. Ayuntamiento de Huelva, Otro..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+            <input type="text" id="ing-empresa" required autocomplete="off"
+              onfocus="mostrarDropdownEmpresasIngreso()" oninput="filtrarDropdownEmpresasIngreso()"
+              placeholder="Ej. Ayuntamiento de Huelva, Otro..."
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+            <div id="dropdown-ing-empresas" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-48 overflow-y-auto z-50 divide-y divide-slate-100"></div>
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Cantidad (€) *</label>
             <input type="number" step="0.01" inputmode="decimal" id="ing-cantidad" required placeholder="0,00" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-emerald-700 focus:outline-none focus:border-slate-400 focus:bg-white">
@@ -1941,31 +1949,41 @@
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Usuario *</label>
             <input type="text" id="ing-usuario" required placeholder="Ej. ADRIÁN, PEPI..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs uppercase focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Fecha *</label>
-            <input type="date" id="ing-fecha" onchange="actualizarFechaIngreso()" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
-          </div>
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Día de la Semana</label>
-            <input type="text" id="ing-dia-semana" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 font-medium">
+            <input type="date" id="ing-fecha" onchange="actualizarFechaIngreso()" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Mes *</label>
-            <select id="ing-mes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
-              <option>ENERO</option><option>FEBRERO</option><option>MARZO</option><option>ABRIL</option>
-              <option>MAYO</option><option>JUNIO</option><option>JULIO</option><option>AGOSTO</option>
-              <option>SEPTIEMBRE</option><option>OCTUBRE</option><option>NOVIEMBRE</option><option>DICIEMBRE</option>
-            </select>
+        <!-- URL Favicon (opcional) -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">URL Favicon empresa (opcional)</label>
+          <div class="relative">
+            <i class="fa-solid fa-globe absolute left-3 top-2.5 text-xs text-slate-400"></i>
+            <input type="text" id="ing-url-icono" placeholder="Ej. huelva.es, etsy.com..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
           </div>
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Año *</label>
-            <input type="number" id="ing-ano" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white">
+        </div>
+
+        <!-- Notas -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Notas</label>
+          <textarea id="ing-notas" rows="2" placeholder="Observaciones o detalles del ingreso..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-slate-400 focus:bg-white resize-y"></textarea>
+        </div>
+
+        <!-- Etiqueta de color -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-[11px] font-semibold text-slate-500">Color de etiqueta</label>
+            <button type="button" onclick="seleccionarEtiquetaColorIngreso('')" id="btn-quitar-etiqueta-ing" class="text-[10px] font-medium text-slate-400 hover:text-rose-500 transition hidden">Quitar color</button>
+          </div>
+          <input type="hidden" id="ing-color-etiqueta" value="">
+          <div class="flex items-center gap-3">
+            <button type="button" onclick="seleccionarEtiquetaColorIngreso('verde')" data-color-ing="verde" title="Verde" class="btn-color-tag-ing w-7 h-7 rounded-full bg-emerald-500 transition shadow-2xs border-2 border-transparent"></button>
+            <button type="button" onclick="seleccionarEtiquetaColorIngreso('azul')" data-color-ing="azul" title="Azul" class="btn-color-tag-ing w-7 h-7 rounded-full bg-sky-500 transition shadow-2xs border-2 border-transparent"></button>
+            <button type="button" onclick="seleccionarEtiquetaColorIngreso('amarillo')" data-color-ing="amarillo" title="Amarillo" class="btn-color-tag-ing w-7 h-7 rounded-full bg-amber-400 transition shadow-2xs border-2 border-transparent"></button>
+            <button type="button" onclick="seleccionarEtiquetaColorIngreso('naranja')" data-color-ing="naranja" title="Naranja" class="btn-color-tag-ing w-7 h-7 rounded-full bg-orange-500 transition shadow-2xs border-2 border-transparent"></button>
+            <button type="button" onclick="seleccionarEtiquetaColorIngreso('rojo')" data-color-ing="rojo" title="Rojo" class="btn-color-tag-ing w-7 h-7 rounded-full bg-rose-500 transition shadow-2xs border-2 border-transparent"></button>
+            <button type="button" onclick="seleccionarEtiquetaColorIngreso('morado')" data-color-ing="morado" title="Morado" class="btn-color-tag-ing w-7 h-7 rounded-full bg-purple-500 transition shadow-2xs border-2 border-transparent"></button>
           </div>
         </div>
 
@@ -8248,6 +8266,24 @@
       const idxTipo = headersSeccionActual.findIndex(h => h.toLowerCase().includes("tipo"));
       const idxEmpresa = headersSeccionActual.findIndex(h => h.toLowerCase().includes("empresa"));
       const idxUsr = headersSeccionActual.findIndex(h => h.toLowerCase().includes("usuario"));
+      const idxFav = headersSeccionActual.findIndex(h => h.toLowerCase().includes("favicon"));
+      const idxColor = headersSeccionActual.findIndex(h => h.toLowerCase().includes("etiqueta") || h.toLowerCase().includes("color"));
+      const mapaColoresIng = {
+        "verde": "border-l-emerald-500",
+        "azul": "border-l-sky-500",
+        "amarillo": "border-l-amber-400",
+        "naranja": "border-l-orange-500",
+        "rojo": "border-l-rose-500",
+        "morado": "border-l-purple-500"
+      };
+      const obtenerAvatarIngreso = (emp, tip, favVal) => {
+        const fav = (favVal || "").trim();
+        if (fav) {
+          const dom = fav.startsWith("url:") ? fav.slice(4) : fav;
+          return `<img src="https://www.google.com/s2/favicons?domain=${dom}&sz=64" alt="" class="w-full h-full rounded-full object-cover bg-white">`;
+        }
+        return (emp || tip).slice(0, 2).toUpperCase();
+      };
 
       const parseCant = (f) => {
         if (idxCant === -1) return 0;
@@ -8263,12 +8299,12 @@
         mapaUsuarios[u].push(f);
       });
 
-      // Orden: PEPI, ADRIÁN y luego el resto
+      // Orden: ADRIÁN, PEPI y luego el resto
       const ordenUsuarios = Object.keys(mapaUsuarios).sort((a, b) => {
-        if (a.includes("PEPI") && !b.includes("PEPI")) return -1;
-        if (!a.includes("PEPI") && b.includes("PEPI")) return 1;
         if (a.includes("ADRI") && !b.includes("ADRI")) return -1;
         if (!a.includes("ADRI") && b.includes("ADRI")) return 1;
+        if (a.includes("PEPI") && !b.includes("PEPI")) return -1;
+        if (!a.includes("PEPI") && b.includes("PEPI")) return 1;
         return a.localeCompare(b, "es");
       });
 
@@ -8281,18 +8317,20 @@
 
         const esPepi = usuario.includes("PEPI");
         const esAdrian = usuario.includes("ADRI");
-        const badgeIcono = esPepi
-          ? "bg-rose-50 text-rose-500 border-rose-200"
-          : (esAdrian ? "bg-sky-50 text-sky-600 border-sky-200" : "bg-emerald-50 text-emerald-600 border-emerald-200");
+        const badgeIcono = (esPepi || esAdrian)
+          ? "border-slate-200/80 bg-white shadow-2xs overflow-hidden"
+          : "bg-emerald-50 text-emerald-600 border-emerald-200";
         const iconoHtml = esPepi
-          ? `<i class="fa-solid fa-person-dress text-rose-500 text-sm"></i>`
-          : (esAdrian ? `<i class="fa-solid fa-person text-sky-600 text-sm"></i>` : `<i class="fa-solid fa-arrow-trend-up text-emerald-600"></i>`);
+          ? `<img src="https://raw.githubusercontent.com/adriandiazgiraldez/mis-gastos/main/img/pepi.png" alt="Pepi" class="w-full h-full rounded-full object-cover">`
+          : (esAdrian
+            ? `<img src="https://raw.githubusercontent.com/adriandiazgiraldez/mis-gastos/main/img/adrian.png" alt="Adrián" class="w-full h-full rounded-full object-cover">`
+            : `<i class="fa-solid fa-arrow-trend-up text-emerald-600"></i>`);
 
         let bloque = `
           <div class="bg-transparent sm:bg-slate-100 sm:border sm:border-slate-200/80 sm:rounded-2xl p-0 sm:p-5 sm:shadow-2xs space-y-3 sm:space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div class="flex items-center gap-2">
-                <span class="w-7 h-7 rounded-lg ${badgeIcono} border flex items-center justify-center">
+              <div class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-full ${badgeIcono} border flex items-center justify-center shrink-0">
                   ${iconoHtml}
                 </span>
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-800">${usuario}</span>
@@ -8332,13 +8370,16 @@
             const ano = idxAno !== -1 ? (fila[idxAno] || "").toString().trim() : "";
             const cantNum = parseCant(fila);
             const cantFmt = "+" + cantNum.toFixed(2).replace(".", ",") + " €";
-            const iniciales = (empresa || tipo).slice(0, 2).toUpperCase();
+            const favVal = idxFav !== -1 ? (fila[idxFav] || "").toString().trim() : "";
+            const colorVal = idxColor !== -1 ? (fila[idxColor] || "").toString().trim().toLowerCase() : "";
+            const bordeColor = mapaColoresIng[colorVal] || "border-l-emerald-500";
+            const avatarHtml = obtenerAvatarIngreso(empresa, tipo, favVal);
 
             bloque += `
-              <div onclick="abrirModalIngreso('${idFila}')" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-2xs hover:shadow-md transition cursor-pointer flex items-center justify-between gap-3 border-l-4 border-l-emerald-500">
+              <div onclick="abrirModalIngreso('${idFila}')" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-2xs hover:shadow-md transition cursor-pointer flex items-center justify-between gap-3 border-l-4 ${bordeColor}">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                  <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200/60 shadow-2xs font-bold text-xs">
-                    ${iniciales}
+                  <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200/60 shadow-2xs font-bold text-xs overflow-hidden">
+                    ${avatarHtml}
                   </div>
                   <div class="min-w-0 flex-1 space-y-0.5">
                     <h4 class="text-xs sm:text-[13px] font-bold text-slate-900 truncate">${tipo}</h4>
@@ -8449,6 +8490,10 @@
           document.getElementById("ing-mes").value = getV("mes").toUpperCase() || MESES_LISTA[new Date().getMonth()];
           document.getElementById("ing-ano").value = getV("año") || getV("ano") || new Date().getFullYear();
           document.getElementById("ing-dia-semana").value = getV("día") || getV("dia");
+          document.getElementById("ing-notas").value = getV("nota");
+          const favRaw = getV("favicon");
+          document.getElementById("ing-url-icono").value = favRaw.startsWith("url:") ? favRaw.slice(4) : favRaw;
+          seleccionarEtiquetaColorIngreso((getV("etiqueta") || getV("color")).toLowerCase());
 
           const fRaw = getV("fecha");
           if (fRaw.includes("/")) {
@@ -8470,6 +8515,9 @@
         document.getElementById("ing-cantidad").value = "";
         document.getElementById("ing-usuario").value = "ADRIÁN";
         document.getElementById("ing-fecha").value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById("ing-notas").value = "";
+        document.getElementById("ing-url-icono").value = "";
+        seleccionarEtiquetaColorIngreso("");
         actualizarFechaIngreso();
       }
 
@@ -8493,6 +8541,60 @@
       document.getElementById("ing-ano").value = y;
     }
 
+    function mostrarDropdownEmpresasIngreso() {
+      filtrarDropdownEmpresasIngreso();
+      document.getElementById("dropdown-ing-empresas").classList.remove("hidden");
+    }
+
+    function filtrarDropdownEmpresasIngreso() {
+      const idxEmp = headersSeccionActual.findIndex(h => h.toLowerCase().includes("empresa"));
+      const dropdown = document.getElementById("dropdown-ing-empresas");
+      if (idxEmp === -1 || !dropdown) return;
+
+      const filtro = (document.getElementById("ing-empresa").value || "").toLowerCase().trim();
+      const unicas = [...new Set(filasSeccionActual.map(f => (f[idxEmp] || "").toString().trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+
+      const filtradas = filtro ? unicas.filter(emp => emp.toLowerCase().includes(filtro)) : unicas;
+      if (filtradas.length === 0) {
+        dropdown.innerHTML = `<div class="px-3.5 py-2 text-xs text-slate-400">Nueva empresa: "${document.getElementById("ing-empresa").value}"</div>`;
+        return;
+      }
+
+      dropdown.innerHTML = filtradas.map(emp => {
+        const seguro = emp.replace(/'/g, "\\'");
+        return `<button type="button" onclick="seleccionarEmpresaIngresoDropdown('${seguro}')" class="w-full text-left px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2 transition">
+          <i class="fa-regular fa-building text-slate-400 text-xs shrink-0"></i>
+          <span class="truncate">${emp}</span>
+        </button>`;
+      }).join("");
+    }
+
+    function seleccionarEmpresaIngresoDropdown(valor) {
+      document.getElementById("ing-empresa").value = valor;
+      document.getElementById("dropdown-ing-empresas").classList.add("hidden");
+    }
+
+    function seleccionarEtiquetaColorIngreso(color) {
+      document.getElementById("ing-color-etiqueta").value = color;
+      document.querySelectorAll(".btn-color-tag-ing").forEach(btn => {
+        if (btn.getAttribute("data-color-ing") === color) {
+          btn.classList.add("ring-2", "ring-slate-900", "ring-offset-2", "scale-110");
+        } else {
+          btn.classList.remove("ring-2", "ring-slate-900", "ring-offset-2", "scale-110");
+        }
+      });
+      document.getElementById("btn-quitar-etiqueta-ing").classList.toggle("hidden", !color);
+    }
+
+    document.addEventListener("click", (e) => {
+      const inp = document.getElementById("ing-empresa");
+      const drp = document.getElementById("dropdown-ing-empresas");
+      if (inp && drp && !inp.contains(e.target) && !drp.contains(e.target)) {
+        drp.classList.add("hidden");
+      }
+    });
+
     async function guardarIngreso(e) {
       e.preventDefault();
       const btn = document.getElementById("btn-guardar-ingreso");
@@ -8503,6 +8605,10 @@
       const fechaIso = document.getElementById("ing-fecha").value;
       const [y, m, d] = fechaIso.split("-");
       const fechaFmt = `${d}/${m}/${y}`;
+
+      const urlRawIng = (document.getElementById("ing-url-icono").value || "").trim();
+      const favIng = urlRawIng ? "url:" + urlRawIng.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0] : "";
+      const colorIng = document.getElementById("ing-color-etiqueta").value;
 
       const payload = {
         token: tokenActual,
@@ -8516,7 +8622,11 @@
         cantidad: document.getElementById("ing-cantidad").value,
         concepto: document.getElementById("ing-tipo").value.trim(),
         empresa: document.getElementById("ing-empresa").value.trim(),
-        usuario: document.getElementById("ing-usuario").value.trim().toUpperCase()
+        usuario: document.getElementById("ing-usuario").value.trim().toUpperCase(),
+        notas: document.getElementById("ing-notas").value.trim(),
+        favicon: favIng,
+        etiqueta: colorIng,
+        color: colorIng
       };
 
       try {
